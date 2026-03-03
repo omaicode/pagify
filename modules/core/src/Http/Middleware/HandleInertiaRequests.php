@@ -21,13 +21,20 @@ class HandleInertiaRequests extends Middleware
         $modules = app(ModuleRegistry::class);
         /** @var SiteContext $siteContext */
         $siteContext = app(SiteContext::class);
+        $admin = $request->user('web');
 
         $menu = array_map(static function (array $item): array {
             $routeName = (string) ($item['route'] ?? '');
             $item['href'] = Route::has($routeName) ? route($routeName) : '#';
 
             return $item;
-        }, $modules->adminMenu());
+        }, $modules->adminMenu(static function (string $permission) use ($admin): bool {
+            if ($admin === null) {
+                return false;
+            }
+
+            return $admin->can($permission);
+        }));
 
         return [
             ...parent::share($request),
@@ -37,7 +44,7 @@ class HandleInertiaRequests extends Middleware
             'menu' => $menu,
             'currentSite' => $siteContext->site()?->only(['id', 'name', 'domain', 'locale']),
             'auth' => [
-                'admin' => $request->user('web')?->only(['id', 'name', 'username', 'email', 'locale']),
+                'admin' => $admin?->only(['id', 'name', 'username', 'email', 'locale']),
             ],
         ];
     }

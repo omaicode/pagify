@@ -26,4 +26,11 @@ class CoreRoutesTest extends TestCase
 
         $response->assertRedirect('/admin/login');
     }
+
+    public function test_admin_api_tokens_page_redirects_guest_to_login(): void
+    {
+        $response = $this->get('/admin/api-tokens');
+
+        $response->assertRedirect('/admin/login');
+    }
 }

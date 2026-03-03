@@ -9,7 +9,7 @@ use Modules\Core\Models\Site;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
-class CoreDatabaseSeeder extends Seeder
+class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
@@ -35,6 +35,7 @@ class CoreDatabaseSeeder extends Seeder
             'core.setting.update',
             'core.audit.viewAny',
             'core.audit.view',
+            'core.token.manage',
         ];
 
         foreach ($permissions as $permissionName) {

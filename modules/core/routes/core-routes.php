@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Core\Http\Controllers\Admin\AuditLogController;
+use Modules\Core\Http\Controllers\Admin\ApiTokenPageController;
 use Modules\Core\Http\Controllers\Admin\AuthController;
 use Modules\Core\Http\Controllers\Admin\DashboardController;
 use Modules\Core\Http\Controllers\Api\AdminTokenController;
@@ -29,6 +30,7 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
         Route::get('/', DashboardController::class)->name('dashboard');
 
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.index');
+        Route::get('/api-tokens', ApiTokenPageController::class)->name('tokens.index');
         });
     });
 });

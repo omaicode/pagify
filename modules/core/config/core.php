@@ -18,6 +18,11 @@ return [
                     'route' => 'core.admin.audit.index',
                     'permission' => 'core.audit.view',
                 ],
+                [
+                    'label' => 'API tokens',
+                    'route' => 'core.admin.tokens.index',
+                    'permission' => 'core.token.manage',
+                ],
             ],
         ],
     ],

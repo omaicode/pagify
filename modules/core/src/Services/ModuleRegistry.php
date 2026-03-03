@@ -36,7 +36,7 @@ class ModuleRegistry
     /**
      * @return array<int, array<string, mixed>>
      */
-    public function adminMenu(): array
+    public function adminMenu(?callable $permissionChecker = null): array
     {
         $menu = [];
 
@@ -48,7 +48,23 @@ class ModuleRegistry
             $moduleMenu = $module['menu'] ?? [];
 
             if (is_array($moduleMenu)) {
-                $menu = [...$menu, ...$moduleMenu];
+                foreach ($moduleMenu as $menuItem) {
+                    if (! is_array($menuItem)) {
+                        continue;
+                    }
+
+                    $permission = $menuItem['permission'] ?? null;
+
+                    if (! is_string($permission) || trim($permission) === '') {
+                        $menu[] = $menuItem;
+
+                        continue;
+                    }
+
+                    if ($permissionChecker !== null && $permissionChecker($permission, $menuItem) === true) {
+                        $menu[] = $menuItem;
+                    }
+                }
             }
         }
 
