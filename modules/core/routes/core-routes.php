@@ -7,6 +7,7 @@ use Modules\Core\Http\Controllers\Admin\AuthController;
 use Modules\Core\Http\Controllers\Admin\DashboardController;
 use Modules\Core\Http\Controllers\Api\AdminTokenController;
 use Modules\Core\Http\Middleware\HandleInertiaRequests;
+use Modules\Core\Http\Middleware\RecordAuditLog;
 use Modules\Core\Http\Middleware\ResolveSite;
 use Modules\Core\Http\Middleware\SetLocaleFromSite;
 use Modules\Core\Support\SiteContext;
@@ -26,7 +27,7 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
             ->middleware('auth:web')
             ->name('logout');
 
-        Route::middleware(['auth:web', HandleInertiaRequests::class])->group(function (): void {
+        Route::middleware(['auth:web', HandleInertiaRequests::class, RecordAuditLog::class])->group(function (): void {
         Route::get('/', DashboardController::class)->name('dashboard');
 
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.index');
@@ -50,7 +51,7 @@ Route::prefix('api/v1')
     });
 
 Route::prefix('api/v1/admin')
-    ->middleware(['web', ResolveSite::class, SetLocaleFromSite::class, 'auth:web', 'throttle:60,1'])
+    ->middleware(['web', ResolveSite::class, SetLocaleFromSite::class, 'auth:web', 'throttle:60,1', RecordAuditLog::class])
     ->name('core.api.v1.admin.')
     ->group(function (): void {
         Route::get('/tokens', [AdminTokenController::class, 'index'])->name('tokens.index');

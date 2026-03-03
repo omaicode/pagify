@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Modules\Core\Models\Admin;
 use Tests\TestCase;
 
 class CoreRoutesTest extends TestCase
@@ -32,5 +33,45 @@ class CoreRoutesTest extends TestCase
         $response = $this->get('/admin/api-tokens');
 
         $response->assertRedirect('/admin/login');
+    }
+
+    public function test_admin_api_tokens_page_returns_403_for_authenticated_user_without_permission(): void
+    {
+        if (! extension_loaded('pdo_sqlite')) {
+            $this->markTestSkipped('pdo_sqlite is required for permission gate assertions in this environment.');
+        }
+
+        $admin = new class extends Admin {
+            public function can($ability, $arguments = []): bool
+            {
+                return false;
+            }
+        };
+
+        $this->actingAs($admin, 'web');
+
+        $response = $this->get('/admin/api-tokens');
+
+        $response->assertForbidden();
+    }
+
+    public function test_admin_tokens_api_returns_403_for_authenticated_user_without_permission(): void
+    {
+        if (! extension_loaded('pdo_sqlite')) {
+            $this->markTestSkipped('pdo_sqlite is required for permission gate assertions in this environment.');
+        }
+
+        $admin = new class extends Admin {
+            public function can($ability, $arguments = []): bool
+            {
+                return false;
+            }
+        };
+
+        $this->actingAs($admin, 'web');
+
+        $response = $this->get('/api/v1/admin/tokens');
+
+        $response->assertForbidden();
     }
 }
