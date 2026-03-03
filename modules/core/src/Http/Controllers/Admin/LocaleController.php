@@ -3,18 +3,14 @@
 namespace Modules\Core\Http\Controllers\Admin;
 
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Modules\Core\Http\Requests\Admin\UpdateLocaleRequest;
 
 class LocaleController extends Controller
 {
-    public function update(Request $request): RedirectResponse
+    public function update(UpdateLocaleRequest $request): RedirectResponse
     {
-        $supported = config('core.locales.supported', ['en']);
-
-        $payload = $request->validate([
-            'locale' => ['required', 'string', 'in:' . implode(',', $supported)],
-        ]);
+        $payload = $request->validated();
 
         $admin = $request->user('web');
 

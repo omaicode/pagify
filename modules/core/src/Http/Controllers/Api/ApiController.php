@@ -19,10 +19,11 @@ class ApiController extends Controller
         ], $status);
     }
 
-    protected function error(string $message, int $status = 400, array $errors = []): JsonResponse
+    protected function error(string $message, int $status = 400, string $code = 'BAD_REQUEST', array $errors = []): JsonResponse
     {
         return response()->json([
             'success' => false,
+            'code' => $code,
             'message' => $message,
             'errors' => $errors,
         ], $status);

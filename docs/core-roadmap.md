@@ -58,14 +58,14 @@ This roadmap tracks delivery status for the Core module backbone and defines the
 ## P3 execution plan
 
 ### P3.1 Module runtime management
-- [ ] Move module enable/disable state from config-only to runtime persistence (DB-backed)
-- [ ] Add cache invalidation strategy and admin controls for module state
-- [ ] Add health checks for module registry consistency (config vs DB)
+- [x] Move module enable/disable state from config-only to runtime persistence (DB-backed)
+- [x] Add cache invalidation strategy and admin controls for module state
+- [x] Add health checks for module registry consistency (config vs DB)
 
 ### P3.2 API layer hardening
-- [ ] Introduce FormRequest classes for admin token and locale endpoints
-- [ ] Introduce API Resource / response DTO patterns for consistency
-- [ ] Standardize API error envelope and codes across all core endpoints
+- [x] Introduce FormRequest classes for admin token and locale endpoints
+- [x] Introduce API Resource / response DTO patterns for consistency
+- [x] Standardize API error envelope and codes across all core endpoints
 
 ### P3.3 Audit maturation
 - [ ] Expand audit coverage to model-level changes (create/update/delete events)

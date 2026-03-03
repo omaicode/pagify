@@ -9,6 +9,7 @@ use Modules\Core\Http\Controllers\Admin\LocaleController;
 use Modules\Core\Http\Controllers\Admin\ModulePageController;
 use Modules\Core\Http\Controllers\Api\AdminModuleController;
 use Modules\Core\Http\Controllers\Api\AdminTokenController;
+use Modules\Core\Http\Middleware\EnsureApiErrorEnvelope;
 use Modules\Core\Http\Middleware\HandleInertiaRequests;
 use Modules\Core\Http\Middleware\RecordAuditLog;
 use Modules\Core\Http\Middleware\ResolveSite;
@@ -42,7 +43,7 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
 });
 
 Route::prefix('api/v1')
-    ->middleware(['api', ResolveSite::class, SetLocaleFromSite::class, 'auth:sanctum', 'throttle:60,1'])
+    ->middleware(['api', EnsureApiErrorEnvelope::class, ResolveSite::class, SetLocaleFromSite::class, 'auth:sanctum', 'throttle:60,1'])
     ->name('core.api.v1.')
     ->group(function (): void {
         Route::get('/health', function (SiteContext $siteContext) {
@@ -56,7 +57,7 @@ Route::prefix('api/v1')
     });
 
 Route::prefix('api/v1/admin')
-    ->middleware(['web', ResolveSite::class, SetLocaleFromSite::class, 'auth:web', 'throttle:60,1', RecordAuditLog::class])
+    ->middleware(['web', EnsureApiErrorEnvelope::class, ResolveSite::class, SetLocaleFromSite::class, 'auth:web', 'throttle:60,1', RecordAuditLog::class])
     ->name('core.api.v1.admin.')
     ->group(function (): void {
         Route::get('/tokens', [AdminTokenController::class, 'index'])->name('tokens.index');

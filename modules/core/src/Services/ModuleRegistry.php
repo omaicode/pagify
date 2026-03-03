@@ -100,6 +100,8 @@ class ModuleRegistry
         $unknownRuntimeModules = array_values(array_diff(array_keys($runtimeStates), $knownModules));
 
         return [
+            'total_configured_modules' => count($knownModules),
+            'total_runtime_modules' => count($runtimeStates),
             'known_modules_count' => count($knownModules),
             'runtime_states_count' => count($runtimeStates),
             'unknown_runtime_modules' => $unknownRuntimeModules,

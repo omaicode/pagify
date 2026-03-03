@@ -3,7 +3,8 @@
 namespace Modules\Core\Http\Controllers\Api;
 
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Modules\Core\Http\Requests\Admin\UpdateModuleStateRequest;
+use Modules\Core\Http\Resources\ModuleStateResource;
 use Modules\Core\Models\Admin;
 use Modules\Core\Services\ModuleRegistry;
 use Modules\Core\Services\ModuleStateService;
@@ -23,20 +24,18 @@ class AdminModuleController extends ApiController
             ])
             ->values();
 
-        return $this->success($data);
+        return $this->success(ModuleStateResource::collection($data)->resolve());
     }
 
-    public function update(Request $request, string $module, ModuleRegistry $modules, ModuleStateService $stateService): JsonResponse
+    public function update(UpdateModuleStateRequest $request, string $module, ModuleRegistry $modules, ModuleStateService $stateService): JsonResponse
     {
         $this->authorize('manageModules', Admin::class);
 
         if (! $modules->has($module)) {
-            return $this->error('Module not found.', 404);
+            return $this->error('Module not found.', 404, 'MODULE_NOT_FOUND');
         }
 
-        $payload = $request->validate([
-            'enabled' => ['required', 'boolean'],
-        ]);
+        $payload = $request->validated();
 
         $stateService->setEnabled($module, (bool) $payload['enabled']);
 

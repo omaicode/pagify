@@ -6,6 +6,9 @@ use Illuminate\Support\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Laravel\Sanctum\PersonalAccessToken;
+use Modules\Core\Http\Requests\Admin\StoreAdminTokenRequest;
+use Modules\Core\Http\Resources\AdminTokenCreatedResource;
+use Modules\Core\Http\Resources\AdminTokenResource;
 use Modules\Core\Models\Admin;
 
 class AdminTokenController extends ApiController
@@ -19,30 +22,16 @@ class AdminTokenController extends ApiController
 
         $tokens = $admin->tokens()
             ->latest('id')
-            ->get(['id', 'name', 'abilities', 'last_used_at', 'expires_at', 'created_at'])
-            ->map(static fn (PersonalAccessToken $token): array => [
-                'id' => $token->id,
-                'name' => $token->name,
-                'abilities' => $token->abilities,
-                'last_used_at' => optional($token->last_used_at)?->toDateTimeString(),
-                'expires_at' => optional($token->expires_at)?->toDateTimeString(),
-                'created_at' => optional($token->created_at)?->toDateTimeString(),
-            ])
-            ->values();
+            ->get(['id', 'name', 'abilities', 'last_used_at', 'expires_at', 'created_at']);
 
-        return $this->success($tokens);
+        return $this->success(AdminTokenResource::collection($tokens)->resolve());
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreAdminTokenRequest $request): JsonResponse
     {
         $this->authorize('manageTokens', Admin::class);
 
-        $payload = $request->validate([
-            'name' => ['required', 'string', 'max:80'],
-            'abilities' => ['nullable', 'array'],
-            'abilities.*' => ['string', 'max:80'],
-            'expires_at' => ['nullable', 'date', 'after:now'],
-        ]);
+        $payload = $request->validated();
 
         /** @var Admin $admin */
         $admin = $request->user('web');
@@ -53,13 +42,15 @@ class AdminTokenController extends ApiController
             expiresAt: isset($payload['expires_at']) ? Carbon::parse((string) $payload['expires_at']) : null,
         );
 
-        return $this->success([
+        $resource = new AdminTokenCreatedResource([
             'id' => $token->accessToken->id,
             'name' => $token->accessToken->name,
             'token' => $token->plainTextToken,
             'abilities' => $token->accessToken->abilities,
             'expires_at' => optional($token->accessToken->expires_at)?->toDateTimeString(),
-        ], 201);
+        ]);
+
+        return $this->success($resource->resolve(), 201);
     }
 
     public function destroy(Request $request, int $tokenId): JsonResponse
@@ -72,7 +63,7 @@ class AdminTokenController extends ApiController
         $deleted = $admin->tokens()->whereKey($tokenId)->delete();
 
         if ($deleted === 0) {
-            return $this->error('Token not found.', 404);
+            return $this->error('Token not found.', 404, 'TOKEN_NOT_FOUND');
         }
 
         return $this->success([

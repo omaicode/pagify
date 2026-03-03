@@ -128,4 +128,11 @@ class CoreRoutesTest extends TestCase
 
         $response->assertForbidden();
     }
+
+    public function test_admin_tokens_api_redirects_guest_to_login(): void
+    {
+        $response = $this->get('/api/v1/admin/tokens');
+
+        $response->assertRedirect('/admin/login');
+    }
 }
