@@ -78,9 +78,9 @@ This roadmap tracks delivery status for the Core module backbone and defines the
 - [x] Validate all core entities consistently apply site ownership rules
 
 ### P3.5 Test infrastructure improvements
-- [ ] Enable permission-denied integration tests without skips (sqlite driver or dedicated DB profile)
-- [ ] Add end-to-end tests for locale switch persistence and token lifecycle
-- [ ] Add regression tests for hook subscriber loading from config
+- [x] Enable permission-denied integration tests without skips (sqlite driver or dedicated DB profile)
+- [x] Add end-to-end tests for locale switch persistence and token lifecycle
+- [x] Add regression tests for hook subscriber loading from config
 
 ---
 

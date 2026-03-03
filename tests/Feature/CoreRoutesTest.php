@@ -2,11 +2,14 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Core\Models\Admin;
 use Tests\TestCase;
 
 class CoreRoutesTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_home_route_is_accessible(): void
     {
         $response = $this->get('/');
@@ -51,16 +54,8 @@ class CoreRoutesTest extends TestCase
 
     public function test_admin_api_tokens_page_returns_403_for_authenticated_user_without_permission(): void
     {
-        if (! extension_loaded('pdo_sqlite')) {
-            $this->markTestSkipped('pdo_sqlite is required for permission gate assertions in this environment.');
-        }
-
-        $admin = new class extends Admin {
-            public function can($ability, $arguments = []): bool
-            {
-                return false;
-            }
-        };
+        /** @var Admin $admin */
+        $admin = Admin::factory()->create();
 
         $this->actingAs($admin, 'web');
 
@@ -71,16 +66,8 @@ class CoreRoutesTest extends TestCase
 
     public function test_admin_tokens_api_returns_403_for_authenticated_user_without_permission(): void
     {
-        if (! extension_loaded('pdo_sqlite')) {
-            $this->markTestSkipped('pdo_sqlite is required for permission gate assertions in this environment.');
-        }
-
-        $admin = new class extends Admin {
-            public function can($ability, $arguments = []): bool
-            {
-                return false;
-            }
-        };
+        /** @var Admin $admin */
+        $admin = Admin::factory()->create();
 
         $this->actingAs($admin, 'web');
 
@@ -91,16 +78,8 @@ class CoreRoutesTest extends TestCase
 
     public function test_admin_modules_page_returns_403_for_authenticated_user_without_permission(): void
     {
-        if (! extension_loaded('pdo_sqlite')) {
-            $this->markTestSkipped('pdo_sqlite is required for permission gate assertions in this environment.');
-        }
-
-        $admin = new class extends Admin {
-            public function can($ability, $arguments = []): bool
-            {
-                return false;
-            }
-        };
+        /** @var Admin $admin */
+        $admin = Admin::factory()->create();
 
         $this->actingAs($admin, 'web');
 
@@ -111,16 +90,8 @@ class CoreRoutesTest extends TestCase
 
     public function test_admin_modules_api_returns_403_for_authenticated_user_without_permission(): void
     {
-        if (! extension_loaded('pdo_sqlite')) {
-            $this->markTestSkipped('pdo_sqlite is required for permission gate assertions in this environment.');
-        }
-
-        $admin = new class extends Admin {
-            public function can($ability, $arguments = []): bool
-            {
-                return false;
-            }
-        };
+        /** @var Admin $admin */
+        $admin = Admin::factory()->create();
 
         $this->actingAs($admin, 'web');
 
