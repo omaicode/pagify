@@ -1,10 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Core\Http\Controllers\Admin\AuditLogController;
 use Modules\Core\Http\Controllers\Admin\AuthController;
+use Modules\Core\Http\Controllers\Admin\DashboardController;
+use Modules\Core\Http\Middleware\HandleInertiaRequests;
 use Modules\Core\Http\Middleware\ResolveSite;
 use Modules\Core\Http\Middleware\SetLocaleFromSite;
-use Modules\Core\Services\ModuleRegistry;
 use Modules\Core\Support\SiteContext;
 
 Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(function (): void {
@@ -22,21 +24,10 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
             ->middleware('auth:web')
             ->name('logout');
 
-        Route::middleware('auth:web')->group(function (): void {
-        Route::get('/', function (ModuleRegistry $modules, SiteContext $siteContext) {
-            return response()->json([
-                'module' => 'core',
-                'menu' => $modules->adminMenu(),
-                'site' => $siteContext->site()?->only(['id', 'name', 'domain', 'locale']),
-                'locale' => app()->getLocale(),
-            ]);
-        })->name('dashboard');
+        Route::middleware(['auth:web', HandleInertiaRequests::class])->group(function (): void {
+        Route::get('/', DashboardController::class)->name('dashboard');
 
-        Route::get('/audit-logs', function () {
-            return response()->json([
-                'message' => 'Audit log UI scaffold is ready.',
-            ]);
-        })->name('audit.index');
+        Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.index');
         });
     });
 });

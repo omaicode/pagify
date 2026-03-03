@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c18ddc4c4e2b72976c4a08a674d33dcd",
+    "content-hash": "74363597f87cc8c627f7c1a31a5adab8",
     "packages": [
         {
             "name": "brick/math",
@@ -1678,6 +1678,75 @@
             "time": "2025-08-22T14:27:06+00:00"
         },
         {
+            "name": "inertiajs/inertia-laravel",
+            "version": "v1.3.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/inertiajs/inertia-laravel.git",
+                "reference": "8d52a6753bead9b01a699d40bd142a72668c2a11"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/inertiajs/inertia-laravel/zipball/8d52a6753bead9b01a699d40bd142a72668c2a11",
+                "reference": "8d52a6753bead9b01a699d40bd142a72668c2a11",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "laravel/framework": "^8.74|^9.0|^10.0|^11.0|^12.0",
+                "php": "^7.3|~8.0.0|~8.1.0|~8.2.0|~8.3.0|~8.4.0",
+                "symfony/console": "^5.3|^6.0|^7.0"
+            },
+            "require-dev": {
+                "mockery/mockery": "^1.3.3",
+                "orchestra/testbench": "^6.45|^7.44|^8.25|^9.3|^10.0",
+                "phpunit/phpunit": "^8.0|^9.5.8|^10.4|^11.5"
+            },
+            "suggest": {
+                "ext-pcntl": "Recommended when running the Inertia SSR server via the `inertia:start-ssr` artisan command."
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Inertia\\ServiceProvider"
+                    ]
+                },
+                "branch-alias": {
+                    "dev-master": "1.x-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "./helpers.php"
+                ],
+                "psr-4": {
+                    "Inertia\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jonathan Reinink",
+                    "email": "jonathan@reinink.ca",
+                    "homepage": "https://reinink.ca"
+                }
+            ],
+            "description": "The Laravel adapter for Inertia.js.",
+            "keywords": [
+                "inertia",
+                "laravel"
+            ],
+            "support": {
+                "issues": "https://github.com/inertiajs/inertia-laravel/issues",
+                "source": "https://github.com/inertiajs/inertia-laravel/tree/v1.3.4"
+            },
+            "time": "2025-12-15T14:57:37+00:00"
+        },
+        {
             "name": "internachi/modular",
             "version": "2.3.0",
             "source": {
@@ -2931,9 +3000,10 @@
             "dist": {
                 "type": "path",
                 "url": "modules/core",
-                "reference": "6c5996fa8fa52fb10abaf6f62a08bb8d3a001ca9"
+                "reference": "9c2d9409c34c6744f77615864342e672c59c88ce"
             },
             "require": {
+                "inertiajs/inertia-laravel": "^1.1",
                 "laravel/sanctum": "^4.0",
                 "spatie/laravel-permission": "^6.10"
             },

@@ -12,4 +12,18 @@ class CoreRoutesTest extends TestCase
 
         $response->assertOk();
     }
+
+    public function test_admin_login_page_is_accessible_for_guests(): void
+    {
+        $response = $this->get('/admin/login');
+
+        $response->assertOk();
+    }
+
+    public function test_admin_dashboard_redirects_guest_to_login(): void
+    {
+        $response = $this->get('/admin');
+
+        $response->assertRedirect('/admin/login');
+    }
 }
