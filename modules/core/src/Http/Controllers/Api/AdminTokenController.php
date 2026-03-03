@@ -12,6 +12,8 @@ class AdminTokenController extends ApiController
 {
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('manageTokens', Admin::class);
+
         /** @var Admin $admin */
         $admin = $request->user('web');
 
@@ -33,6 +35,8 @@ class AdminTokenController extends ApiController
 
     public function store(Request $request): JsonResponse
     {
+        $this->authorize('manageTokens', Admin::class);
+
         $payload = $request->validate([
             'name' => ['required', 'string', 'max:80'],
             'abilities' => ['nullable', 'array'],
@@ -60,6 +64,8 @@ class AdminTokenController extends ApiController
 
     public function destroy(Request $request, int $tokenId): JsonResponse
     {
+        $this->authorize('manageTokens', Admin::class);
+
         /** @var Admin $admin */
         $admin = $request->user('web');
 

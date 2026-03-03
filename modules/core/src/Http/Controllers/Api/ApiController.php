@@ -2,11 +2,14 @@
 
 namespace Modules\Core\Http\Controllers\Api;
 
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 
 class ApiController extends Controller
 {
+    use AuthorizesRequests;
+
     protected function success(mixed $data = null, int $status = 200, array $meta = []): JsonResponse
     {
         return response()->json([

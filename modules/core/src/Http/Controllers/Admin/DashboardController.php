@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Core\Models\Admin;
 
 class DashboardController extends Controller
 {
@@ -16,7 +17,7 @@ class DashboardController extends Controller
         return Inertia::render('Admin/Dashboard', [
             'message' => 'Core admin shell is active.',
             'admin' => $admin?->only(['id', 'name', 'username', 'email']),
-            'canManageTokens' => $admin?->can('core.token.manage') === true,
+            'canManageTokens' => $admin?->can('manageTokens', Admin::class) === true,
         ]);
     }
 }

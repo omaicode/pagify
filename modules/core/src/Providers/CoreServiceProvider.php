@@ -7,11 +7,13 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Modules\Core\Events\EntryCreated;
 use Modules\Core\Events\EntryPublished;
+use Modules\Core\Models\Admin;
 use Modules\Core\Models\AuditLog;
 use Modules\Core\Models\Setting;
 use Illuminate\Support\ServiceProvider;
 use Modules\Core\Models\Site;
 use Modules\Core\Policies\AuditLogPolicy;
+use Modules\Core\Policies\AdminPolicy;
 use Modules\Core\Policies\SettingPolicy;
 use Modules\Core\Policies\SitePolicy;
 use Modules\Core\Services\AuditLogger;
@@ -102,6 +104,7 @@ class CoreServiceProvider extends ServiceProvider
 
 	private function registerPolicies(): void
 	{
+		Gate::policy(Admin::class, AdminPolicy::class);
 		Gate::policy(Site::class, SitePolicy::class);
 		Gate::policy(Setting::class, SettingPolicy::class);
 		Gate::policy(AuditLog::class, AuditLogPolicy::class);

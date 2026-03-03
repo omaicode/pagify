@@ -2,16 +2,20 @@
 
 namespace Modules\Core\Http\Controllers\Admin;
 
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Core\Models\Admin;
 
 class ApiTokenPageController extends Controller
 {
+    use AuthorizesRequests;
+
     public function __invoke(Request $request): Response
     {
-        abort_unless($request->user('web')?->can('core.token.manage'), 403);
+        $this->authorize('manageTokens', Admin::class);
 
         return Inertia::render('Admin/Tokens/Index', [
             'apiRoutes' => [
