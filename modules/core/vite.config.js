@@ -7,6 +7,9 @@ export default defineConfig({
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/admin.js'],
+            publicDirectory: '../../public',
+            hotFile: '../../public/hot',
+            buildDirectory: 'build',
             refresh: true,
         }),
         vue(),
@@ -17,4 +20,7 @@ export default defineConfig({
             ignored: ['**/storage/framework/views/**'],
         },
     },
+    build: {
+        emptyOutDir: true
+    }
 });
