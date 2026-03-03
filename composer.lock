@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "74363597f87cc8c627f7c1a31a5adab8",
+    "content-hash": "32e7cf8b9fff68984f67aaa11cae4fd3",
     "packages": [
         {
             "name": "brick/math",
@@ -2993,6 +2993,38 @@
                 "source": "https://github.com/marc-mabe/php-enum/tree/v4.7.2"
             },
             "time": "2025-09-14T11:18:39+00:00"
+        },
+        {
+            "name": "modules/content",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "modules/content",
+                "reference": "66b5bdf0784028f476939623c681c80204999757"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Modules\\Content\\Providers\\ContentServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Modules\\Content\\": "src/",
+                    "Modules\\Content\\Tests\\": "tests/",
+                    "Modules\\Content\\Database\\Factories\\": "database/factories/",
+                    "Modules\\Content\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "modules/core",

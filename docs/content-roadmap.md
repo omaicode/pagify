@@ -34,11 +34,11 @@ Roadmap này định nghĩa lộ trình triển khai module `content` cho Pagify
 
 ## Phase C0 — Module bootstrap & architecture baseline
 
-- [ ] Create module scaffold (`modules/content`) with provider, config, routes, resources, tests.
-- [ ] Register module package/composer wiring and ensure autoload discovery.
-- [ ] Add Content menu entry into admin shell via module registry.
-- [ ] Wire middleware stack parity with core (site resolve, locale, auth, audit, API envelope).
-- [ ] Add base permissions namespace for content (`content.*`).
+- [x] Create module scaffold (`modules/content`) with provider, config, routes, resources, tests.
+- [x] Register module package/composer wiring and ensure autoload discovery.
+- [x] Add Content menu entry into admin shell via module registry.
+- [x] Wire middleware stack parity with core (site resolve, locale, auth, audit, API envelope).
+- [x] Add base permissions namespace for content (`content.*`).
 
 Deliverables:
 - `modules/content/src/Providers/ContentServiceProvider.php`

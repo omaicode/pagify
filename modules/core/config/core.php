@@ -30,6 +30,19 @@ return [
                 ],
             ],
         ],
+        'content' => [
+            'enabled' => true,
+            'name' => 'Content',
+            'slug' => 'content',
+            'description' => 'Content modeling and entry management module',
+            'menu' => [
+                [
+                    'label' => 'Content',
+                    'route' => 'content.admin.dashboard',
+                    'permission' => null,
+                ],
+            ],
+        ],
     ],
 
     'locales' => [
