@@ -1,9 +1,10 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "pagify/pagify",
+    "name": "omaicode/pagify",
     "type": "project",
     "description": "Pagify is CMS built on top of Laravel, designed to provide a user-friendly interface for managing and creating content. It offers a range of features to help users easily create and organize their content, making it an ideal choice for bloggers, businesses, and anyone looking to establish an online presence.",
     "keywords": [
+        "omaicode",
         "pagify",
         "cms",
         "laravel",
