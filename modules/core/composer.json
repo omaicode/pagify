@@ -4,7 +4,10 @@
 	"type": "library",
 	"version": "1.0",
 	"license": "proprietary",
-	"require": {},
+	"require": {
+		"laravel/sanctum": "^4.0",
+		"spatie/laravel-permission": "^6.10"
+	},
 	"autoload": {
 		"psr-4": {
 			"Modules\\Core\\": "src/",

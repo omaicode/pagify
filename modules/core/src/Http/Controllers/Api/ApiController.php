@@ -1,0 +1,27 @@
+<?php
+
+namespace Modules\Core\Http\Controllers\Api;
+
+use Illuminate\Http\JsonResponse;
+use Illuminate\Routing\Controller;
+
+class ApiController extends Controller
+{
+    protected function success(mixed $data = null, int $status = 200, array $meta = []): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+            'meta' => $meta,
+        ], $status);
+    }
+
+    protected function error(string $message, int $status = 400, array $errors = []): JsonResponse
+    {
+        return response()->json([
+            'success' => false,
+            'message' => $message,
+            'errors' => $errors,
+        ], $status);
+    }
+}

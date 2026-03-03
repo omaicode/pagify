@@ -3,17 +3,29 @@
 namespace Modules\Core\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
+use Modules\Core\Traits\BelongsToSite;
+use Spatie\Permission\Traits\HasRoles;
 
 class Admin extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use BelongsToSite;
+    use HasApiTokens;
+    use HasFactory;
+    use HasRoles;
+    use Notifiable;
+
+    protected string $guard_name = 'web';
 
     protected $fillable = [
+        "site_id",
         "name",
         "username",
         "email",
+        "locale",
         "password",
         "remember_token"
     ];
@@ -24,11 +36,17 @@ class Admin extends Authenticatable
     ];
 
     protected $casts = [
-        "email_verified_at" => "datetime"
+        "email_verified_at" => "datetime",
+        "password" => "hashed",
     ];
 
     protected static function newFactory()
     {
         return \Modules\Core\Database\Factories\AdminFactory::new();
+    }
+
+    public function site(): BelongsTo
+    {
+        return $this->belongsTo(Site::class);
     }
 }
