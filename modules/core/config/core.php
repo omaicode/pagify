@@ -23,6 +23,11 @@ return [
                     'route' => 'core.admin.tokens.index',
                     'permission' => 'core.token.manage',
                 ],
+                [
+                    'label' => 'Modules',
+                    'route' => 'core.admin.modules.index',
+                    'permission' => 'core.module.manage',
+                ],
             ],
         ],
     ],

@@ -6,8 +6,13 @@ class ModuleRegistry
 {
     /**
      * @param array<string, array<string, mixed>> $modules
+     * @param array<string, bool> $runtimeStates
      */
-    public function __construct(private readonly array $modules)
+    public function __construct(
+        private readonly array $modules,
+        private readonly ?ModuleStateService $moduleStateService = null,
+        private readonly array $runtimeStates = [],
+    )
     {
     }
 
@@ -16,12 +21,25 @@ class ModuleRegistry
      */
     public function all(): array
     {
-        return $this->modules;
+        $resolved = $this->modules;
+        $overrides = $this->runtimeStates !== []
+            ? $this->runtimeStates
+            : ($this->moduleStateService?->states() ?? []);
+
+        foreach ($overrides as $module => $enabled) {
+            if (! isset($resolved[$module])) {
+                continue;
+            }
+
+            $resolved[$module]['enabled'] = (bool) $enabled;
+        }
+
+        return $resolved;
     }
 
     public function has(string $module): bool
     {
-        return isset($this->modules[$module]);
+        return isset($this->all()[$module]);
     }
 
     public function enabled(string $module): bool
@@ -30,7 +48,7 @@ class ModuleRegistry
             return false;
         }
 
-        return (bool) ($this->modules[$module]['enabled'] ?? false);
+        return (bool) ($this->all()[$module]['enabled'] ?? false);
     }
 
     /**
@@ -40,7 +58,7 @@ class ModuleRegistry
     {
         $menu = [];
 
-        foreach ($this->modules as $module) {
+        foreach ($this->all() as $module) {
             if (! (bool) ($module['enabled'] ?? false)) {
                 continue;
             }
@@ -69,5 +87,23 @@ class ModuleRegistry
         }
 
         return $menu;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function health(): array
+    {
+        $knownModules = array_keys($this->modules);
+        $runtimeStates = $this->moduleStateService?->states() ?? $this->runtimeStates;
+
+        $unknownRuntimeModules = array_values(array_diff(array_keys($runtimeStates), $knownModules));
+
+        return [
+            'known_modules_count' => count($knownModules),
+            'runtime_states_count' => count($runtimeStates),
+            'unknown_runtime_modules' => $unknownRuntimeModules,
+            'healthy' => $unknownRuntimeModules === [],
+        ];
     }
 }

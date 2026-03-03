@@ -39,4 +39,13 @@ return [
     'failed_load_tokens' => 'Không tải được danh sách token.',
     'failed_create_token' => 'Không tạo được token.',
     'failed_revoke_token' => 'Không thu hồi được token.',
+    'modules_health_title' => 'Sức khỏe Registry',
+    'modules_status_healthy' => 'Ổn định',
+    'modules_status_warning' => 'Cần kiểm tra',
+    'modules_total_configured' => 'Số module cấu hình',
+    'modules_total_runtime' => 'Số bản ghi runtime',
+    'modules_unknown_runtime' => 'Module runtime không xác định',
+    'modules_list_title' => 'Trạng thái module',
+    'modules_enabled' => 'Bật',
+    'modules_disabled' => 'Tắt',
 ];

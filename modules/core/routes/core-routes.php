@@ -6,6 +6,8 @@ use Modules\Core\Http\Controllers\Admin\ApiTokenPageController;
 use Modules\Core\Http\Controllers\Admin\AuthController;
 use Modules\Core\Http\Controllers\Admin\DashboardController;
 use Modules\Core\Http\Controllers\Admin\LocaleController;
+use Modules\Core\Http\Controllers\Admin\ModulePageController;
+use Modules\Core\Http\Controllers\Api\AdminModuleController;
 use Modules\Core\Http\Controllers\Api\AdminTokenController;
 use Modules\Core\Http\Middleware\HandleInertiaRequests;
 use Modules\Core\Http\Middleware\RecordAuditLog;
@@ -34,6 +36,7 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
 
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.index');
         Route::get('/api-tokens', ApiTokenPageController::class)->name('tokens.index');
+        Route::get('/modules', ModulePageController::class)->name('modules.index');
         });
     });
 });
@@ -59,4 +62,8 @@ Route::prefix('api/v1/admin')
         Route::get('/tokens', [AdminTokenController::class, 'index'])->name('tokens.index');
         Route::post('/tokens', [AdminTokenController::class, 'store'])->name('tokens.store');
         Route::delete('/tokens/{tokenId}', [AdminTokenController::class, 'destroy'])->name('tokens.destroy');
+
+        Route::get('/modules', [AdminModuleController::class, 'index'])->name('modules.index');
+        Route::patch('/modules/{module}', [AdminModuleController::class, 'update'])->name('modules.update');
+        Route::get('/modules/health', [AdminModuleController::class, 'health'])->name('modules.health');
     });

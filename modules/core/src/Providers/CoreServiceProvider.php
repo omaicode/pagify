@@ -21,6 +21,7 @@ use Modules\Core\Services\AuditLogger;
 use Modules\Core\Services\EventBus;
 use Modules\Core\Services\HookRegistry;
 use Modules\Core\Services\ModuleRegistry;
+use Modules\Core\Services\ModuleStateService;
 use Modules\Core\Services\SettingsManager;
 use Modules\Core\Support\SiteContext;
 
@@ -33,10 +34,19 @@ class CoreServiceProvider extends ServiceProvider
 		$this->app->singleton(SiteContext::class);
 
 		$this->app->singleton(ModuleRegistry::class, function (): ModuleRegistry {
-			return new ModuleRegistry(config('core.modules', []));
+			return new ModuleRegistry(
+				config('core.modules', []),
+				$this->app->make(ModuleStateService::class),
+			);
 		});
 
 		$this->app->alias(ModuleRegistry::class, 'core.modules');
+
+		$this->app->singleton(ModuleStateService::class, function ($app): ModuleStateService {
+			return new ModuleStateService($app->make('cache.store'));
+		});
+
+		$this->app->alias(ModuleStateService::class, 'core.module-state');
 
 		$this->app->singleton(SettingsManager::class, function ($app): SettingsManager {
 			return new SettingsManager($app->make(SiteContext::class));

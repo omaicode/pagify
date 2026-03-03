@@ -39,4 +39,13 @@ return [
     'failed_load_tokens' => 'Failed to load tokens.',
     'failed_create_token' => 'Failed to create token.',
     'failed_revoke_token' => 'Failed to revoke token.',
+    'modules_health_title' => 'Registry health',
+    'modules_status_healthy' => 'Healthy',
+    'modules_status_warning' => 'Needs attention',
+    'modules_total_configured' => 'Configured modules',
+    'modules_total_runtime' => 'Runtime state entries',
+    'modules_unknown_runtime' => 'Unknown runtime modules',
+    'modules_list_title' => 'Module states',
+    'modules_enabled' => 'Enabled',
+    'modules_disabled' => 'Disabled',
 ];

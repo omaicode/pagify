@@ -10,4 +10,9 @@ class AdminPolicy
     {
         return $admin->can('core.token.manage');
     }
+
+    public function manageModules(Admin $admin): bool
+    {
+        return $admin->can('core.module.manage');
+    }
 }
