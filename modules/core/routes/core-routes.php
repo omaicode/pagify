@@ -5,6 +5,7 @@ use Modules\Core\Http\Controllers\Admin\AuditLogController;
 use Modules\Core\Http\Controllers\Admin\ApiTokenPageController;
 use Modules\Core\Http\Controllers\Admin\AuthController;
 use Modules\Core\Http\Controllers\Admin\DashboardController;
+use Modules\Core\Http\Controllers\Admin\LocaleController;
 use Modules\Core\Http\Controllers\Api\AdminTokenController;
 use Modules\Core\Http\Middleware\HandleInertiaRequests;
 use Modules\Core\Http\Middleware\RecordAuditLog;
@@ -29,6 +30,7 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
 
         Route::middleware(['auth:web', HandleInertiaRequests::class, RecordAuditLog::class])->group(function (): void {
         Route::get('/', DashboardController::class)->name('dashboard');
+        Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
 
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.index');
         Route::get('/api-tokens', ApiTokenPageController::class)->name('tokens.index');

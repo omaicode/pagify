@@ -1,15 +1,21 @@
 <script setup>
+import { computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
+
 defineProps({
     items: {
         type: Array,
         default: () => [],
     },
 });
+
+const page = usePage();
+const navigationLabel = computed(() => page.props.translations?.ui?.navigation ?? 'Navigation');
 </script>
 
 <template>
     <nav class="space-y-1">
-        <p class="mb-3 text-xs uppercase tracking-wide text-slate-500">Navigation</p>
+        <p class="mb-3 text-xs uppercase tracking-wide text-slate-500">{{ navigationLabel }}</p>
         <a
             v-for="item in items"
             :key="item.route ?? item.href"

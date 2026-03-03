@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Modules\Core\Events\EntryCreated;
 use Modules\Core\Events\EntryPublished;
+use Modules\Core\Contracts\CoreHookSubscriber;
 use Modules\Core\Models\Admin;
 use Modules\Core\Models\AuditLog;
 use Modules\Core\Models\Setting;
@@ -73,6 +74,7 @@ class CoreServiceProvider extends ServiceProvider
 		$this->registerSiteContextFromRequest();
 		$this->registerPolicies();
 		$this->registerEventHookBridges();
+		$this->registerConfiguredHookSubscribers();
 	}
 
 	private function registerSiteContextFromRequest(): void
@@ -116,5 +118,33 @@ class CoreServiceProvider extends ServiceProvider
 
 		$eventBus->bridgeEventToHook(EntryCreated::class, 'entry.created');
 		$eventBus->bridgeEventToHook(EntryPublished::class, 'entry.published');
+	}
+
+	private function registerConfiguredHookSubscribers(): void
+	{
+		$eventBus = $this->app->make(EventBus::class);
+		$subscribers = config('core.hook_subscribers', []);
+
+		if (! is_array($subscribers)) {
+			return;
+		}
+
+		foreach ($subscribers as $subscriberClass) {
+			if (! is_string($subscriberClass) || $subscriberClass === '') {
+				continue;
+			}
+
+			if (! class_exists($subscriberClass)) {
+				continue;
+			}
+
+			$subscriber = $this->app->make($subscriberClass);
+
+			if (! $subscriber instanceof CoreHookSubscriber) {
+				continue;
+			}
+
+			$eventBus->registerSubscriber($subscriber);
+		}
 	}
 }

@@ -46,6 +46,10 @@ class HandleInertiaRequests extends Middleware
             'appName' => config('app.name'),
             'locale' => app()->getLocale(),
             'supportedLocales' => config('core.locales.supported', ['en']),
+            'localeUpdateUrl' => Route::has('core.admin.locale.update') ? route('core.admin.locale.update') : null,
+            'translations' => [
+                'ui' => trans('core::ui'),
+            ],
             'menu' => $menu,
             'currentSite' => $siteContext->site()?->only(['id', 'name', 'domain', 'locale']),
             'auth' => [

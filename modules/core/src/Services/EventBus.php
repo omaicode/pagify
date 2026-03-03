@@ -3,6 +3,7 @@
 namespace Modules\Core\Services;
 
 use Illuminate\Contracts\Events\Dispatcher;
+use Modules\Core\Contracts\CoreHookSubscriber;
 
 class EventBus
 {
@@ -40,5 +41,10 @@ class EventBus
         $this->dispatcher->listen($eventClass, function (object $event) use ($hook): void {
             $this->hooks->dispatch($hook, $event);
         });
+    }
+
+    public function registerSubscriber(CoreHookSubscriber $subscriber): void
+    {
+        $subscriber->register($this);
     }
 }

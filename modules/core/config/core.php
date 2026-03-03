@@ -31,4 +31,8 @@ return [
         'default' => 'en',
         'supported' => ['en', 'vi'],
     ],
+
+    'hook_subscribers' => [
+        // Example: Modules\Blog\Hooks\BlogHookSubscriber::class,
+    ],
 ];

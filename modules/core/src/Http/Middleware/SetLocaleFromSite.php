@@ -17,10 +17,11 @@ class SetLocaleFromSite
     public function handle(Request $request, Closure $next): Response
     {
         $site = app(SiteContext::class)->site();
+        $admin = $request->user('web');
         $supportedLocales = config('core.locales.supported', ['en']);
         $defaultLocale = config('core.locales.default', 'en');
 
-        $locale = $site?->locale;
+        $locale = $admin?->locale ?? $site?->locale;
 
         if (! is_string($locale) || ! in_array($locale, $supportedLocales, true)) {
             $locale = $defaultLocale;

@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
     items: {
@@ -7,6 +8,9 @@ const props = defineProps({
         default: () => [],
     },
 });
+
+const page = usePage();
+const t = computed(() => page.props.translations?.ui ?? {});
 
 const opened = ref(false);
 const query = ref('');
@@ -48,7 +52,7 @@ onBeforeUnmount(() => {
             class="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600"
             @click="opened = !opened"
         >
-            Search (⌘K)
+            {{ t.search ?? 'Search (⌘K)' }}
         </button>
 
         <div
@@ -58,7 +62,7 @@ onBeforeUnmount(() => {
             <input
                 v-model="query"
                 type="text"
-                placeholder="Search menu..."
+                :placeholder="t.search_menu ?? 'Search menu...'"
                 class="mb-2 w-full rounded border border-slate-300 px-2 py-1 text-sm"
             >
             <div class="space-y-1">
@@ -70,7 +74,7 @@ onBeforeUnmount(() => {
                 >
                     {{ item.label }}
                 </a>
-                <p v-if="filtered.length === 0" class="px-2 py-1 text-xs text-slate-500">No results</p>
+                <p v-if="filtered.length === 0" class="px-2 py-1 text-xs text-slate-500">{{ t.no_results ?? 'No results' }}</p>
             </div>
         </div>
     </div>

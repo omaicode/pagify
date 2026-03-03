@@ -1,6 +1,6 @@
 <script setup>
-import { Link, router } from '@inertiajs/vue3';
-import { reactive } from 'vue';
+import { Link, router, usePage } from '@inertiajs/vue3';
+import { computed, reactive } from 'vue';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
 
 const props = defineProps({
@@ -37,6 +37,13 @@ const filterForm = reactive({
     sort_dir: props.filters.sort_dir ?? 'desc',
 });
 
+const page = usePage();
+const t = computed(() => page.props.translations?.ui ?? {});
+
+const label = (key, fallback) => {
+    return t.value?.[key] ?? fallback;
+};
+
 const submitFilters = () => {
     router.get('/admin/audit-logs', filterForm, {
         preserveState: true,
@@ -64,31 +71,31 @@ const resetFilters = () => {
 <template>
     <AdminLayout>
         <div class="mb-4 flex items-center justify-between">
-            <h1 class="text-xl font-semibold">Audit logs</h1>
+            <h1 class="text-xl font-semibold">{{ label('audit_logs', 'Audit logs') }}</h1>
         </div>
 
         <form class="mb-4 grid grid-cols-1 gap-2 rounded border border-slate-200 bg-white p-3 md:grid-cols-5" @submit.prevent="submitFilters">
-            <input v-model="filterForm.q" type="text" placeholder="Search" class="rounded border border-slate-300 px-2 py-1 text-sm">
+            <input v-model="filterForm.q" type="text" :placeholder="label('search', 'Search')" class="rounded border border-slate-300 px-2 py-1 text-sm">
 
             <select v-model="filterForm.action" class="rounded border border-slate-300 px-2 py-1 text-sm">
-                <option value="">All actions</option>
+                <option value="">{{ label('all_actions', 'All actions') }}</option>
                 <option v-for="action in filterOptions.actions" :key="action" :value="action">{{ action }}</option>
             </select>
 
             <select v-model="filterForm.entity_type" class="rounded border border-slate-300 px-2 py-1 text-sm">
-                <option value="">All entity types</option>
+                <option value="">{{ label('all_entity_types', 'All entity types') }}</option>
                 <option v-for="entityType in filterOptions.entity_types" :key="entityType" :value="entityType">{{ entityType }}</option>
             </select>
 
             <input v-model="filterForm.entity_id" type="text" placeholder="Entity ID" class="rounded border border-slate-300 px-2 py-1 text-sm">
 
             <select v-model="filterForm.site_id" class="rounded border border-slate-300 px-2 py-1 text-sm">
-                <option value="">All sites</option>
+                <option value="">{{ label('all_sites', 'All sites') }}</option>
                 <option v-for="site in filterOptions.sites" :key="site.id" :value="site.id">{{ site.name }}</option>
             </select>
 
             <select v-model="filterForm.admin_id" class="rounded border border-slate-300 px-2 py-1 text-sm">
-                <option value="">All admins</option>
+                <option value="">{{ label('all_admins', 'All admins') }}</option>
                 <option v-for="admin in filterOptions.admins" :key="admin.id" :value="admin.id">{{ admin.name }}</option>
             </select>
 
@@ -115,8 +122,8 @@ const resetFilters = () => {
             </select>
 
             <div class="flex gap-2 md:col-span-5">
-                <button type="submit" class="rounded bg-slate-900 px-3 py-1 text-sm text-white">Filter</button>
-                <button type="button" class="rounded border border-slate-300 px-3 py-1 text-sm text-slate-700" @click="resetFilters">Reset</button>
+                <button type="submit" class="rounded bg-slate-900 px-3 py-1 text-sm text-white">{{ label('filter', 'Filter') }}</button>
+                <button type="button" class="rounded border border-slate-300 px-3 py-1 text-sm text-slate-700" @click="resetFilters">{{ label('reset', 'Reset') }}</button>
             </div>
         </form>
 
@@ -124,12 +131,12 @@ const resetFilters = () => {
             <table class="min-w-full divide-y divide-slate-200 text-sm">
                 <thead class="bg-slate-50">
                     <tr>
-                        <th class="px-3 py-2 text-left">When</th>
-                        <th class="px-3 py-2 text-left">Action</th>
-                        <th class="px-3 py-2 text-left">Entity</th>
-                        <th class="px-3 py-2 text-left">IP</th>
+                        <th class="px-3 py-2 text-left">{{ label('when', 'When') }}</th>
+                        <th class="px-3 py-2 text-left">{{ label('action', 'Action') }}</th>
+                        <th class="px-3 py-2 text-left">{{ label('entity', 'Entity') }}</th>
+                        <th class="px-3 py-2 text-left">{{ label('ip', 'IP') }}</th>
                         <th class="px-3 py-2 text-left">Admin</th>
-                        <th class="px-3 py-2 text-left">Site</th>
+                        <th class="px-3 py-2 text-left">{{ label('site', 'Site') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
@@ -138,11 +145,11 @@ const resetFilters = () => {
                         <td class="px-3 py-2">{{ log.action }}</td>
                         <td class="px-3 py-2">{{ log.entity_type }}#{{ log.entity_id }}</td>
                         <td class="px-3 py-2">{{ log.ip_address ?? '-' }}</td>
-                        <td class="px-3 py-2">{{ log.admin?.name ?? 'System' }}</td>
-                        <td class="px-3 py-2">{{ log.site?.name ?? 'Global' }}</td>
+                        <td class="px-3 py-2">{{ log.admin?.name ?? label('system', 'System') }}</td>
+                        <td class="px-3 py-2">{{ log.site?.name ?? label('global', 'Global') }}</td>
                     </tr>
                     <tr v-if="auditLogs.data.length === 0">
-                        <td colspan="6" class="px-3 py-6 text-center text-slate-500">No audit logs found.</td>
+                        <td colspan="6" class="px-3 py-6 text-center text-slate-500">{{ label('no_audit_logs', 'No audit logs found.') }}</td>
                     </tr>
                 </tbody>
             </table>
