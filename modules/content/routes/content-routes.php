@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Content\Http\Controllers\Admin\ContentDashboardController;
+use Modules\Content\Http\Controllers\Admin\ContentEntryController;
 use Modules\Content\Http\Controllers\Admin\ContentTypeController;
 use Modules\Content\Http\Controllers\Api\ContentHealthController;
 use Modules\Core\Http\Middleware\EnsureApiErrorEnvelope;
@@ -22,6 +23,13 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
 			Route::get('/types/{contentType}/edit', [ContentTypeController::class, 'edit'])->name('types.edit');
 			Route::put('/types/{contentType}', [ContentTypeController::class, 'update'])->name('types.update');
 			Route::delete('/types/{contentType}', [ContentTypeController::class, 'destroy'])->name('types.destroy');
+
+			Route::get('/{contentTypeSlug}/entries', [ContentEntryController::class, 'index'])->name('entries.index');
+			Route::get('/{contentTypeSlug}/entries/create', [ContentEntryController::class, 'create'])->name('entries.create');
+			Route::post('/{contentTypeSlug}/entries', [ContentEntryController::class, 'store'])->name('entries.store');
+			Route::get('/{contentTypeSlug}/entries/{entryId}/edit', [ContentEntryController::class, 'edit'])->name('entries.edit');
+			Route::put('/{contentTypeSlug}/entries/{entryId}', [ContentEntryController::class, 'update'])->name('entries.update');
+			Route::delete('/{contentTypeSlug}/entries/{entryId}', [ContentEntryController::class, 'destroy'])->name('entries.destroy');
 		});
 });
 

@@ -112,6 +112,7 @@
             <button type="submit">Delete</button>
         </form>
 
+        <p><a href="{{ route('content.admin.entries.index', $contentType->slug) }}">Manage entries</a></p>
         <p><a href="{{ route('content.admin.types.index') }}">Back to list</a></p>
     </main>
 </body>

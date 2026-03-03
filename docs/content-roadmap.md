@@ -22,7 +22,7 @@ Roadmap này định nghĩa lộ trình triển khai module `content` cho Pagify
 
 - Phase C0: completed
 - Phase C1: completed
-- Phase C2: planned
+- Phase C2: completed
 - Phase C3: planned
 - Phase C4: planned
 - Phase C5: planned
@@ -66,12 +66,12 @@ Deliverables:
 
 ## Phase C2 — Content Entries engine (dynamic form from schema)
 
-- [ ] Add migration/model for `content_entries`.
-- [ ] Implement dynamic form resolver from content type schema.
-- [ ] Implement admin CRUD entries for each content type slug.
-- [ ] Validate entry payload against field schema rules.
-- [ ] Enforce multi-site isolation in all read/write entry operations.
-- [ ] Add audit logging for entry mutations.
+- [x] Add migration/model for `content_entries`.
+- [x] Implement dynamic form resolver from content type schema.
+- [x] Implement admin CRUD entries for each content type slug.
+- [x] Validate entry payload against field schema rules.
+- [x] Enforce multi-site isolation in all read/write entry operations.
+- [x] Add audit logging for entry mutations.
 
 Deliverables:
 - `modules/content/src/Models/ContentEntry.php`

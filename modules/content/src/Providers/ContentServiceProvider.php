@@ -3,8 +3,10 @@
 namespace Modules\Content\Providers;
 
 use Illuminate\Support\Facades\Gate;
+use Modules\Content\Models\ContentEntry;
 use Illuminate\Support\ServiceProvider;
 use Modules\Content\Models\ContentType;
+use Modules\Content\Policies\ContentEntryPolicy;
 use Modules\Content\Policies\ContentTypePolicy;
 
 class ContentServiceProvider extends ServiceProvider
@@ -25,5 +27,6 @@ class ContentServiceProvider extends ServiceProvider
 		], 'content-config');
 
 		Gate::policy(ContentType::class, ContentTypePolicy::class);
+		Gate::policy(ContentEntry::class, ContentEntryPolicy::class);
 	}
 }
