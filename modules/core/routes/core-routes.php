@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Core\Http\Controllers\Admin\AuditLogController;
 use Modules\Core\Http\Controllers\Admin\AuthController;
 use Modules\Core\Http\Controllers\Admin\DashboardController;
+use Modules\Core\Http\Controllers\Api\AdminTokenController;
 use Modules\Core\Http\Middleware\HandleInertiaRequests;
 use Modules\Core\Http\Middleware\ResolveSite;
 use Modules\Core\Http\Middleware\SetLocaleFromSite;
@@ -44,4 +45,13 @@ Route::prefix('api/v1')
                 'locale' => app()->getLocale(),
             ]);
         })->name('health');
+    });
+
+Route::prefix('api/v1/admin')
+    ->middleware(['web', ResolveSite::class, SetLocaleFromSite::class, 'auth:web', 'throttle:60,1'])
+    ->name('core.api.v1.admin.')
+    ->group(function (): void {
+        Route::get('/tokens', [AdminTokenController::class, 'index'])->name('tokens.index');
+        Route::post('/tokens', [AdminTokenController::class, 'store'])->name('tokens.store');
+        Route::delete('/tokens/{tokenId}', [AdminTokenController::class, 'destroy'])->name('tokens.destroy');
     });

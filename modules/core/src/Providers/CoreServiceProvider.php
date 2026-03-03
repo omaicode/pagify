@@ -5,6 +5,8 @@ namespace Modules\Core\Providers;
 use Throwable;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
+use Modules\Core\Events\EntryCreated;
+use Modules\Core\Events\EntryPublished;
 use Modules\Core\Models\AuditLog;
 use Modules\Core\Models\Setting;
 use Illuminate\Support\ServiceProvider;
@@ -13,6 +15,8 @@ use Modules\Core\Policies\AuditLogPolicy;
 use Modules\Core\Policies\SettingPolicy;
 use Modules\Core\Policies\SitePolicy;
 use Modules\Core\Services\AuditLogger;
+use Modules\Core\Services\EventBus;
+use Modules\Core\Services\HookRegistry;
 use Modules\Core\Services\ModuleRegistry;
 use Modules\Core\Services\SettingsManager;
 use Modules\Core\Support\SiteContext;
@@ -39,6 +43,18 @@ class CoreServiceProvider extends ServiceProvider
 
 		$this->app->singleton(AuditLogger::class);
 		$this->app->alias(AuditLogger::class, 'core.audit');
+
+		$this->app->singleton(HookRegistry::class);
+		$this->app->alias(HookRegistry::class, 'core.hooks');
+
+		$this->app->singleton(EventBus::class, function ($app): EventBus {
+			return new EventBus(
+				dispatcher: $app['events'],
+				hooks: $app->make(HookRegistry::class),
+			);
+		});
+
+		$this->app->alias(EventBus::class, 'core.event-bus');
 	}
 
 	public function boot(): void
@@ -54,6 +70,7 @@ class CoreServiceProvider extends ServiceProvider
 
 		$this->registerSiteContextFromRequest();
 		$this->registerPolicies();
+		$this->registerEventHookBridges();
 	}
 
 	private function registerSiteContextFromRequest(): void
@@ -88,5 +105,13 @@ class CoreServiceProvider extends ServiceProvider
 		Gate::policy(Site::class, SitePolicy::class);
 		Gate::policy(Setting::class, SettingPolicy::class);
 		Gate::policy(AuditLog::class, AuditLogPolicy::class);
+	}
+
+	private function registerEventHookBridges(): void
+	{
+		$eventBus = $this->app->make(EventBus::class);
+
+		$eventBus->bridgeEventToHook(EntryCreated::class, 'entry.created');
+		$eventBus->bridgeEventToHook(EntryPublished::class, 'entry.published');
 	}
 }
