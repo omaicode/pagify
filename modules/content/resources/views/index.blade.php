@@ -9,6 +9,7 @@
 	<main>
 		<h1>{{ $title ?? 'Content module' }}</h1>
 		<p>{{ $description ?? 'Content module is ready.' }}</p>
+		<p><a href="{{ route('content.admin.types.index') }}">Manage content types</a></p>
 	</main>
 </body>
 </html>

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Content\Http\Controllers\Admin\ContentDashboardController;
+use Modules\Content\Http\Controllers\Admin\ContentTypeController;
 use Modules\Content\Http\Controllers\Api\ContentHealthController;
 use Modules\Core\Http\Middleware\EnsureApiErrorEnvelope;
 use Modules\Core\Http\Middleware\HandleInertiaRequests;
@@ -15,6 +16,12 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
 		->middleware(['auth:web', HandleInertiaRequests::class, RecordAuditLog::class])
 		->group(function (): void {
 			Route::get('/', ContentDashboardController::class)->name('dashboard');
+			Route::get('/types', [ContentTypeController::class, 'index'])->name('types.index');
+			Route::get('/types/create', [ContentTypeController::class, 'create'])->name('types.create');
+			Route::post('/types', [ContentTypeController::class, 'store'])->name('types.store');
+			Route::get('/types/{contentType}/edit', [ContentTypeController::class, 'edit'])->name('types.edit');
+			Route::put('/types/{contentType}', [ContentTypeController::class, 'update'])->name('types.update');
+			Route::delete('/types/{contentType}', [ContentTypeController::class, 'destroy'])->name('types.destroy');
 		});
 });
 

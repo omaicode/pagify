@@ -1,6 +1,25 @@
 <?php
 
 return [
+    'field_types' => [
+        'text',
+        'richtext',
+        'number',
+        'date',
+        'boolean',
+        'select',
+        'media',
+        'relation',
+        'repeater',
+        'conditional',
+    ],
+
+    'relation_types' => [
+        'hasOne',
+        'hasMany',
+        'manyToMany',
+    ],
+
     'permissions' => [
         'content.type.viewAny',
         'content.type.create',

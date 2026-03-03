@@ -2,7 +2,10 @@
 
 namespace Modules\Content\Providers;
 
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Modules\Content\Models\ContentType;
+use Modules\Content\Policies\ContentTypePolicy;
 
 class ContentServiceProvider extends ServiceProvider
 {
@@ -20,5 +23,7 @@ class ContentServiceProvider extends ServiceProvider
 		$this->publishes([
 			__DIR__ . '/../../config/content.php' => config_path('content.php'),
 		], 'content-config');
+
+		Gate::policy(ContentType::class, ContentTypePolicy::class);
 	}
 }

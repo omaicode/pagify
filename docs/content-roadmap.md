@@ -20,8 +20,8 @@ Roadmap này định nghĩa lộ trình triển khai module `content` cho Pagify
 
 ## Progress summary
 
-- Phase C0: planned
-- Phase C1: planned
+- Phase C0: completed
+- Phase C1: completed
 - Phase C2: planned
 - Phase C3: planned
 - Phase C4: planned
@@ -49,12 +49,12 @@ Deliverables:
 
 ## Phase C1 — Content Type Modeler (DB + Admin CRUD)
 
-- [ ] Add migrations for `content_types` and `content_type_fields`.
-- [ ] Implement models (`ContentType`, `ContentField`) with site ownership scope.
-- [ ] Build admin CRUD for content types (list/create/edit/delete).
-- [ ] Support field definitions: Text, RichText, Number, Date, Boolean, Select, Media, Relation, Repeater, Conditional.
-- [ ] Validate schema payload using FormRequest + service-level schema guard.
-- [ ] Add policy checks for type management (per-content-type aware).
+- [x] Add migrations for `content_types` and `content_type_fields`.
+- [x] Implement models (`ContentType`, `ContentField`) with site ownership scope.
+- [x] Build admin CRUD for content types (list/create/edit/delete).
+- [x] Support field definitions: Text, RichText, Number, Date, Boolean, Select, Media, Relation, Repeater, Conditional.
+- [x] Validate schema payload using FormRequest + service-level schema guard.
+- [x] Add policy checks for type management (per-content-type aware).
 
 Deliverables:
 - `modules/content/src/Models/ContentType.php`
