@@ -8,11 +8,14 @@ use Illuminate\Support\Facades\Route;
 use Modules\Core\Events\EntryCreated;
 use Modules\Core\Events\EntryPublished;
 use Modules\Core\Contracts\CoreHookSubscriber;
+use Modules\Core\Console\Commands\CleanupAuditLogsCommand;
 use Modules\Core\Models\Admin;
 use Modules\Core\Models\AuditLog;
 use Modules\Core\Models\Setting;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\ServiceProvider;
 use Modules\Core\Models\Site;
+use Modules\Core\Observers\AuditableModelObserver;
 use Modules\Core\Policies\AuditLogPolicy;
 use Modules\Core\Policies\AdminPolicy;
 use Modules\Core\Policies\SettingPolicy;
@@ -85,6 +88,13 @@ class CoreServiceProvider extends ServiceProvider
 		$this->registerPolicies();
 		$this->registerEventHookBridges();
 		$this->registerConfiguredHookSubscribers();
+		$this->registerAuditObservers();
+
+		if ($this->app->runningInConsole()) {
+			$this->commands([
+				CleanupAuditLogsCommand::class,
+			]);
+		}
 	}
 
 	private function registerSiteContextFromRequest(): void
@@ -155,6 +165,29 @@ class CoreServiceProvider extends ServiceProvider
 			}
 
 			$eventBus->registerSubscriber($subscriber);
+		}
+	}
+
+	private function registerAuditObservers(): void
+	{
+		$models = config('core.audit.audited_models', []);
+
+		if (! is_array($models)) {
+			return;
+		}
+
+		$observer = $this->app->make(AuditableModelObserver::class);
+
+		foreach ($models as $modelClass) {
+			if (! is_string($modelClass) || $modelClass === '') {
+				continue;
+			}
+
+			if (! class_exists($modelClass) || ! is_subclass_of($modelClass, Model::class)) {
+				continue;
+			}
+
+			$modelClass::observe($observer);
 		}
 	}
 }

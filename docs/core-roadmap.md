@@ -68,9 +68,9 @@ This roadmap tracks delivery status for the Core module backbone and defines the
 - [x] Standardize API error envelope and codes across all core endpoints
 
 ### P3.3 Audit maturation
-- [ ] Expand audit coverage to model-level changes (create/update/delete events)
-- [ ] Add metadata redaction policy for sensitive keys
-- [ ] Add retention/cleanup strategy for audit table growth
+- [x] Expand audit coverage to model-level changes (create/update/delete events)
+- [x] Add metadata redaction policy for sensitive keys
+- [x] Add retention/cleanup strategy for audit table growth
 
 ### P3.4 Multi-site completeness
 - [ ] Add stronger site resolution strategy (domain/header fallback policy)
