@@ -73,9 +73,9 @@ This roadmap tracks delivery status for the Core module backbone and defines the
 - [x] Add retention/cleanup strategy for audit table growth
 
 ### P3.4 Multi-site completeness
-- [ ] Add stronger site resolution strategy (domain/header fallback policy)
-- [ ] Add tests for cross-site isolation and scope enforcement
-- [ ] Validate all core entities consistently apply site ownership rules
+- [x] Add stronger site resolution strategy (domain/header fallback policy)
+- [x] Add tests for cross-site isolation and scope enforcement
+- [x] Validate all core entities consistently apply site ownership rules
 
 ### P3.5 Test infrastructure improvements
 - [ ] Enable permission-denied integration tests without skips (sqlite driver or dedicated DB profile)

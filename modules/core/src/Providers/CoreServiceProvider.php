@@ -113,7 +113,10 @@ class CoreServiceProvider extends ServiceProvider
 			}
 
 			try {
-				$site = Site::query()->where('domain', $host)->first();
+				$site = Site::query()
+					->where('domain', $host)
+					->where('is_active', true)
+					->first();
 			} catch (Throwable) {
 				return;
 			}

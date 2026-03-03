@@ -23,7 +23,21 @@ trait BelongsToSite
             $siteId = app(SiteContext::class)->siteId();
 
             if ($siteId !== null) {
-                $builder->where($builder->getModel()->getTable() . '.site_id', $siteId);
+                $column = $builder->getModel()->getTable() . '.site_id';
+                $allowGlobal = property_exists($builder->getModel(), 'allowGlobalSiteRecords')
+                    && $builder->getModel()->allowGlobalSiteRecords === true;
+
+                if ($allowGlobal) {
+                    $builder->where(static function (Builder $siteBuilder) use ($column, $siteId): void {
+                        $siteBuilder
+                            ->where($column, $siteId)
+                            ->orWhereNull($column);
+                    });
+
+                    return;
+                }
+
+                $builder->where($column, $siteId);
             }
         });
     }

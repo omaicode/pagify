@@ -10,6 +10,7 @@ use Inertia\Response;
 use Modules\Core\Models\Admin;
 use Modules\Core\Models\AuditLog;
 use Modules\Core\Models\Site;
+use Modules\Core\Support\SiteContext;
 
 class AuditLogController extends Controller
 {
@@ -104,6 +105,9 @@ class AuditLogController extends Controller
                 ->values(),
             'sites' => Site::query()
                 ->select(['id', 'name'])
+                ->when(app(SiteContext::class)->siteId() !== null, static function (Builder $builder): void {
+                    $builder->where('id', app(SiteContext::class)->siteId());
+                })
                 ->orderBy('name')
                 ->get(),
             'admins' => Admin::query()

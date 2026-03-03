@@ -37,6 +37,15 @@ return [
         'supported' => ['en', 'vi'],
     ],
 
+    'sites' => [
+        'resolution' => [
+            'enable_header_fallback' => true,
+            'header_domain' => 'X-Site-Domain',
+            'header_slug' => 'X-Site-Slug',
+            'default_site_slug' => 'default',
+        ],
+    ],
+
     'hook_subscribers' => [
         // Example: Modules\Blog\Hooks\BlogHookSubscriber::class,
     ],
