@@ -1,7 +1,6 @@
 <p align="center"><a href="https://github.com/omaicode/pagify" target="_blank"><img src="https://raw.githubusercontent.com/omaicode/pagify/master/logo/pagify_logo.png" width="400" alt="Pagify Logo"></a></p>
 
 <p align="center">
-<a href="https://github.com/omaicode/pagify/actions"><img src="https://github.com/omaicode/pagify/workflows/tests/badge.svg" alt="Build Status"></a>
 <a href="https://packagist.org/packages/omaicode/pagify"><img src="https://img.shields.io/packagist/dt/omaicode/pagify" alt="Total Downloads"></a>
 <a href="https://packagist.org/packages/omaicode/pagify"><img src="https://img.shields.io/packagist/v/omaicode/pagify" alt="Latest Stable Version"></a>
 <a href="https://packagist.org/packages/omaicode/pagify"><img src="https://img.shields.io/packagist/l/omaicode/pagify" alt="License"></a>
