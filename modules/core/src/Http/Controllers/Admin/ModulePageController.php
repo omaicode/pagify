@@ -2,6 +2,7 @@
 
 namespace Modules\Core\Http\Controllers\Admin;
 
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
@@ -10,6 +11,8 @@ use Modules\Core\Models\Admin;
 
 class ModulePageController extends Controller
 {
+    use AuthorizesRequests;
+
     public function __invoke(Request $request): Response
     {
         $this->authorize('manageModules', Admin::class);
