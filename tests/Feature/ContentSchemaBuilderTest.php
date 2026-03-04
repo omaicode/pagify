@@ -4,11 +4,15 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Content\Jobs\QueueSchemaMigrationPlanJob;
 use Modules\Content\Models\ContentSchemaMigrationPlan;
 use Modules\Content\Models\ContentType;
+use Modules\Content\Services\ContentSchemaMigrationExecutor;
+use Modules\Content\Services\SchemaMigrationPlanner;
 use Modules\Core\Models\Admin;
+use RuntimeException;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
@@ -59,9 +63,9 @@ class ContentSchemaBuilderTest extends TestCase
                         'sort_order' => 0,
                         'is_required' => 1,
                         'is_localized' => 0,
-                        'config' => '{}',
-                        'validation' => '{}',
-                        'conditional' => '{}',
+                        'config' => [],
+                        'validation' => [],
+                        'conditional' => [],
                     ],
                     [
                         'key' => 'summary',
@@ -70,9 +74,9 @@ class ContentSchemaBuilderTest extends TestCase
                         'sort_order' => 1,
                         'is_required' => 0,
                         'is_localized' => 0,
-                        'config' => '{}',
-                        'validation' => '{}',
-                        'conditional' => '{}',
+                        'config' => [],
+                        'validation' => [],
+                        'conditional' => [],
                     ],
                 ],
             ]);
@@ -93,6 +97,54 @@ class ContentSchemaBuilderTest extends TestCase
 
         $this->assertCount(2, $fields);
         $this->assertSame('summary', $fields[1]['key'] ?? null);
+    }
+
+    public function test_queued_job_builds_and_executes_schema_ddl(): void
+    {
+        $contentType = ContentType::query()->create([
+            'name' => 'Article',
+            'slug' => 'article',
+            'is_active' => true,
+            'schema_json' => ['version' => 1, 'fields' => []],
+        ]);
+
+        $plan = ContentSchemaMigrationPlan::query()->create([
+            'content_type_id' => $contentType->id,
+            'status' => 'queued',
+            'schema_before_json' => [],
+            'schema_after_json' => [
+                [
+                    'key' => 'title',
+                    'label' => 'Title',
+                    'field_type' => 'text',
+                    'config' => [],
+                    'validation' => [],
+                    'conditional' => [],
+                    'sort_order' => 0,
+                    'is_required' => true,
+                    'is_localized' => false,
+                ],
+            ],
+        ]);
+
+        $job = new QueueSchemaMigrationPlanJob($plan->id);
+        $job->handle(app(SchemaMigrationPlanner::class), app(ContentSchemaMigrationExecutor::class));
+
+        $plan->refresh();
+
+        $this->assertSame('applied', $plan->status);
+        $this->assertNotNull($plan->executed_at);
+        $this->assertTrue(Schema::hasTable('content_type_data_' . $contentType->id));
+        $this->assertTrue(Schema::hasColumn('content_type_data_' . $contentType->id, 'title'));
+
+        $attemptsAfterFirstRun = (int) $plan->execution_attempts;
+
+        $job->handle(app(SchemaMigrationPlanner::class), app(ContentSchemaMigrationExecutor::class));
+
+        $plan->refresh();
+
+        $this->assertSame('applied', $plan->status);
+        $this->assertSame($attemptsAfterFirstRun, (int) $plan->execution_attempts);
     }
 
     public function test_status_page_lists_generated_plan_after_job_handle(): void
@@ -131,6 +183,55 @@ class ContentSchemaBuilderTest extends TestCase
                 ->where('plans.data.0.id', $plan->id)
                 ->where('plans.data.0.summary.additions', 1)
             );
+    }
+
+    public function test_failed_execution_marks_plan_retryable_with_error_message(): void
+    {
+        $contentType = ContentType::query()->create([
+            'name' => 'Article',
+            'slug' => 'article',
+            'is_active' => true,
+            'schema_json' => ['version' => 1, 'fields' => []],
+        ]);
+
+        $plan = ContentSchemaMigrationPlan::query()->create([
+            'content_type_id' => $contentType->id,
+            'status' => 'queued',
+            'schema_before_json' => [],
+            'schema_after_json' => [
+                [
+                    'key' => 'title',
+                    'label' => 'Title',
+                    'field_type' => 'text',
+                    'config' => [],
+                    'validation' => [],
+                    'conditional' => [],
+                    'sort_order' => 0,
+                    'is_required' => true,
+                    'is_localized' => false,
+                ],
+            ],
+        ]);
+
+        $this->mock(ContentSchemaMigrationExecutor::class, function ($mock): void {
+            $mock->shouldReceive('execute')
+                ->once()
+                ->andThrow(new RuntimeException('Forced executor failure'));
+        });
+
+        $job = new QueueSchemaMigrationPlanJob($plan->id);
+
+        try {
+            $job->handle(app(SchemaMigrationPlanner::class), app(ContentSchemaMigrationExecutor::class));
+            $this->fail('Expected executor failure was not thrown.');
+        } catch (RuntimeException $exception) {
+            $this->assertSame('Forced executor failure', $exception->getMessage());
+        }
+
+        $plan->refresh();
+
+        $this->assertSame('retryable', $plan->status);
+        $this->assertSame('Forced executor failure', $plan->error_message);
     }
 
     /**

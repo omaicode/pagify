@@ -53,8 +53,6 @@ class ContentTypeCrudTest extends TestCase
             ],
         ]);
 
-        $response->assertRedirect();
-
         $this->assertDatabaseHas('content_types', [
             'slug' => 'article',
             'name' => 'Article',
@@ -63,7 +61,12 @@ class ContentTypeCrudTest extends TestCase
         $contentType = ContentType::query()->where('slug', 'article')->first();
 
         $this->assertNotNull($contentType);
+        $response->assertRedirect('/admin/content/types/' . $contentType->id . '/builder/status');
         $this->assertCount(3, $contentType->fields);
+
+        $this->assertDatabaseHas('content_schema_migration_plans', [
+            'content_type_id' => $contentType->id,
+        ]);
     }
 
     public function test_admin_with_permission_can_update_and_delete_content_type(): void
@@ -107,11 +110,15 @@ class ContentTypeCrudTest extends TestCase
             ],
         ]);
 
-        $updateResponse->assertRedirect();
+        $updateResponse->assertRedirect('/admin/content/types/' . $contentType->id . '/builder/status');
 
         $this->assertDatabaseHas('content_types', [
             'id' => $contentType->id,
             'slug' => 'article-updated',
+        ]);
+
+        $this->assertDatabaseHas('content_schema_migration_plans', [
+            'content_type_id' => $contentType->id,
         ]);
 
         $deleteResponse = $this->actingAs($admin, 'web')->delete('/admin/content/types/' . $contentType->id);

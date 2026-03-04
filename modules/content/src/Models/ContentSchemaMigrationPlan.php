@@ -22,6 +22,10 @@ class ContentSchemaMigrationPlan extends Model
         'schema_after_json',
         'plan_json',
         'error_message',
+        'execution_hash',
+        'execution_attempts',
+        'execution_started_at',
+        'executed_at',
         'planned_at',
     ];
 
@@ -29,6 +33,9 @@ class ContentSchemaMigrationPlan extends Model
         'schema_before_json' => 'array',
         'schema_after_json' => 'array',
         'plan_json' => 'array',
+        'execution_attempts' => 'integer',
+        'execution_started_at' => 'datetime',
+        'executed_at' => 'datetime',
         'planned_at' => 'datetime',
     ];
 

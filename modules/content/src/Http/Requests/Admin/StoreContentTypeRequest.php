@@ -4,10 +4,13 @@ namespace Modules\Content\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Modules\Content\Http\Requests\Admin\Concerns\HasSchemaFieldRules;
 use Modules\Core\Support\SiteContext;
 
 class StoreContentTypeRequest extends FormRequest
 {
+    use HasSchemaFieldRules;
+
     public function authorize(): bool
     {
         return true;
@@ -19,7 +22,6 @@ class StoreContentTypeRequest extends FormRequest
     public function rules(): array
     {
         $siteId = app(SiteContext::class)->siteId();
-        $fieldTypes = config('content.field_types', []);
 
         return [
             'name' => ['required', 'string', 'max:120'],
@@ -32,16 +34,7 @@ class StoreContentTypeRequest extends FormRequest
             ],
             'description' => ['nullable', 'string', 'max:1000'],
             'is_active' => ['nullable', 'boolean'],
-            'fields' => ['required', 'array', 'min:1'],
-            'fields.*.key' => ['required', 'string', 'max:120', 'alpha_dash'],
-            'fields.*.label' => ['required', 'string', 'max:120'],
-            'fields.*.field_type' => ['required', 'string', Rule::in($fieldTypes)],
-            'fields.*.config' => ['nullable'],
-            'fields.*.validation' => ['nullable'],
-            'fields.*.conditional' => ['nullable'],
-            'fields.*.sort_order' => ['nullable', 'integer', 'min:0'],
-            'fields.*.is_required' => ['nullable', 'boolean'],
-            'fields.*.is_localized' => ['nullable', 'boolean'],
+            ...$this->schemaFieldRules(),
         ];
     }
 }

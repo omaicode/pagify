@@ -8,6 +8,7 @@ use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Content\Http\Requests\Admin\SaveSchemaBuilderRequest;
+use Modules\Content\Jobs\QueueSchemaMigrationPlanJob;
 use Modules\Content\Models\ContentSchemaMigrationPlan;
 use Modules\Content\Models\ContentType;
 use Modules\Content\Services\ContentTypeService;
@@ -94,6 +95,9 @@ class ContentTypeBuilderController extends Controller
                 'id' => $plan->id,
                 'status' => $plan->status,
                 'planned_at' => $plan->planned_at?->toDateTimeString(),
+                'execution_started_at' => $plan->execution_started_at?->toDateTimeString(),
+                'executed_at' => $plan->executed_at?->toDateTimeString(),
+                'execution_attempts' => (int) $plan->execution_attempts,
                 'summary' => [
                     'additions' => (int) ($plan->plan_json['summary']['additions'] ?? 0),
                     'removals' => (int) ($plan->plan_json['summary']['removals'] ?? 0),
@@ -104,7 +108,26 @@ class ContentTypeBuilderController extends Controller
             'routes' => [
                 'builderEdit' => route('content.admin.types.builder.edit', $contentType),
                 'typeEdit' => route('content.admin.types.edit', $contentType),
+                'retry' => route('content.admin.types.builder.retry', [
+                    'contentType' => $contentType,
+                    'plan' => '__PLAN_ID__',
+                ]),
             ],
         ]);
+    }
+
+    public function retry(ContentType $contentType, ContentSchemaMigrationPlan $plan): RedirectResponse
+    {
+        $this->authorize('update', $contentType);
+
+        if ($plan->content_type_id !== $contentType->id) {
+            abort(404);
+        }
+
+        QueueSchemaMigrationPlanJob::dispatch($plan->id)->afterCommit();
+
+        return redirect()
+            ->route('content.admin.types.builder.status', $contentType)
+            ->with('status', 'Migration plan #' . $plan->id . ' queued for retry.');
     }
 }

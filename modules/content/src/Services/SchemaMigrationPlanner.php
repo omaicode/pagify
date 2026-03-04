@@ -4,7 +4,6 @@ namespace Modules\Content\Services;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Modules\Content\Jobs\QueueSchemaMigrationPlanJob;
 use Modules\Content\Models\ContentSchemaMigrationPlan;
@@ -53,7 +52,7 @@ class SchemaMigrationPlanner
                 'schema_after_json' => $normalizedFields,
             ]);
 
-            Bus::dispatch(new QueueSchemaMigrationPlanJob($plan->id));
+            QueueSchemaMigrationPlanJob::dispatch($plan->id)->afterCommit();
 
             return $plan;
         });
@@ -62,6 +61,11 @@ class SchemaMigrationPlanner
     public function buildPlan(ContentSchemaMigrationPlan $plan): ContentSchemaMigrationPlan
     {
         try {
+            $plan->fill([
+                'status' => 'planning',
+                'error_message' => null,
+            ])->save();
+
             $before = collect((array) $plan->schema_before_json)->keyBy(static fn (array $field): string => (string) ($field['key'] ?? ''));
             $after = collect((array) $plan->schema_after_json)->keyBy(static fn (array $field): string => (string) ($field['key'] ?? ''));
 
@@ -106,12 +110,13 @@ class SchemaMigrationPlanner
                         'removals' => count($removals),
                         'updates' => count($updates),
                     ],
+                    'table_name' => 'content_type_data_' . $plan->content_type_id,
                     'operations' => [
                         'add' => $additions,
                         'remove' => $removals,
                         'update' => $updates,
                     ],
-                    'note' => 'Plan generated for review only. No database DDL was executed in web request context.',
+                    'note' => 'Plan generated and ready for queued DDL execution.',
                 ],
                 'error_message' => null,
                 'planned_at' => Carbon::now(),

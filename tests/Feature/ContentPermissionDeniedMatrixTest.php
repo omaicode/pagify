@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Modules\Content\Models\ContentEntry;
 use Modules\Content\Models\ContentEntryRevision;
+use Modules\Content\Models\ContentSchemaMigrationPlan;
 use Modules\Content\Models\ContentType;
 use Modules\Core\Models\Admin;
 use Tests\TestCase;
@@ -83,6 +84,17 @@ class ContentPermissionDeniedMatrixTest extends TestCase
             ]],
         ])->assertForbidden();
         $this->actingAs($admin, 'web')->get('/admin/content/types/' . $contentType->id . '/builder/status')->assertForbidden();
+
+        $plan = ContentSchemaMigrationPlan::query()->create([
+            'content_type_id' => $contentType->id,
+            'status' => 'retryable',
+            'schema_before_json' => [],
+            'schema_after_json' => [],
+        ]);
+
+        $this->actingAs($admin, 'web')
+            ->post('/admin/content/types/' . $contentType->id . '/builder/plans/' . $plan->id . '/retry')
+            ->assertForbidden();
 
         $this->actingAs($admin, 'web')->get('/admin/content/article/entries')->assertForbidden();
         $this->actingAs($admin, 'web')->get('/admin/content/article/entries/create')->assertForbidden();

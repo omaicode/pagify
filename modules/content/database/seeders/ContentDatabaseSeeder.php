@@ -177,5 +177,193 @@ class ContentDatabaseSeeder extends Seeder
                 ]
             );
         }
+
+        $this->seedVisualBuilderQaDemoType($site?->id, $contentType->slug);
+    }
+
+    private function seedVisualBuilderQaDemoType(?int $siteId, string $articleTypeSlug): void
+    {
+        $qaFields = [
+            [
+                'key' => 'title',
+                'label' => 'Title',
+                'field_type' => 'text',
+                'config' => [],
+                'validation' => [
+                    'rules' => ['required', 'string', 'max:180'],
+                ],
+                'conditional' => [],
+                'sort_order' => 0,
+                'is_required' => true,
+                'is_localized' => true,
+            ],
+            [
+                'key' => 'body',
+                'label' => 'Body',
+                'field_type' => 'richtext',
+                'config' => [],
+                'validation' => [],
+                'conditional' => [],
+                'sort_order' => 1,
+                'is_required' => false,
+                'is_localized' => true,
+            ],
+            [
+                'key' => 'reading_time',
+                'label' => 'Reading time (minutes)',
+                'field_type' => 'number',
+                'config' => [],
+                'validation' => [
+                    'min' => 1,
+                    'max' => 300,
+                    'step' => 1,
+                    'rules' => ['integer', 'min:1'],
+                ],
+                'conditional' => [],
+                'sort_order' => 2,
+                'is_required' => false,
+                'is_localized' => false,
+            ],
+            [
+                'key' => 'published_at',
+                'label' => 'Published at',
+                'field_type' => 'date',
+                'config' => [],
+                'validation' => [
+                    'rules' => ['nullable', 'date'],
+                ],
+                'conditional' => [],
+                'sort_order' => 3,
+                'is_required' => false,
+                'is_localized' => false,
+            ],
+            [
+                'key' => 'is_featured',
+                'label' => 'Featured',
+                'field_type' => 'boolean',
+                'config' => [],
+                'validation' => [],
+                'conditional' => [],
+                'sort_order' => 4,
+                'is_required' => false,
+                'is_localized' => false,
+            ],
+            [
+                'key' => 'category',
+                'label' => 'Category',
+                'field_type' => 'select',
+                'config' => [
+                    'options' => ['news', 'blog', 'guide', 'announcement'],
+                ],
+                'validation' => [
+                    'rules' => ['required'],
+                ],
+                'conditional' => [],
+                'sort_order' => 5,
+                'is_required' => true,
+                'is_localized' => false,
+            ],
+            [
+                'key' => 'cover_media',
+                'label' => 'Cover media',
+                'field_type' => 'media',
+                'config' => [
+                    'multiple' => false,
+                    'accept' => ['image/jpeg', 'image/png', 'image/webp'],
+                ],
+                'validation' => [],
+                'conditional' => [],
+                'sort_order' => 6,
+                'is_required' => false,
+                'is_localized' => false,
+            ],
+            [
+                'key' => 'related_article',
+                'label' => 'Related article',
+                'field_type' => 'relation',
+                'config' => [
+                    'relation_type' => 'hasOne',
+                    'target_content_type_slug' => $articleTypeSlug,
+                ],
+                'validation' => [],
+                'conditional' => [],
+                'sort_order' => 7,
+                'is_required' => false,
+                'is_localized' => false,
+            ],
+            [
+                'key' => 'faq_items',
+                'label' => 'FAQ items',
+                'field_type' => 'repeater',
+                'config' => [
+                    'min_items' => 0,
+                    'max_items' => 10,
+                    'fields' => [
+                        [
+                            'key' => 'question',
+                            'label' => 'Question',
+                            'field_type' => 'text',
+                        ],
+                        [
+                            'key' => 'answer',
+                            'label' => 'Answer',
+                            'field_type' => 'richtext',
+                        ],
+                    ],
+                ],
+                'validation' => [],
+                'conditional' => [],
+                'sort_order' => 8,
+                'is_required' => false,
+                'is_localized' => false,
+            ],
+            [
+                'key' => 'featured_badge',
+                'label' => 'Featured badge',
+                'field_type' => 'conditional',
+                'config' => [],
+                'validation' => [],
+                'conditional' => [
+                    'depends_on' => 'is_featured',
+                    'operator' => 'eq',
+                    'value' => true,
+                ],
+                'sort_order' => 9,
+                'is_required' => false,
+                'is_localized' => false,
+            ],
+        ];
+
+        $demoType = ContentType::withoutGlobalScopes()->updateOrCreate(
+            [
+                'site_id' => $siteId,
+                'slug' => 'qa-visual-builder',
+            ],
+            [
+                'name' => 'QA Visual Builder Demo',
+                'description' => 'Demo content type for QA drag-drop and no-code schema builder testing.',
+                'is_active' => true,
+                'schema_json' => [
+                    'version' => 1,
+                    'fields' => $qaFields,
+                ],
+            ]
+        );
+
+        foreach ($qaFields as $field) {
+            $demoType->fields()->updateOrCreate(
+                ['key' => $field['key']],
+                [
+                    'label' => $field['label'],
+                    'field_type' => $field['field_type'],
+                    'config_json' => $field['config'],
+                    'validation_json' => $field['validation'],
+                    'conditional_json' => $field['conditional'],
+                    'sort_order' => $field['sort_order'],
+                    'is_required' => $field['is_required'],
+                    'is_localized' => $field['is_localized'],
+                ]
+            );
+        }
     }
 }

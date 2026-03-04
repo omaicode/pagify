@@ -21,6 +21,38 @@ class ContentTypeService
     /**
      * @param array<string, mixed> $payload
      */
+    public function createMetadataOnly(array $payload): ContentType
+    {
+        return ContentType::query()->create([
+            'name' => (string) $payload['name'],
+            'slug' => (string) $payload['slug'],
+            'description' => $payload['description'] ?? null,
+            'is_active' => (bool) ($payload['is_active'] ?? true),
+            'schema_json' => [
+                'version' => 1,
+                'fields' => [],
+            ],
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    public function updateMetadataOnly(ContentType $contentType, array $payload): ContentType
+    {
+        $contentType->fill([
+            'name' => (string) $payload['name'],
+            'slug' => (string) $payload['slug'],
+            'description' => $payload['description'] ?? null,
+            'is_active' => (bool) ($payload['is_active'] ?? true),
+        ])->save();
+
+        return $contentType;
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
     public function create(array $payload): ContentType
     {
         $normalizedFields = $this->normalizeFields($payload['fields'] ?? []);
@@ -189,14 +221,6 @@ class ContentTypeService
     {
         if (is_array($value)) {
             return $value;
-        }
-
-        if (is_string($value) && trim($value) !== '') {
-            $decoded = json_decode($value, true);
-
-            if (is_array($decoded)) {
-                return $decoded;
-            }
         }
 
         return [];

@@ -57,6 +57,14 @@ From project root:
 php artisan test
 ```
 
+### Run queue worker (required for schema migration execution)
+
+From project root:
+
+```bash
+php artisan queue:work --queue=default --tries=3
+```
+
 ### Build frontend assets
 
 From project root:
@@ -95,6 +103,8 @@ composer dev
 - If admin UI is not updated, rebuild assets from active theme path.
 - If tests fail with missing Vite manifest entry, run `composer setup` with correct `ADMIN_THEME`.
 - If active theme path does not exist, app falls back to `ADMIN_THEME_FALLBACK`.
+- If content schema builder plan stays in `queued`/`planning`, ensure queue worker is running.
+- If a schema plan is `failed`/`retryable`, open builder status page and trigger `Retry`.
 - If login always shows invalid credentials, reseed core admin account:
 
 ```bash
@@ -105,6 +115,15 @@ php artisan db:seed --class="Modules\\Core\\Database\\Seeders\\CoreDatabaseSeede
 	- `CORE_ADMIN_USERNAME` (default: `admin`)
 	- `CORE_ADMIN_EMAIL` (default: `admin@localhost`)
 	- `CORE_ADMIN_PASSWORD` (default: `password`)
+- Seed content demo data for QA drag-drop builder testing:
+
+```bash
+php artisan db:seed --class="Modules\\Content\\Database\\Seeders\\ContentDatabaseSeeder"
+```
+
+- This seed creates/updates demo content types including:
+	- `article`
+	- `qa-visual-builder` (covers all field types for visual schema builder QA)
 - If config/view cache causes stale behavior, clear Laravel caches:
 
 ```bash

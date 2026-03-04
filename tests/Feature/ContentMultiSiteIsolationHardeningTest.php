@@ -115,7 +115,7 @@ class ContentMultiSiteIsolationHardeningTest extends TestCase
             'metadata_json' => [],
         ]);
 
-        ContentSchemaMigrationPlan::withoutGlobalScopes()->create([
+        $planA = ContentSchemaMigrationPlan::withoutGlobalScopes()->create([
             'site_id' => $siteA->id,
             'content_type_id' => $typeA->id,
             'requested_by_admin_id' => $admin->id,
@@ -125,7 +125,7 @@ class ContentMultiSiteIsolationHardeningTest extends TestCase
             'plan_json' => ['summary' => ['additions' => 1, 'removals' => 0, 'updates' => 0]],
         ]);
 
-        ContentSchemaMigrationPlan::withoutGlobalScopes()->create([
+        $planB = ContentSchemaMigrationPlan::withoutGlobalScopes()->create([
             'site_id' => $siteB->id,
             'content_type_id' => $typeB->id,
             'requested_by_admin_id' => $admin->id,
@@ -163,6 +163,16 @@ class ContentMultiSiteIsolationHardeningTest extends TestCase
                 ->component('Content/Types/Builder/Status')
                 ->has('plans.data', 1)
             );
+
+        $this->actingAs($admin, 'web')
+            ->withServerVariables(['HTTP_HOST' => 'a.local'])
+            ->post('/admin/content/types/' . $typeA->id . '/builder/plans/' . $planB->id . '/retry')
+            ->assertNotFound();
+
+        $this->actingAs($admin, 'web')
+            ->withServerVariables(['HTTP_HOST' => 'a.local'])
+            ->post('/admin/content/types/' . $typeA->id . '/builder/plans/' . $planA->id . '/retry')
+            ->assertRedirect('/admin/content/types/' . $typeA->id . '/builder/status');
 
         Sanctum::actingAs($admin, ['*']);
 

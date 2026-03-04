@@ -12,12 +12,16 @@ use Modules\Content\Http\Requests\Admin\StoreContentTypeRequest;
 use Modules\Content\Http\Requests\Admin\UpdateContentTypeRequest;
 use Modules\Content\Models\ContentType;
 use Modules\Content\Services\ContentTypeService;
+use Modules\Content\Services\SchemaMigrationPlanner;
 
 class ContentTypeController extends Controller
 {
     use AuthorizesRequests;
 
-    public function __construct(private readonly ContentTypeService $contentTypeService)
+    public function __construct(
+        private readonly ContentTypeService $contentTypeService,
+        private readonly SchemaMigrationPlanner $schemaMigrationPlanner,
+    )
     {
     }
 
@@ -67,11 +71,17 @@ class ContentTypeController extends Controller
     {
         $this->authorize('create', ContentType::class);
 
-        $contentType = $this->contentTypeService->create($request->validated());
+        /** @var \Modules\Core\Models\Admin|null $admin */
+        $admin = $request->user('web');
+
+        $validated = $request->validated();
+        $contentType = $this->contentTypeService->createMetadataOnly($validated);
+        $normalizedFields = $this->contentTypeService->normalizeBuilderFields((array) ($validated['fields'] ?? []));
+        $plan = $this->schemaMigrationPlanner->queue($contentType, $normalizedFields, $admin?->id);
 
         return redirect()
-            ->route('content.admin.types.edit', $contentType)
-            ->with('status', 'Content type created successfully.');
+            ->route('content.admin.types.builder.status', $contentType)
+            ->with('status', 'Content type created. Migration plan queued #' . $plan->id . '.');
     }
 
     public function edit(ContentType $contentType): Response
@@ -120,11 +130,18 @@ class ContentTypeController extends Controller
     {
         $this->authorize('update', $contentType);
 
-        $this->contentTypeService->update($contentType, $request->validated());
+        /** @var \Modules\Core\Models\Admin|null $admin */
+        $admin = $request->user('web');
+
+        $validated = $request->validated();
+
+        $this->contentTypeService->updateMetadataOnly($contentType, $validated);
+        $normalizedFields = $this->contentTypeService->normalizeBuilderFields((array) ($validated['fields'] ?? []));
+        $plan = $this->schemaMigrationPlanner->queue($contentType, $normalizedFields, $admin?->id);
 
         return redirect()
-            ->route('content.admin.types.edit', $contentType)
-            ->with('status', 'Content type updated successfully.');
+            ->route('content.admin.types.builder.status', $contentType)
+            ->with('status', 'Content type updated. Migration plan queued #' . $plan->id . '.');
     }
 
     public function destroy(ContentType $contentType): RedirectResponse

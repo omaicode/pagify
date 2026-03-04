@@ -27,6 +27,7 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
 			Route::get('/types/{contentType}/builder', [ContentTypeBuilderController::class, 'edit'])->name('types.builder.edit');
 			Route::put('/types/{contentType}/builder', [ContentTypeBuilderController::class, 'update'])->name('types.builder.update');
 			Route::get('/types/{contentType}/builder/status', [ContentTypeBuilderController::class, 'status'])->name('types.builder.status');
+			Route::post('/types/{contentType}/builder/plans/{plan}/retry', [ContentTypeBuilderController::class, 'retry'])->name('types.builder.retry');
 			Route::get('/types/{contentType}/edit', [ContentTypeController::class, 'edit'])->name('types.edit');
 			Route::put('/types/{contentType}', [ContentTypeController::class, 'update'])->name('types.update');
 			Route::delete('/types/{contentType}', [ContentTypeController::class, 'destroy'])->name('types.destroy');
