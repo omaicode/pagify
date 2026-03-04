@@ -31,6 +31,7 @@ return [
         'content.entry.update',
         'content.entry.delete',
         'content.entry.publish',
+        'content.relation.view',
         'content.entry.revision.view',
         'content.entry.revision.rollback',
         'content.api.read',

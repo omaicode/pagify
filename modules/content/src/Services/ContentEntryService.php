@@ -15,6 +15,7 @@ class ContentEntryService
     public function __construct(
         private readonly EntrySchemaResolver $schemaResolver,
         private readonly EntryRevisionService $entryRevisionService,
+        private readonly RelationResolver $relationResolver,
     ) {
     }
 
@@ -32,6 +33,8 @@ class ContentEntryService
                 'status' => (string) ($validated['status'] ?? 'draft'),
                 'data_json' => $this->normalizeData($contentType, (array) $validated['data']),
             ]);
+
+            $this->relationResolver->syncForEntry($entry, $contentType, (array) $validated['data']);
 
             $this->entryRevisionService->snapshot(
                 entry: $entry,
@@ -59,6 +62,8 @@ class ContentEntryService
                 'status' => (string) ($validated['status'] ?? $entry->status),
                 'data_json' => $this->normalizeData($contentType, (array) $validated['data']),
             ])->save();
+
+            $this->relationResolver->syncForEntry($entry, $contentType, (array) $validated['data']);
 
             $this->entryRevisionService->snapshot(
                 entry: $entry,
@@ -110,7 +115,9 @@ class ContentEntryService
         $data = (array) ($payload['data'] ?? []);
 
         foreach ($contentType->fields as $field) {
-            if ((string) $field->field_type !== 'repeater') {
+            $fieldType = (string) $field->field_type;
+
+            if ($fieldType !== 'repeater' && $fieldType !== 'relation') {
                 continue;
             }
 
@@ -120,12 +127,22 @@ class ContentEntryService
                 continue;
             }
 
-            if (is_string($data[$key])) {
+            if ($fieldType === 'repeater' && is_string($data[$key])) {
                 $decoded = json_decode($data[$key], true);
 
                 if (is_array($decoded)) {
                     $data[$key] = $decoded;
                 }
+            }
+
+            if ($fieldType === 'relation') {
+                $normalizedTargets = $this->relationResolver->normalizeRelationValue($field, $data[$key]);
+                $config = (array) ($field->config_json ?? []);
+                $relationType = isset($config['relation_type']) ? (string) $config['relation_type'] : 'hasOne';
+
+                $data[$key] = $relationType === 'hasOne'
+                    ? ($normalizedTargets[0] ?? null)
+                    : $normalizedTargets;
             }
         }
 

@@ -22,6 +22,8 @@ class EntrySchemaResolver
             $key = (string) $field->key;
             $ruleKey = 'data.' . $key;
             $fieldRules = [];
+            $fieldType = (string) $field->field_type;
+            $config = (array) ($field->config_json ?? []);
 
             if ((bool) $field->is_required) {
                 $fieldRules[] = 'required';
@@ -29,8 +31,19 @@ class EntrySchemaResolver
                 $fieldRules[] = 'nullable';
             }
 
-            foreach ($this->rulesByFieldType((string) $field->field_type, (array) ($field->config_json ?? [])) as $rule) {
-                $fieldRules[] = $rule;
+            if ($fieldType === 'relation') {
+                $relationType = (string) ($config['relation_type'] ?? 'hasOne');
+
+                if ($relationType === 'hasOne') {
+                    $fieldRules[] = 'integer';
+                } else {
+                    $fieldRules[] = 'array';
+                    $rules[$ruleKey . '.*'] = ['integer'];
+                }
+            } else {
+                foreach ($this->rulesByFieldType($fieldType, $config) as $rule) {
+                    $fieldRules[] = $rule;
+                }
             }
 
             $customRules = (array) ($field->validation_json['rules'] ?? []);

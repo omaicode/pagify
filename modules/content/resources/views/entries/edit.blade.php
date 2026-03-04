@@ -37,6 +37,20 @@
             </div>
         @endif
 
+        @if (! empty($resolvedRelations ?? []))
+            <section>
+                <h2>Resolved relations</h2>
+                <ul>
+                    @foreach ($resolvedRelations as $fieldKey => $relations)
+                        <li>
+                            <strong>{{ $fieldKey }}</strong>:
+                            {{ collect($relations)->pluck('target_slug')->filter()->join(', ') }}
+                        </li>
+                    @endforeach
+                </ul>
+            </section>
+        @endif
+
         <form method="POST" action="{{ route('content.admin.entries.update', [$contentType->slug, $entry->id]) }}">
             @csrf
             @method('PUT')

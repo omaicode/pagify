@@ -5,6 +5,7 @@ use Modules\Content\Http\Controllers\Admin\ContentDashboardController;
 use Modules\Content\Http\Controllers\Admin\ContentEntryController;
 use Modules\Content\Http\Controllers\Admin\ContentEntryRevisionController;
 use Modules\Content\Http\Controllers\Admin\ContentTypeController;
+use Modules\Content\Http\Controllers\Api\AdminRelationPickerController;
 use Modules\Content\Http\Controllers\Api\ContentHealthController;
 use Modules\Core\Http\Middleware\EnsureApiErrorEnvelope;
 use Modules\Core\Http\Middleware\HandleInertiaRequests;
@@ -51,4 +52,5 @@ Route::prefix('api/v1/admin/content')
 	->name('content.api.v1.admin.')
 	->group(function (): void {
 		Route::get('/health', [ContentHealthController::class, 'admin'])->name('health');
+		Route::get('/{contentTypeSlug}/relations/picker', AdminRelationPickerController::class)->name('relations.picker');
 	});

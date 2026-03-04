@@ -21,6 +21,17 @@
                     <strong>{{ $entry->slug }}</strong>
                     [{{ $entry->status }}]
                     - <a href="{{ route('content.admin.entries.edit', [$contentType->slug, $entry->id]) }}">Edit</a>
+
+                    @if (! empty($hydratedRelations[$entry->id] ?? []))
+                        <ul>
+                            @foreach (($hydratedRelations[$entry->id] ?? []) as $fieldKey => $relations)
+                                <li>
+                                    {{ $fieldKey }}:
+                                    {{ collect($relations)->pluck('target_slug')->filter()->join(', ') }}
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
                 </li>
             @empty
                 <li>No entries yet.</li>

@@ -25,7 +25,7 @@ Roadmap này định nghĩa lộ trình triển khai module `content` cho Pagify
 - Phase C2: completed
 - Phase C3: completed
 - Phase C4: completed
-- Phase C5: planned
+- Phase C5: completed
 - Phase C6: planned
 - Phase C7: planned
 - Phase C8: planned
@@ -116,12 +116,12 @@ Deliverables:
 
 ## Phase C5 — Relation engine
 
-- [ ] Add migration/model for `content_relations`.
-- [ ] Implement relation types: hasOne, hasMany, manyToMany between entries.
-- [ ] Build relation picker API for admin form UI.
-- [ ] Resolve relation hydration for entry detail/list payloads.
-- [ ] Enforce cross-site relation constraints.
-- [ ] Add cycle/invalid-target protection rules.
+- [x] Add migration/model for `content_relations`.
+- [x] Implement relation types: hasOne, hasMany, manyToMany between entries.
+- [x] Build relation picker API for admin form UI.
+- [x] Resolve relation hydration for entry detail/list payloads.
+- [x] Enforce cross-site relation constraints.
+- [x] Add cycle/invalid-target protection rules.
 
 Deliverables:
 - `modules/content/src/Models/ContentRelation.php`

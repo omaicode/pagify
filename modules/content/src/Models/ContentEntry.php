@@ -45,4 +45,16 @@ class ContentEntry extends Model
         return $this->hasMany(ContentEntryRevision::class, 'content_entry_id')
             ->orderByDesc('revision_no');
     }
+
+    public function outgoingRelations(): HasMany
+    {
+        return $this->hasMany(ContentRelation::class, 'source_entry_id')
+            ->orderBy('field_key')
+            ->orderBy('position');
+    }
+
+    public function incomingRelations(): HasMany
+    {
+        return $this->hasMany(ContentRelation::class, 'target_entry_id');
+    }
 }

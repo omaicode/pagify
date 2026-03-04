@@ -16,6 +16,7 @@ use Modules\Content\Models\ContentType;
 use Modules\Content\Services\ContentEntryService;
 use Modules\Content\Services\EntrySchemaResolver;
 use Modules\Content\Services\PublishingWorkflowService;
+use Modules\Content\Services\RelationResolver;
 use Modules\Core\Services\AuditLogger;
 
 class ContentEntryController extends Controller
@@ -26,6 +27,7 @@ class ContentEntryController extends Controller
         private readonly ContentEntryService $contentEntryService,
         private readonly EntrySchemaResolver $schemaResolver,
         private readonly PublishingWorkflowService $publishingWorkflowService,
+        private readonly RelationResolver $relationResolver,
         private readonly AuditLogger $auditLogger,
     ) {
     }
@@ -40,10 +42,13 @@ class ContentEntryController extends Controller
             ->latest('id')
             ->paginate(20);
 
+        $hydratedRelations = $this->relationResolver->hydrateForEntries($entries->getCollection());
+
         return view('content::entries.index', [
             'contentType' => $contentType,
             'entries' => $entries,
             'formFields' => $this->schemaResolver->formDefinition($contentType),
+            'hydratedRelations' => $hydratedRelations,
         ]);
     }
 
@@ -99,6 +104,7 @@ class ContentEntryController extends Controller
             'contentType' => $contentType,
             'entry' => $entry,
             'formFields' => $this->schemaResolver->formDefinition($contentType),
+            'resolvedRelations' => $this->relationResolver->hydrateForEntry($entry),
             'publishActionsAllowed' => [
                 'publish' => request()->user('web')?->can('publish', [ContentEntry::class, $contentType, $entry]) ?? false,
                 'unpublish' => request()->user('web')?->can('unpublish', [ContentEntry::class, $contentType, $entry]) ?? false,
