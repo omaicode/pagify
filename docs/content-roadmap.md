@@ -24,7 +24,7 @@ Roadmap này định nghĩa lộ trình triển khai module `content` cho Pagify
 - Phase C1: completed
 - Phase C2: completed
 - Phase C3: completed
-- Phase C4: planned
+- Phase C4: completed
 - Phase C5: planned
 - Phase C6: planned
 - Phase C7: planned
@@ -100,12 +100,12 @@ Deliverables:
 
 ## Phase C4 — Draft / Publish / Schedule workflow
 
-- [ ] Add entry state flow: `draft`, `published`, `scheduled`.
-- [ ] Add publish/unpublish timestamps and scheduler metadata.
-- [ ] Implement schedule publish/unpublish queue processing command/job.
-- [ ] Emit hooks/events for publish transitions.
-- [ ] Add permission gates for publish actions.
-- [ ] Add tests for immediate publish and delayed schedule processing.
+- [x] Add entry state flow: `draft`, `published`, `scheduled`.
+- [x] Add publish/unpublish timestamps and scheduler metadata.
+- [x] Implement schedule publish/unpublish queue processing command/job.
+- [x] Emit hooks/events for publish transitions.
+- [x] Add permission gates for publish actions.
+- [x] Add tests for immediate publish and delayed schedule processing.
 
 Deliverables:
 - `modules/content/src/Jobs/ProcessScheduledPublicationJob.php`

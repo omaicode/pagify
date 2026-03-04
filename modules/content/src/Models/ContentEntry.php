@@ -18,11 +18,21 @@ class ContentEntry extends Model
         'content_type_id',
         'slug',
         'status',
+        'published_at',
+        'unpublished_at',
+        'scheduled_publish_at',
+        'scheduled_unpublish_at',
         'data_json',
+        'schedule_metadata_json',
     ];
 
     protected $casts = [
         'data_json' => 'array',
+        'schedule_metadata_json' => 'array',
+        'published_at' => 'datetime',
+        'unpublished_at' => 'datetime',
+        'scheduled_publish_at' => 'datetime',
+        'scheduled_unpublish_at' => 'datetime',
     ];
 
     public function contentType(): BelongsTo

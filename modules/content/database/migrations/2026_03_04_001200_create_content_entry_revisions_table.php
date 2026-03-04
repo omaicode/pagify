@@ -19,8 +19,8 @@ return new class extends Migration
             $table->json('metadata_json')->nullable();
             $table->timestamps();
 
-            $table->unique(['content_entry_id', 'revision_no']);
-            $table->index(['content_entry_id', 'created_at']);
+            $table->unique(['content_entry_id', 'revision_no'], 'cer_entry_revision_unique');
+            $table->index(['content_entry_id', 'created_at'], 'cer_entry_created_at_idx');
         });
     }
 

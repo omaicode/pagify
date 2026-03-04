@@ -66,4 +66,23 @@ class ContentEntryPolicy
                 || $admin->can('content.entry.update')
             );
     }
+
+    public function publish(Admin $admin, ContentType $contentType, ContentEntry $entry): bool
+    {
+        return $entry->content_type_id === $contentType->id
+            && (
+                $admin->can('content.entry.publish')
+                || $admin->can('content.entry.publish.' . $contentType->slug)
+            );
+    }
+
+    public function unpublish(Admin $admin, ContentType $contentType, ContentEntry $entry): bool
+    {
+        return $this->publish($admin, $contentType, $entry);
+    }
+
+    public function schedule(Admin $admin, ContentType $contentType, ContentEntry $entry): bool
+    {
+        return $this->publish($admin, $contentType, $entry);
+    }
 }

@@ -9,6 +9,19 @@
     <main>
         <h1>Edit entry {{ $entry->slug }} for {{ $contentType->name }}</h1>
 
+        <p>
+            Current status: <strong>{{ $entry->status }}</strong>
+            @if ($entry->published_at)
+                | Published at: {{ $entry->published_at }}
+            @endif
+            @if ($entry->scheduled_publish_at)
+                | Scheduled publish: {{ $entry->scheduled_publish_at }}
+            @endif
+            @if ($entry->scheduled_unpublish_at)
+                | Scheduled unpublish: {{ $entry->scheduled_unpublish_at }}
+            @endif
+        </p>
+
         @if (session('status'))
             <p>{{ session('status') }}</p>
         @endif
@@ -68,6 +81,38 @@
 
             <button type="submit">Update</button>
         </form>
+
+        @if ($publishActionsAllowed['publish'] ?? false)
+            <form method="POST" action="{{ route('content.admin.entries.publish', [$contentType->slug, $entry->id]) }}" style="margin-top: 1rem;">
+                @csrf
+                <button type="submit">Publish now</button>
+            </form>
+        @endif
+
+        @if ($publishActionsAllowed['unpublish'] ?? false)
+            <form method="POST" action="{{ route('content.admin.entries.unpublish', [$contentType->slug, $entry->id]) }}" style="margin-top: 0.5rem;">
+                @csrf
+                <button type="submit">Move to draft now</button>
+            </form>
+        @endif
+
+        @if ($publishActionsAllowed['schedule'] ?? false)
+            <form method="POST" action="{{ route('content.admin.entries.schedule', [$contentType->slug, $entry->id]) }}" style="margin-top: 1rem;">
+                @csrf
+
+                <label>
+                    Schedule publish at
+                    <input type="datetime-local" name="scheduled_publish_at" value="{{ old('scheduled_publish_at', $entry->scheduled_publish_at?->format('Y-m-d\TH:i')) }}">
+                </label>
+
+                <label>
+                    Schedule unpublish at
+                    <input type="datetime-local" name="scheduled_unpublish_at" value="{{ old('scheduled_unpublish_at', $entry->scheduled_unpublish_at?->format('Y-m-d\TH:i')) }}">
+                </label>
+
+                <button type="submit">Save schedule</button>
+            </form>
+        @endif
 
         <form method="POST" action="{{ route('content.admin.entries.destroy', [$contentType->slug, $entry->id]) }}" style="margin-top: 1rem;">
             @csrf

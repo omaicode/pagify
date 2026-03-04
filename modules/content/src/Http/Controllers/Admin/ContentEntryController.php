@@ -2,6 +2,7 @@
 
 namespace Modules\Content\Http\Controllers\Admin;
 
+use Illuminate\Support\Carbon;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ use Modules\Content\Models\ContentEntry;
 use Modules\Content\Models\ContentType;
 use Modules\Content\Services\ContentEntryService;
 use Modules\Content\Services\EntrySchemaResolver;
+use Modules\Content\Services\PublishingWorkflowService;
 use Modules\Core\Services\AuditLogger;
 
 class ContentEntryController extends Controller
@@ -23,6 +25,7 @@ class ContentEntryController extends Controller
     public function __construct(
         private readonly ContentEntryService $contentEntryService,
         private readonly EntrySchemaResolver $schemaResolver,
+        private readonly PublishingWorkflowService $publishingWorkflowService,
         private readonly AuditLogger $auditLogger,
     ) {
     }
@@ -96,6 +99,11 @@ class ContentEntryController extends Controller
             'contentType' => $contentType,
             'entry' => $entry,
             'formFields' => $this->schemaResolver->formDefinition($contentType),
+            'publishActionsAllowed' => [
+                'publish' => request()->user('web')?->can('publish', [ContentEntry::class, $contentType, $entry]) ?? false,
+                'unpublish' => request()->user('web')?->can('unpublish', [ContentEntry::class, $contentType, $entry]) ?? false,
+                'schedule' => request()->user('web')?->can('schedule', [ContentEntry::class, $contentType, $entry]) ?? false,
+            ],
         ]);
     }
 
@@ -155,6 +163,67 @@ class ContentEntryController extends Controller
         return redirect()
             ->route('content.admin.entries.index', $contentType->slug)
             ->with('status', 'Content entry deleted successfully.');
+    }
+
+    public function publish(Request $request, string $contentTypeSlug, int $entryId): RedirectResponse
+    {
+        $contentType = $this->resolveType($contentTypeSlug);
+        $entry = $this->resolveEntry($contentType, $entryId);
+        $this->authorize('publish', [ContentEntry::class, $contentType, $entry]);
+
+        /** @var \Modules\Core\Models\Admin|null $admin */
+        $admin = $request->user('web');
+
+        $this->publishingWorkflowService->publishNow($entry, $admin?->id);
+
+        return redirect()
+            ->route('content.admin.entries.edit', [$contentType->slug, $entry->id])
+            ->with('status', 'Content entry published successfully.');
+    }
+
+    public function unpublish(Request $request, string $contentTypeSlug, int $entryId): RedirectResponse
+    {
+        $contentType = $this->resolveType($contentTypeSlug);
+        $entry = $this->resolveEntry($contentType, $entryId);
+        $this->authorize('unpublish', [ContentEntry::class, $contentType, $entry]);
+
+        /** @var \Modules\Core\Models\Admin|null $admin */
+        $admin = $request->user('web');
+
+        $this->publishingWorkflowService->unpublishNow($entry, $admin?->id);
+
+        return redirect()
+            ->route('content.admin.entries.edit', [$contentType->slug, $entry->id])
+            ->with('status', 'Content entry moved to draft successfully.');
+    }
+
+    public function schedule(Request $request, string $contentTypeSlug, int $entryId): RedirectResponse
+    {
+        $contentType = $this->resolveType($contentTypeSlug);
+        $entry = $this->resolveEntry($contentType, $entryId);
+        $this->authorize('schedule', [ContentEntry::class, $contentType, $entry]);
+
+        $validated = $request->validate([
+            'scheduled_publish_at' => ['nullable', 'date', 'required_without:scheduled_unpublish_at'],
+            'scheduled_unpublish_at' => ['nullable', 'date', 'after:scheduled_publish_at', 'required_without:scheduled_publish_at'],
+        ]);
+
+        /** @var \Modules\Core\Models\Admin|null $admin */
+        $admin = $request->user('web');
+
+        $publishAt = isset($validated['scheduled_publish_at']) && $validated['scheduled_publish_at'] !== null
+            ? Carbon::parse((string) $validated['scheduled_publish_at'])
+            : null;
+
+        $unpublishAt = isset($validated['scheduled_unpublish_at']) && $validated['scheduled_unpublish_at'] !== null
+            ? Carbon::parse((string) $validated['scheduled_unpublish_at'])
+            : null;
+
+        $this->publishingWorkflowService->schedule($entry, $publishAt, $unpublishAt, $admin?->id);
+
+        return redirect()
+            ->route('content.admin.entries.edit', [$contentType->slug, $entry->id])
+            ->with('status', 'Content schedule updated successfully.');
     }
 
     private function resolveType(string $contentTypeSlug): ContentType

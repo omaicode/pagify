@@ -20,6 +20,8 @@ class UpdateContentEntryRequest extends FormRequest
             'slug' => ['required', 'string', 'max:160', 'alpha_dash'],
             'status' => ['nullable', 'string'],
             'data' => ['required', 'array'],
+            'scheduled_publish_at' => ['nullable', 'date'],
+            'scheduled_unpublish_at' => ['nullable', 'date', 'after:scheduled_publish_at'],
         ];
     }
 }

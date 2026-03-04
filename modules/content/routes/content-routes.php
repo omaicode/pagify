@@ -30,6 +30,9 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
 			Route::post('/{contentTypeSlug}/entries', [ContentEntryController::class, 'store'])->name('entries.store');
 			Route::get('/{contentTypeSlug}/entries/{entryId}/edit', [ContentEntryController::class, 'edit'])->name('entries.edit');
 			Route::put('/{contentTypeSlug}/entries/{entryId}', [ContentEntryController::class, 'update'])->name('entries.update');
+			Route::post('/{contentTypeSlug}/entries/{entryId}/publish', [ContentEntryController::class, 'publish'])->name('entries.publish');
+			Route::post('/{contentTypeSlug}/entries/{entryId}/unpublish', [ContentEntryController::class, 'unpublish'])->name('entries.unpublish');
+			Route::post('/{contentTypeSlug}/entries/{entryId}/schedule', [ContentEntryController::class, 'schedule'])->name('entries.schedule');
 			Route::delete('/{contentTypeSlug}/entries/{entryId}', [ContentEntryController::class, 'destroy'])->name('entries.destroy');
 			Route::get('/{contentTypeSlug}/entries/{entryId}/revisions', [ContentEntryRevisionController::class, 'index'])->name('entries.revisions.index');
 			Route::post('/{contentTypeSlug}/entries/{entryId}/revisions/{revisionId}/rollback', [ContentEntryRevisionController::class, 'rollback'])->name('entries.revisions.rollback');

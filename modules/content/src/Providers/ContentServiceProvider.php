@@ -3,8 +3,9 @@
 namespace Modules\Content\Providers;
 
 use Illuminate\Support\Facades\Gate;
-use Modules\Content\Models\ContentEntry;
 use Illuminate\Support\ServiceProvider;
+use Modules\Content\Console\Commands\ProcessScheduledContentCommand;
+use Modules\Content\Models\ContentEntry;
 use Modules\Content\Models\ContentType;
 use Modules\Content\Policies\ContentEntryPolicy;
 use Modules\Content\Policies\ContentTypePolicy;
@@ -28,5 +29,11 @@ class ContentServiceProvider extends ServiceProvider
 
 		Gate::policy(ContentType::class, ContentTypePolicy::class);
 		Gate::policy(ContentEntry::class, ContentEntryPolicy::class);
+
+		if ($this->app->runningInConsole()) {
+			$this->commands([
+				ProcessScheduledContentCommand::class,
+			]);
+		}
 	}
 }
