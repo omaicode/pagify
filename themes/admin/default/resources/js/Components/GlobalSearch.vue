@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -14,6 +14,8 @@ const t = computed(() => page.props.translations?.ui ?? {});
 
 const opened = ref(false);
 const query = ref('');
+const triggerRef = ref(null);
+const panelStyle = ref({});
 
 const filtered = computed(() => {
     if (query.value.trim() === '') {
@@ -36,28 +38,68 @@ const onKeydown = (event) => {
     }
 };
 
+const updatePanelPosition = () => {
+    const trigger = triggerRef.value;
+
+    if (!trigger) {
+        return;
+    }
+
+    const rect = trigger.getBoundingClientRect();
+    const panelWidth = Math.min(320, window.innerWidth - 16);
+    const desiredLeft = rect.right - panelWidth;
+    const left = Math.max(8, Math.min(desiredLeft, window.innerWidth - panelWidth - 8));
+
+    panelStyle.value = {
+        left: `${left}px`,
+        top: `${rect.bottom + 8}px`,
+        width: `${panelWidth}px`,
+    };
+};
+
+const toggleOpened = async () => {
+    opened.value = !opened.value;
+
+    if (opened.value) {
+        await nextTick();
+        updatePanelPosition();
+    }
+};
+
 onMounted(() => {
     window.addEventListener('keydown', onKeydown);
+    window.addEventListener('resize', updatePanelPosition);
+    window.addEventListener('scroll', updatePanelPosition, true);
 });
 
 onBeforeUnmount(() => {
     window.removeEventListener('keydown', onKeydown);
+    window.removeEventListener('resize', updatePanelPosition);
+    window.removeEventListener('scroll', updatePanelPosition, true);
 });
 </script>
 
 <template>
     <div class="relative">
         <button
+            ref="triggerRef"
             type="button"
-            class="rounded-full border border-[#7c3aed] bg-[#f3f0ff] px-3 py-1.5 text-xs font-medium text-[#4b3fd8]"
-            @click="opened = !opened"
+            class="rounded-full border border-[#d8cffc] bg-white px-2.5 py-1.5 text-xs font-medium flex items-center gap-1 text-gray-700 hover:bg-[#f3f0ff] cursor-pointer"
+            @click="toggleOpened"
         >
-            {{ t.search ?? 'Search (⌘K)' }}
+            <svg viewBox="0 0 24 24" class="h-4 w-4 inline-block" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="7" />
+                <path d="M20 20L16.65 16.65" />
+            </svg>
+            <span class="inline-block">
+                (⌘K)
+            </span>
         </button>
 
         <div
             v-if="opened"
-            class="absolute right-0 z-50 mt-2 w-80 rounded-xl border border-[#e5deff] bg-white p-3 shadow-lg"
+            class="fixed z-[70] rounded-xl border border-[#e5deff] bg-white p-3 shadow-lg"
+            :style="panelStyle"
             style="border-left: 3px solid #a020f0"
         >
             <input

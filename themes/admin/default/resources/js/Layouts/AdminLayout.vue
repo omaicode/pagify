@@ -1,8 +1,10 @@
 <script setup>
 import { computed } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import GlobalSearch from '../Components/GlobalSearch.vue';
+import LocaleDropdown from '../Components/LocaleDropdown.vue';
+import AvatarMenu from '../Components/AvatarMenu.vue';
 import logo from '@img/pagify_icon.png';
 
 const page = usePage();
@@ -18,7 +20,7 @@ const currentUrl = computed(() => page.url ?? '/');
 
 const activeHref = computed(() => currentUrl.value.split('?')[0]);
 
-const navItems = computed(() => (Array.isArray(menu.value) ? menu.value : []).slice(0, 6));
+const navItems = computed(() => (Array.isArray(menu.value) ? menu.value : []));
 
 const adminInitials = computed(() => {
     const name = `${admin.value?.name ?? ''}`.trim();
@@ -34,9 +36,11 @@ const adminInitials = computed(() => {
         .toUpperCase();
 });
 
-const updateLocale = async (event) => {
-    const nextLocale = event.target.value;
+const logout = () => {
+    router.post('/admin/logout');
+};
 
+const switchLocale = async (nextLocale) => {
     if (!localeUpdateUrl.value || !nextLocale) {
         return;
     }
@@ -63,28 +67,33 @@ const updateLocale = async (event) => {
                     </div>
                 </div>
 
-                <nav class="col-span-12 flex items-center justify-center gap-2 md:col-span-6">
-                    <a
-                        v-for="item in navItems"
-                        :key="item.route ?? item.href"
-                        :href="item.href"
-                        :class="item.href === activeHref ? 'pf-nav-pill-active' : 'pf-nav-pill hover:bg-[#f3f0ff]'"
-                    >
-                        {{ item.label }}
-                    </a>
-                </nav>
+                <div class="col-span-12 md:col-span-6">
+                    <nav class="flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-1">
+                        <a
+                            v-for="item in navItems"
+                            :key="item.route ?? item.href"
+                            :href="item.href"
+                            :class="item.href === activeHref ? 'pf-nav-pill-active' : 'pf-nav-pill hover:bg-[#f3f0ff]'"
+                            class="shrink-0"
+                        >
+                            {{ item.label }}
+                        </a>
+                    </nav>
+                </div>
 
                 <div class="col-span-12 flex items-center justify-end gap-2 md:col-span-3">
                     <GlobalSearch :items="menu" />
-                    <label class="text-xs text-[#6b7280]">
-                        {{ translation.change_locale ?? 'Change locale' }}
-                        <select :value="locale" class="ml-1 rounded-md border border-[#d8cffc] bg-white px-1.5 py-1 text-xs" @change="updateLocale">
-                            <option v-for="item in supportedLocales" :key="item" :value="item">{{ item }}</option>
-                        </select>
-                    </label>
-                    <div class="flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold text-white" style="background-image: var(--pagify-gradient)">
-                        {{ adminInitials }}
-                    </div>
+
+                    <LocaleDropdown
+                        :locale="locale"
+                        :supported-locales="supportedLocales"
+                        @select="switchLocale"
+                    />
+
+                    <AvatarMenu
+                        :initials="adminInitials"
+                        @logout="logout"
+                    />
                 </div>
             </div>
         </header>
