@@ -49,7 +49,7 @@ onBeforeUnmount(() => {
     <div class="relative">
         <button
             type="button"
-            class="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600"
+            class="rounded-full border border-[#7c3aed] bg-[#f3f0ff] px-3 py-1.5 text-xs font-medium text-[#4b3fd8]"
             @click="opened = !opened"
         >
             {{ t.search ?? 'Search (⌘K)' }}
@@ -57,24 +57,25 @@ onBeforeUnmount(() => {
 
         <div
             v-if="opened"
-            class="absolute right-0 z-50 mt-2 w-72 rounded border border-slate-200 bg-white p-2 shadow"
+            class="absolute right-0 z-50 mt-2 w-80 rounded-xl border border-[#e5deff] bg-white p-3 shadow-lg"
+            style="border-left: 3px solid #a020f0"
         >
             <input
                 v-model="query"
                 type="text"
                 :placeholder="t.search_menu ?? 'Search menu...'"
-                class="mb-2 w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                class="pf-input mb-2"
             >
             <div class="space-y-1">
                 <a
                     v-for="item in filtered"
                     :key="item.route ?? item.href"
                     :href="item.href"
-                    class="block rounded px-2 py-1 text-sm text-slate-700 hover:bg-slate-100"
+                    class="block rounded-lg px-2 py-1.5 text-sm text-[#1e1b4b] hover:bg-[#f3f0ff]"
                 >
                     {{ item.label }}
                 </a>
-                <p v-if="filtered.length === 0" class="px-2 py-1 text-xs text-slate-500">{{ t.no_results ?? 'No results' }}</p>
+                <p v-if="filtered.length === 0" class="px-2 py-1 text-xs text-[#6b7280]">{{ t.no_results ?? 'No results' }}</p>
             </div>
         </div>
     </div>

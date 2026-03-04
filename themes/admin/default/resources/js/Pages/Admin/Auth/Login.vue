@@ -17,10 +17,15 @@ const errors = computed(() => page.props.errors ?? {});
 <template>
     <Head title="Admin Login" />
 
-    <main class="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10">
-        <section class="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h1 class="mb-1 text-2xl font-semibold text-slate-900">{{ t.admin ?? 'Admin' }} Login</h1>
-            <p class="mb-6 text-sm text-slate-600">Sign in to continue.</p>
+    <main class="pf-page flex min-h-screen items-center justify-center px-4 py-10">
+        <section class="w-full max-w-md rounded-2xl border border-[#e5deff] bg-white p-6 shadow-lg">
+            <div class="mb-5 flex items-center gap-3">
+                <div class="h-10 w-10 rounded-xl" style="background-image: var(--pagify-gradient)" />
+                <div>
+                    <h1 class="text-2xl font-semibold text-[#1e1b4b]">{{ t.admin ?? 'Admin' }} Login</h1>
+                    <p class="text-sm text-[#6b7280]">Sign in to continue.</p>
+                </div>
+            </div>
 
             <div v-if="errors.username" class="mb-4 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
                 {{ errors.username }}
@@ -35,7 +40,7 @@ const errors = computed(() => page.props.errors ?? {});
                         id="username"
                         name="username"
                         type="text"
-                        class="w-full rounded border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500"
+                        class="pf-input"
                         required
                         autofocus
                     >
@@ -47,7 +52,7 @@ const errors = computed(() => page.props.errors ?? {});
                         id="password"
                         name="password"
                         type="password"
-                        class="w-full rounded border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500"
+                        class="pf-input"
                         required
                     >
                 </div>
@@ -59,7 +64,7 @@ const errors = computed(() => page.props.errors ?? {});
 
                 <button
                     type="submit"
-                    class="w-full rounded bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+                    class="pf-btn-primary w-full !rounded-lg py-2.5"
                 >
                     Sign in
                 </button>

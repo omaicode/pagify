@@ -25,30 +25,30 @@ defineProps({
     <AdminLayout>
         <div class="space-y-4">
             <div>
-                <h1 class="text-xl font-semibold text-slate-900">{{ title }}</h1>
-                <p class="text-sm text-slate-600">{{ description }}</p>
+                <h1 class="pf-section-title">{{ title }}</h1>
+                <p class="pf-section-subtitle">{{ description }}</p>
             </div>
 
             <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-                <article class="rounded border border-slate-200 bg-white p-4">
-                    <p class="text-xs uppercase tracking-wide text-slate-500">Content types</p>
-                    <p class="text-2xl font-semibold text-slate-900">{{ stats.types }}</p>
+                <article class="pf-card-highlight">
+                    <p class="text-xs uppercase tracking-wide text-white/80">Content types</p>
+                    <p class="text-2xl font-semibold text-white">{{ stats.types }}</p>
                 </article>
-                <article class="rounded border border-slate-200 bg-white p-4">
-                    <p class="text-xs uppercase tracking-wide text-slate-500">Entries</p>
-                    <p class="text-2xl font-semibold text-slate-900">{{ stats.entries }}</p>
+                <article class="pf-card">
+                    <p class="text-xs uppercase tracking-wide text-[#6b7280]">Entries</p>
+                    <p class="text-2xl font-semibold text-[#1e1b4b]">{{ stats.entries }}</p>
                 </article>
-                <article class="rounded border border-slate-200 bg-white p-4">
-                    <p class="text-xs uppercase tracking-wide text-slate-500">Published entries</p>
-                    <p class="text-2xl font-semibold text-slate-900">{{ stats.publishedEntries }}</p>
+                <article class="pf-card">
+                    <p class="text-xs uppercase tracking-wide text-[#6b7280]">Published entries</p>
+                    <p class="text-2xl font-semibold text-[#1e1b4b]">{{ stats.publishedEntries }}</p>
                 </article>
             </div>
 
             <div class="flex flex-wrap gap-2">
-                <a :href="routes.typesIndex" class="rounded border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100">
+                <a :href="routes.typesIndex" class="pf-btn-primary">
                     Manage content types
                 </a>
-                <a :href="routes.apiEntries" class="rounded border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100">
+                <a :href="routes.apiEntries" class="pf-btn-outline">
                     API preview (article)
                 </a>
             </div>

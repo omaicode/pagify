@@ -17,10 +17,10 @@ const retryPlan = (planId) => {
 <template>
     <AdminLayout>
         <div class="space-y-4">
-            <h1 class="text-xl font-semibold text-slate-900">Schema migration plans for {{ contentType.name }}</h1>
+            <h1 class="pf-section-title">Schema migration plans for {{ contentType.name }}</h1>
 
             <ul class="space-y-2">
-                <li v-for="plan in plans.data" :key="plan.id" class="rounded border border-slate-200 bg-white p-3 text-sm text-slate-700">
+                <li v-for="plan in plans.data" :key="plan.id" class="pf-card text-sm text-[#1e1b4b]">
                     <strong>#{{ plan.id }}</strong> [{{ plan.status }}]
                     <span v-if="plan.planned_at"> planned at {{ plan.planned_at }}</span>
                     <span v-if="plan.execution_started_at"> · started {{ plan.execution_started_at }}</span>
@@ -33,18 +33,18 @@ const retryPlan = (planId) => {
                     <button
                         v-if="['failed', 'retryable'].includes(plan.status)"
                         type="button"
-                        class="mt-2 rounded border border-slate-300 px-2 py-1 text-xs text-slate-700"
+                        class="pf-btn-outline mt-2 !px-2 !py-1 !text-xs"
                         @click="retryPlan(plan.id)"
                     >
                         Retry
                     </button>
                 </li>
-                <li v-if="(plans.data ?? []).length === 0" class="rounded border border-slate-200 bg-white p-3 text-sm text-slate-500">No migration plans yet.</li>
+                <li v-if="(plans.data ?? []).length === 0" class="pf-card text-sm text-[#6b7280]">No migration plans yet.</li>
             </ul>
 
             <div class="flex flex-wrap gap-2">
-                <a :href="routes.builderEdit" class="rounded border border-slate-300 px-3 py-2 text-sm text-slate-700">Back to builder</a>
-                <a :href="routes.typeEdit" class="rounded border border-slate-300 px-3 py-2 text-sm text-slate-700">Back to content type edit</a>
+                <a :href="routes.builderEdit" class="pf-btn-outline">Back to builder</a>
+                <a :href="routes.typeEdit" class="pf-btn-outline">Back to content type edit</a>
             </div>
         </div>
     </AdminLayout>

@@ -2,8 +2,8 @@
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
-import Sidebar from '../Components/Sidebar.vue';
 import GlobalSearch from '../Components/GlobalSearch.vue';
+import logo from '@img/pagify_icon.png';
 
 const page = usePage();
 
@@ -14,6 +14,25 @@ const admin = computed(() => page.props.auth?.admin ?? null);
 const supportedLocales = computed(() => page.props.supportedLocales ?? ['en']);
 const localeUpdateUrl = computed(() => page.props.localeUpdateUrl ?? null);
 const translation = computed(() => page.props.translations?.ui ?? {});
+const currentUrl = computed(() => page.url ?? '/');
+
+const activeHref = computed(() => currentUrl.value.split('?')[0]);
+
+const navItems = computed(() => (Array.isArray(menu.value) ? menu.value : []).slice(0, 6));
+
+const adminInitials = computed(() => {
+    const name = `${admin.value?.name ?? ''}`.trim();
+    if (!name) {
+        return 'A';
+    }
+
+    return name
+        .split(' ')
+        .map((part) => part[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase();
+});
 
 const updateLocale = async (event) => {
     const nextLocale = event.target.value;
@@ -31,29 +50,47 @@ const updateLocale = async (event) => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-slate-50 text-slate-900">
-        <header class="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
-            <div>
-                <p class="text-xs uppercase tracking-wide text-slate-500">{{ translation.admin ?? 'Admin' }}</p>
-                <p class="text-sm font-semibold">{{ currentSite?.name ?? (translation.no_site ?? 'No site selected') }}</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <label class="text-xs text-slate-600">
-                    {{ translation.change_locale ?? 'Change locale' }}
-                    <select :value="locale" class="ml-1 rounded border border-slate-300 px-1 py-0.5 text-xs" @change="updateLocale">
-                        <option v-for="item in supportedLocales" :key="item" :value="item">{{ item }}</option>
-                    </select>
-                </label>
-                <span class="text-sm font-medium">{{ admin?.name ?? (translation.guest ?? 'Guest') }}</span>
-                <GlobalSearch :items="menu" />
+    <div class="pf-page">
+        <header class="sticky top-0 z-40 border-b border-[#e5deff] bg-white/95 px-5 py-3 backdrop-blur">
+            <div class="mx-auto grid max-w-[1400px] grid-cols-12 items-center gap-3">
+                <div class="col-span-12 flex items-center gap-2 md:col-span-3">
+                    <div class="h-9 w-9">
+                        <img :src="logo" alt="Pagify logo" class="h-full w-full object-cover">
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-[#1e1b4b]">Pagify Admin</p>
+                        <p class="text-xs text-[#6b7280]">{{ currentSite?.name ?? (translation.no_site ?? 'No site selected') }}</p>
+                    </div>
+                </div>
+
+                <nav class="col-span-12 flex items-center justify-center gap-2 md:col-span-6">
+                    <a
+                        v-for="item in navItems"
+                        :key="item.route ?? item.href"
+                        :href="item.href"
+                        :class="item.href === activeHref ? 'pf-nav-pill-active' : 'pf-nav-pill hover:bg-[#f3f0ff]'"
+                    >
+                        {{ item.label }}
+                    </a>
+                </nav>
+
+                <div class="col-span-12 flex items-center justify-end gap-2 md:col-span-3">
+                    <GlobalSearch :items="menu" />
+                    <label class="text-xs text-[#6b7280]">
+                        {{ translation.change_locale ?? 'Change locale' }}
+                        <select :value="locale" class="ml-1 rounded-md border border-[#d8cffc] bg-white px-1.5 py-1 text-xs" @change="updateLocale">
+                            <option v-for="item in supportedLocales" :key="item" :value="item">{{ item }}</option>
+                        </select>
+                    </label>
+                    <div class="flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold text-white" style="background-image: var(--pagify-gradient)">
+                        {{ adminInitials }}
+                    </div>
+                </div>
             </div>
         </header>
 
-        <div class="grid min-h-[calc(100vh-57px)] grid-cols-12">
-            <aside class="col-span-12 border-r border-slate-200 bg-white p-4 md:col-span-3 lg:col-span-2">
-                <Sidebar :items="menu" />
-            </aside>
-            <main class="col-span-12 p-4 md:col-span-9 lg:col-span-10">
+        <div class="mx-auto max-w-[1400px] p-5">
+            <main>
                 <slot />
             </main>
         </div>

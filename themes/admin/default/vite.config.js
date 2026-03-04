@@ -21,6 +21,7 @@ export default defineConfig({
             vue: fileURLToPath(new URL('./node_modules/vue/dist/vue.esm-bundler.js', import.meta.url)),
             '@inertiajs/vue3': fileURLToPath(new URL('./node_modules/@inertiajs/vue3/dist/index.js', import.meta.url)),
             '@admin-theme': fileURLToPath(new URL('./resources/js', import.meta.url)),
+            '@img': fileURLToPath(new URL('./resources/images', import.meta.url)),
         },
     },
     server: {
