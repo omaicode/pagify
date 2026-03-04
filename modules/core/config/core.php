@@ -1,25 +1,6 @@
 <?php
 
 return [
-    'modules' => [
-        'core' => [
-            'enabled' => true,
-            'name' => 'Core',
-            'slug' => 'core',
-            'config_key' => 'core',
-            'description' => 'System backbone module',
-            'ui_contract_path' => __DIR__ . '/../ui-contract.json',
-        ],
-        'content' => [
-            'enabled' => true,
-            'name' => 'Content',
-            'slug' => 'content',
-            'config_key' => 'content',
-            'description' => 'Content modeling and entry management module',
-            'ui_contract_path' => __DIR__ . '/../../content/ui-contract.json',
-        ],
-    ],
-
     'admin_ui' => [
         'themes_base_path' => env('ADMIN_THEMES_BASE_PATH', 'themes/admin'),
         'theme' => env('ADMIN_THEME', 'default'),

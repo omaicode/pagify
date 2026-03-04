@@ -27,7 +27,6 @@ use Modules\Core\Services\ModuleRegistry;
 use Modules\Core\Services\ModuleStateService;
 use Modules\Core\Services\SettingsManager;
 use Modules\Core\Support\SiteContext;
-use JsonException;
 
 class CoreServiceProvider extends ServiceProvider
 {
@@ -35,13 +34,12 @@ class CoreServiceProvider extends ServiceProvider
 	{
 		$this->mergeConfigFrom(__DIR__ . '/../../config/core.php', 'core');
 		$this->mergeConfigFrom(__DIR__ . '/../../config/menu.php', 'core.menu');
-
-		$this->mergeModuleUiContractsIntoConfig();
+		$this->mergeConfigFrom(__DIR__ . '/../../config/module.php', 'core.module');
 
 		$this->app->singleton(SiteContext::class);
 
 		$this->app->singleton(ModuleRegistry::class, function (): ModuleRegistry {
-			$modules = config('core.modules', []);
+			$modules = $this->resolveRegisteredModules();
 
 			return new ModuleRegistry(
 				$modules,
@@ -80,60 +78,56 @@ class CoreServiceProvider extends ServiceProvider
 		$this->app->alias(EventBus::class, 'core.event-bus');
 	}
 
-	private function mergeModuleUiContractsIntoConfig(): void
+	/**
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function resolveRegisteredModules(): array
 	{
-		$modules = config('core.modules', []);
-
-		if (! is_array($modules) || $modules === []) {
-			return;
-		}
-
 		$resolvedModules = [];
 
-		foreach ($modules as $moduleKey => $moduleConfig) {
-			if (! is_array($moduleConfig)) {
+		foreach ($this->discoverModuleSlugs() as $moduleSlug) {
+			$moduleConfig = config(sprintf('%s.module', $moduleSlug), []);
+
+			if (! is_array($moduleConfig) || $moduleConfig === []) {
 				continue;
 			}
 
-			$contractPath = $moduleConfig['ui_contract_path'] ?? null;
+			$resolvedSlug = (string) ($moduleConfig['slug'] ?? $moduleSlug);
 
-			if (! is_string($contractPath) || $contractPath === '' || ! is_file($contractPath)) {
-				$resolvedModules[$moduleKey] = $moduleConfig;
+			if ($resolvedSlug === '') {
 				continue;
 			}
 
-			$payload = file_get_contents($contractPath);
-
-			if (! is_string($payload) || trim($payload) === '') {
-				$resolvedModules[$moduleKey] = $moduleConfig;
-				continue;
-			}
-
-			try {
-				/** @var array<string, mixed> $decoded */
-				$decoded = json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
-			} catch (JsonException) {
-				$resolvedModules[$moduleKey] = $moduleConfig;
-				continue;
-			}
-
-			$contractPages = $decoded['pages'] ?? [];
-			$contractActions = $decoded['actions'] ?? [];
-			$contractWidgets = $decoded['widgets'] ?? [];
-
-			$resolvedModules[$moduleKey] = [
+			$resolvedModules[$resolvedSlug] = [
 				...$moduleConfig,
-				'pages' => is_array($contractPages) ? $contractPages : [],
-				'actions' => is_array($contractActions) ? $contractActions : [],
-				'widgets' => is_array($contractWidgets) ? $contractWidgets : [],
-				'ui_contract' => [
-					'path' => $contractPath,
-					'loaded' => true,
-				],
+				'slug' => $resolvedSlug,
 			];
 		}
 
-		config(['core.modules' => $resolvedModules]);
+		return $resolvedModules;
+	}
+
+	/**
+	 * @return array<int, string>
+	 */
+	private function discoverModuleSlugs(): array
+	{
+		$moduleConfigFiles = glob(base_path('modules/*/config/module.php'));
+
+		if (! is_array($moduleConfigFiles) || $moduleConfigFiles === []) {
+			return [];
+		}
+
+		$slugs = array_values(array_unique(array_filter(array_map(
+			static function (string $path): string {
+				return basename(dirname(dirname($path)));
+			},
+			$moduleConfigFiles,
+		), static fn (string $slug): bool => $slug !== '')));
+
+		sort($slugs);
+
+		return $slugs;
 	}
 
 	/**
@@ -174,6 +168,7 @@ class CoreServiceProvider extends ServiceProvider
 
 		$this->publishes([
 			__DIR__ . '/../../config/core.php' => config_path('core.php'),
+			__DIR__ . '/../../config/module.php' => config_path('core-module.php'),
 			__DIR__ . '/../../config/menu.php' => config_path('core-menu.php'),
 		], 'core-config');
 

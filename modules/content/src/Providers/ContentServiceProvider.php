@@ -15,6 +15,7 @@ class ContentServiceProvider extends ServiceProvider
 	public function register(): void
 	{
 		$this->mergeConfigFrom(__DIR__ . '/../../config/content.php', 'content');
+		$this->mergeConfigFrom(__DIR__ . '/../../config/module.php', 'content.module');
 		$this->mergeConfigFrom(__DIR__ . '/../../config/menu.php', 'content.menu');
 	}
 
@@ -27,6 +28,7 @@ class ContentServiceProvider extends ServiceProvider
 
 		$this->publishes([
 			__DIR__ . '/../../config/content.php' => config_path('content.php'),
+			__DIR__ . '/../../config/module.php' => config_path('content-module.php'),
 			__DIR__ . '/../../config/menu.php' => config_path('content-menu.php'),
 		], 'content-config');
 
