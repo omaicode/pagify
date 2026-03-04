@@ -3000,7 +3000,10 @@
             "dist": {
                 "type": "path",
                 "url": "modules/content",
-                "reference": "66b5bdf0784028f476939623c681c80204999757"
+                "reference": "a58d963a186779c5cc2a264f56dc791ebad141cc"
+            },
+            "require": {
+                "modules/core": "*"
             },
             "type": "library",
             "extra": {
