@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import GlobalSearch from '../Components/GlobalSearch.vue';
+import TopNav from '../Components/TopNav.vue';
 import LocaleDropdown from '../Components/LocaleDropdown.vue';
 import AvatarMenu from '../Components/AvatarMenu.vue';
 import logo from '@img/pagify_icon.png';
@@ -57,7 +58,7 @@ const switchLocale = async (nextLocale) => {
     <div class="pf-page">
         <header class="sticky top-0 z-40 border-b border-[#e5deff] bg-white/95 px-5 py-3 backdrop-blur">
             <div class="mx-auto grid max-w-[1400px] grid-cols-12 items-center gap-3">
-                <div class="col-span-12 flex items-center gap-2 md:col-span-3">
+                <div class="order-1 col-span-6 flex items-center gap-2 md:col-span-3 md:order-1">
                     <div class="h-9 w-9">
                         <img :src="logo" alt="Pagify logo" class="h-full w-full object-cover">
                     </div>
@@ -67,21 +68,11 @@ const switchLocale = async (nextLocale) => {
                     </div>
                 </div>
 
-                <div class="col-span-12 md:col-span-6">
-                    <nav class="flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-1">
-                        <a
-                            v-for="item in navItems"
-                            :key="item.route ?? item.href"
-                            :href="item.href"
-                            :class="item.href === activeHref ? 'pf-nav-pill-active' : 'pf-nav-pill hover:bg-[#f3f0ff]'"
-                            class="shrink-0"
-                        >
-                            {{ item.label }}
-                        </a>
-                    </nav>
+                <div class="order-3 col-span-12 md:col-span-6 md:order-2">
+                    <TopNav :items="navItems" :active-href="activeHref" />
                 </div>
 
-                <div class="col-span-12 flex items-center justify-end gap-2 md:col-span-3">
+                <div class="order-2 col-span-6 flex items-center justify-end gap-2 md:col-span-3 md:order-3">
                     <GlobalSearch :items="menu" />
 
                     <LocaleDropdown
