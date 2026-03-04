@@ -28,7 +28,7 @@ Roadmap này định nghĩa lộ trình triển khai module `content` cho Pagify
 - Phase C5: completed
 - Phase C6: completed
 - Phase C7: completed
-- Phase C8: planned
+- Phase C8: completed
 
 ---
 
@@ -164,12 +164,12 @@ Deliverables:
 
 ## Phase C8 — Test infrastructure & hardening for content
 
-- [ ] Add feature tests for full authoring lifecycle (type -> entry -> revision -> publish -> API).
-- [ ] Add multi-site isolation tests across all content entities.
-- [ ] Add regression tests for hook/event dispatch integration.
-- [ ] Add permission-denied tests (no skips) for all content admin/API routes.
-- [ ] Add seed helpers/factories for content types, fields, entries, revisions.
-- [ ] Run and stabilize full test suite.
+- [x] Add feature tests for full authoring lifecycle (type -> entry -> revision -> publish -> API).
+- [x] Add multi-site isolation tests across all content entities.
+- [x] Add regression tests for hook/event dispatch integration.
+- [x] Add permission-denied tests (no skips) for all content admin/API routes.
+- [x] Add seed helpers/factories for content types, fields, entries, revisions.
+- [x] Run and stabilize full test suite.
 
 Deliverables:
 - `tests/Feature/Content/*`

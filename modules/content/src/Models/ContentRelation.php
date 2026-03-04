@@ -36,4 +36,9 @@ class ContentRelation extends Model
     {
         return $this->belongsTo(ContentEntry::class, 'target_entry_id');
     }
+
+    protected static function newFactory()
+    {
+        return \Modules\Content\Database\Factories\ContentRelationFactory::new();
+    }
 }

@@ -30,4 +30,9 @@ class ContentType extends Model
     {
         return $this->hasMany(ContentField::class)->orderBy('sort_order');
     }
+
+    protected static function newFactory()
+    {
+        return \Modules\Content\Database\Factories\ContentTypeFactory::new();
+    }
 }

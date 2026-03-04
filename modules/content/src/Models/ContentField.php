@@ -38,4 +38,9 @@ class ContentField extends Model
     {
         return $this->belongsTo(ContentType::class);
     }
+
+    protected static function newFactory()
+    {
+        return \Modules\Content\Database\Factories\ContentFieldFactory::new();
+    }
 }

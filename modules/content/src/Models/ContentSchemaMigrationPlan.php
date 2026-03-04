@@ -41,4 +41,9 @@ class ContentSchemaMigrationPlan extends Model
     {
         return $this->belongsTo(Admin::class, 'requested_by_admin_id');
     }
+
+    protected static function newFactory()
+    {
+        return \Modules\Content\Database\Factories\ContentSchemaMigrationPlanFactory::new();
+    }
 }

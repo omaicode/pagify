@@ -36,4 +36,9 @@ class ContentEntryRevision extends Model
     {
         return $this->belongsTo(Admin::class, 'created_by_admin_id');
     }
+
+    protected static function newFactory()
+    {
+        return \Modules\Content\Database\Factories\ContentEntryRevisionFactory::new();
+    }
 }

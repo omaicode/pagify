@@ -57,4 +57,9 @@ class ContentEntry extends Model
     {
         return $this->hasMany(ContentRelation::class, 'target_entry_id');
     }
+
+    protected static function newFactory()
+    {
+        return \Modules\Content\Database\Factories\ContentEntryFactory::new();
+    }
 }
