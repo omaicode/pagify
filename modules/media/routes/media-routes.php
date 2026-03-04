@@ -26,6 +26,8 @@ Route::prefix('api/v1/admin/media')
 	->name('media.api.v1.admin.')
 	->group(function (): void {
 		Route::get('/assets', [AdminMediaAssetController::class, 'index'])->name('assets.index');
+		Route::get('/assets/{asset}/preview', [AdminMediaAssetController::class, 'preview'])->name('assets.preview');
+		Route::get('/assets/{asset}/download', [AdminMediaAssetController::class, 'download'])->name('assets.download');
 		Route::post('/assets', [AdminMediaAssetController::class, 'store'])->name('assets.store');
 		Route::patch('/assets/{asset}', [AdminMediaAssetController::class, 'update'])->name('assets.update');
 		Route::delete('/assets/{asset}', [AdminMediaAssetController::class, 'destroy'])->name('assets.destroy');

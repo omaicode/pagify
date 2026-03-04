@@ -1,5 +1,7 @@
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
+import Toastify, { toast } from 'vue3-toastify';
+import 'vue3-toastify/dist/index.css';
 
 import.meta.glob([
     '../images/**'
@@ -26,6 +28,13 @@ createInertiaApp({
     setup({ el, App, props, plugin }) {
         createApp({ render: () => h(App, props) })
             .use(plugin)
+            .use(Toastify, {
+                autoClose: 1800,
+                position: toast.POSITION.TOP_RIGHT,
+                hideProgressBar: true,
+                closeOnClick: true,
+                pauseOnHover: true,
+            })
             .mount(el);
     },
     progress: {

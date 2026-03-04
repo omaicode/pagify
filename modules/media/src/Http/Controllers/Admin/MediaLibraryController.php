@@ -15,6 +15,8 @@ class MediaLibraryController extends Controller
                 'assetsIndex' => route('media.api.v1.admin.assets.index'),
                 'assetsStore' => route('media.api.v1.admin.assets.store'),
                 'assetsDestroyBase' => route('media.api.v1.admin.assets.destroy', ['asset' => '__ASSET__']),
+                'assetsPreviewBase' => route('media.api.v1.admin.assets.preview', ['asset' => '__ASSET__']),
+                'assetsDownloadBase' => route('media.api.v1.admin.assets.download', ['asset' => '__ASSET__']),
                 'uploadSessionsStore' => route('media.api.v1.admin.upload-sessions.store'),
                 'uploadChunkBase' => route('media.api.v1.admin.upload-sessions.chunk', ['session' => '__SESSION__']),
                 'uploadCompleteBase' => route('media.api.v1.admin.upload-sessions.complete', ['session' => '__SESSION__']),

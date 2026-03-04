@@ -5,6 +5,7 @@ namespace Modules\Media\Http\Controllers\Api;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Modules\Media\Jobs\GenerateMediaImageTransformsJob;
 use Modules\Core\Http\Controllers\Api\ApiController;
 use Modules\Media\Http\Requests\Admin\ListMediaAssetsRequest;
@@ -118,6 +119,49 @@ class AdminMediaAssetController extends ApiController
         }
 
         return $this->success((new MediaAssetResource($asset))->resolve(), 201);
+    }
+
+    public function preview(MediaAsset $asset): StreamedResponse
+    {
+        $this->authorize('view', $asset);
+
+        if (! Storage::disk($asset->disk)->exists($asset->path)) {
+            abort(404);
+        }
+
+        $stream = Storage::disk($asset->disk)->readStream($asset->path);
+        if ($stream === false) {
+            abort(404);
+        }
+
+        return response()->stream(static function () use ($stream): void {
+            fpassthru($stream);
+            fclose($stream);
+        }, 200, [
+            'Content-Type' => (string) ($asset->mime_type ?: 'application/octet-stream'),
+            'Content-Disposition' => 'inline; filename="' . addslashes((string) $asset->original_name) . '"',
+        ]);
+    }
+
+    public function download(MediaAsset $asset): StreamedResponse
+    {
+        $this->authorize('view', $asset);
+
+        if (! Storage::disk($asset->disk)->exists($asset->path)) {
+            abort(404);
+        }
+
+        $stream = Storage::disk($asset->disk)->readStream($asset->path);
+        if ($stream === false) {
+            abort(404);
+        }
+
+        return response()->streamDownload(static function () use ($stream): void {
+            fpassthru($stream);
+            fclose($stream);
+        }, $asset->original_name, [
+            'Content-Type' => (string) ($asset->mime_type ?: 'application/octet-stream'),
+        ]);
     }
 
     public function update(UpdateMediaAssetRequest $request, MediaAsset $asset): JsonResponse
