@@ -24,6 +24,58 @@ const navItems = computed(() => (Array.isArray(props.items) ? props.items : []))
 const visibleItems = computed(() => navItems.value.slice(0, visibleCount.value));
 const overflowItems = computed(() => navItems.value.slice(visibleCount.value));
 
+const normalizePath = (value) => {
+    if (!value) {
+        return '/';
+    }
+
+    try {
+        const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+        const parsedUrl = new URL(String(value), base);
+        const normalized = parsedUrl.pathname.replace(/\/+$/, '');
+
+        return normalized || '/';
+    } catch {
+        const fallbackValue = String(value).split('?')[0].split('#')[0] || '/';
+        const normalized = fallbackValue.replace(/\/+$/, '');
+
+        return normalized || '/';
+    }
+};
+
+const isItemActive = (href) => {
+    if (!activeItemPath.value) {
+        return false;
+    }
+
+    return normalizePath(href) === activeItemPath.value;
+};
+
+const activeItemPath = computed(() => {
+    const currentPath = normalizePath(props.activeHref);
+
+    const matches = navItems.value
+        .map((item) => normalizePath(item?.href))
+        .filter((path, index, array) => {
+            if (!path) {
+                return false;
+            }
+
+            if (array.indexOf(path) !== index) {
+                return false;
+            }
+
+            if (path === '/') {
+                return currentPath === '/';
+            }
+
+            return currentPath === path || currentPath.startsWith(`${path}/`);
+        })
+        .sort((left, right) => right.length - left.length);
+
+    return matches[0] ?? null;
+});
+
 const setMeasureItemRef = (el, index) => {
     if (!el) {
         return;
@@ -170,7 +222,7 @@ watch(
                 v-for="item in visibleItems"
                 :key="item.route ?? item.href"
                 :href="item.href"
-                :class="item.href === activeHref ? 'pf-nav-pill-active' : 'pf-nav-pill hover:bg-[#f3f0ff]'"
+                :class="isItemActive(item.href) ? 'pf-nav-pill-active' : 'pf-nav-pill hover:bg-[#f3f0ff]'"
                 class="shrink-0"
             >
                 {{ item.label }}
@@ -194,7 +246,7 @@ watch(
                         v-for="item in overflowItems"
                         :key="`overflow-${item.route ?? item.href}`"
                         :href="item.href"
-                        :class="item.href === activeHref ? 'pf-nav-pill-active' : 'pf-nav-pill hover:bg-[#f3f0ff]'"
+                        :class="isItemActive(item.href) ? 'pf-nav-pill-active' : 'pf-nav-pill hover:bg-[#f3f0ff]'"
                         class="mb-1 block w-full last:mb-0"
                         @click="closeOverflow"
                     >
@@ -209,7 +261,7 @@ watch(
                 v-for="(item, index) in navItems"
                 :key="`measure-${item.route ?? item.href}`"
                 :ref="(el) => setMeasureItemRef(el, index)"
-                :class="item.href === activeHref ? 'pf-nav-pill-active' : 'pf-nav-pill'"
+                :class="isItemActive(item.href) ? 'pf-nav-pill-active' : 'pf-nav-pill'"
                 class="inline-flex"
             >
                 {{ item.label }}
