@@ -23,10 +23,13 @@ class SettingsPageController extends Controller
                 [
                     'key' => 'system',
                     'label' => 'System',
+                    'label_key' => 'settings_group_system',
                     'items' => array_values(array_filter([
                         $this->makeItem(
                             label: 'Content',
+                            labelKey: 'settings_item_content',
                             description: 'Manage content types, schema builder, and entries.',
+                            descriptionKey: 'settings_item_content_description',
                             href: Route::has('content.admin.dashboard') ? route('content.admin.dashboard') : '#',
                             allowed: $modules->enabled('content')
                                 && Route::has('content.admin.dashboard')
@@ -34,7 +37,9 @@ class SettingsPageController extends Controller
                         ),
                         $this->makeItem(
                             label: 'Modules',
+                            labelKey: 'settings_item_modules',
                             description: 'Enable or disable installed modules.',
+                            descriptionKey: 'settings_item_modules_description',
                             href: route('core.admin.modules.index'),
                             allowed: $admin?->can('manageModules', Admin::class) === true,
                         ),
@@ -43,10 +48,13 @@ class SettingsPageController extends Controller
                 [
                     'key' => 'security',
                     'label' => 'Security',
+                    'label_key' => 'settings_group_security',
                     'items' => array_values(array_filter([
                         $this->makeItem(
                             label: 'API tokens',
+                            labelKey: 'settings_item_api_tokens',
                             description: 'Create and revoke admin API tokens.',
+                            descriptionKey: 'settings_item_api_tokens_description',
                             href: route('core.admin.tokens.index'),
                             allowed: $admin?->can('manageTokens', Admin::class) === true,
                         ),
@@ -55,10 +63,13 @@ class SettingsPageController extends Controller
                 [
                     'key' => 'audit',
                     'label' => 'Monitoring',
+                    'label_key' => 'settings_group_monitoring',
                     'items' => array_values(array_filter([
                         $this->makeItem(
                             label: 'Audit logs',
+                            labelKey: 'settings_item_audit_logs',
                             description: 'Review administrative activities and changes.',
+                            descriptionKey: 'settings_item_audit_logs_description',
                             href: route('core.admin.audit.index'),
                             allowed: $admin?->can('core.audit.view') || $admin?->can('core.audit.viewAny'),
                         ),
@@ -71,7 +82,7 @@ class SettingsPageController extends Controller
     /**
      * @return array<string, string>|null
      */
-    private function makeItem(string $label, string $description, string $href, bool $allowed): ?array
+    private function makeItem(string $label, string $labelKey, string $description, string $descriptionKey, string $href, bool $allowed): ?array
     {
         if (! $allowed) {
             return null;
@@ -79,7 +90,9 @@ class SettingsPageController extends Controller
 
         return [
             'label' => $label,
+            'label_key' => $labelKey,
             'description' => $description,
+            'description_key' => $descriptionKey,
             'href' => $href,
         ];
     }

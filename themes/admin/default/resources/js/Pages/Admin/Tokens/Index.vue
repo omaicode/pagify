@@ -133,7 +133,7 @@ onMounted(loadTokens);
                 <thead class="bg-[#f8f6ff]">
                     <tr>
                         <th class="px-3 py-2 text-left">{{ t.token_name ?? 'Name' }}</th>
-                        <th class="px-3 py-2 text-left">Abilities</th>
+                        <th class="px-3 py-2 text-left">{{ t.abilities ?? 'Abilities' }}</th>
                         <th class="px-3 py-2 text-left">{{ t.last_used ?? 'Last used' }}</th>
                         <th class="px-3 py-2 text-left">{{ t.expires ?? 'Expires' }}</th>
                         <th class="px-3 py-2 text-left">{{ t.actions ?? 'Actions' }}</th>

@@ -14,8 +14,8 @@ class ContentDashboardController extends Controller
     public function __invoke(Request $request): Response
     {
         return Inertia::render('Content/Dashboard', [
-            'title' => 'Content module',
-            'description' => 'Manage content types, entries, and publishing workflows from shared admin shell.',
+            'title' => __('content::messages.dashboard.title'),
+            'description' => __('content::messages.dashboard.description'),
             'stats' => [
                 'types' => ContentType::query()->count(),
                 'entries' => ContentEntry::query()->count(),

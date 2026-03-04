@@ -89,7 +89,7 @@ class ContentApiController extends ApiController
             ->first();
 
         if ($entry === null) {
-            return $this->error('Content entry not found.', 404, 'CONTENT_ENTRY_NOT_FOUND');
+            return $this->error(__('content::messages.api.content_entry_not_found'), 404, 'CONTENT_ENTRY_NOT_FOUND');
         }
 
         $entry->setAttribute('resolved_relations', $this->relationResolver->hydrateForEntry($entry));

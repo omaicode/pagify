@@ -15,7 +15,7 @@ class DashboardController extends Controller
         $admin = $request->user('web');
 
         return Inertia::render('Admin/Dashboard', [
-            'message' => 'Core admin shell is active.',
+            'message' => __('core::messages.dashboard_active'),
             'admin' => $admin?->only(['id', 'name', 'username', 'email']),
             'canManageTokens' => $admin?->can('manageTokens', Admin::class) === true,
         ]);

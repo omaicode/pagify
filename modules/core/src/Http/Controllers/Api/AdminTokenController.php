@@ -63,7 +63,7 @@ class AdminTokenController extends ApiController
         $deleted = $admin->tokens()->whereKey($tokenId)->delete();
 
         if ($deleted === 0) {
-            return $this->error('Token not found.', 404, 'TOKEN_NOT_FOUND');
+            return $this->error(__('core::messages.api.token_not_found'), 404, 'TOKEN_NOT_FOUND');
         }
 
         return $this->success([

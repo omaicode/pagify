@@ -23,4 +23,20 @@ class StoreAdminTokenRequest extends FormRequest
             'expires_at' => ['nullable', 'date', 'after:now'],
         ];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return trans('core::validation.messages');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return trans('core::validation.attributes');
+    }
 }

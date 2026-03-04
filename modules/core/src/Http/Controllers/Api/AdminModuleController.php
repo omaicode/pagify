@@ -33,13 +33,13 @@ class AdminModuleController extends ApiController
         $this->authorize('manageModules', Admin::class);
 
         if (! $modules->has($module)) {
-            return $this->error('Module not found.', 404, 'MODULE_NOT_FOUND');
+            return $this->error(__('core::messages.api.module_not_found'), 404, 'MODULE_NOT_FOUND');
         }
 
         $payload = $request->validated();
 
         if ($module === 'core' && (bool) $payload['enabled'] === false) {
-            return $this->error('Core module cannot be disabled.', 422, 'MODULE_LOCKED');
+            return $this->error(__('core::messages.api.module_locked'), 422, 'MODULE_LOCKED');
         }
 
         $stateService->setEnabled($module, (bool) $payload['enabled']);

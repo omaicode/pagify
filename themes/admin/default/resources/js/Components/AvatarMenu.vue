@@ -1,5 +1,6 @@
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
     initials: {
@@ -17,6 +18,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['logout']);
+const page = usePage();
+const t = computed(() => page.props.translations?.ui ?? {});
 
 const opened = ref(false);
 
@@ -72,14 +75,14 @@ onBeforeUnmount(() => {
             v-if="opened"
             class="absolute right-0 z-50 mt-2 min-w-[150px] rounded-xl border border-[#e5deff] bg-white p-1.5 shadow-lg"
         >
-            <a :href="profileHref" class="block rounded-lg px-3 py-2 text-sm text-[#1e1b4b] hover:bg-[#f3f0ff]">Hồ sơ</a>
-            <a :href="settingsHref" class="block rounded-lg px-3 py-2 text-sm text-[#1e1b4b] hover:bg-[#f3f0ff]">Cài đặt</a>
+            <a :href="profileHref" class="block rounded-lg px-3 py-2 text-sm text-[#1e1b4b] hover:bg-[#f3f0ff]">{{ t.profile ?? 'Profile' }}</a>
+            <a :href="settingsHref" class="block rounded-lg px-3 py-2 text-sm text-[#1e1b4b] hover:bg-[#f3f0ff]">{{ t.settings ?? 'Settings' }}</a>
             <button
                 type="button"
                 class="block w-full rounded-lg px-3 py-2 text-left text-sm text-rose-700 hover:bg-rose-50"
                 @click="logout"
             >
-                Thoát
+                {{ t.logout ?? 'Logout' }}
             </button>
         </div>
     </div>

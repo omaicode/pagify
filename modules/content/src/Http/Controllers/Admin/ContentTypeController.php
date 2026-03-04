@@ -81,7 +81,7 @@ class ContentTypeController extends Controller
 
         return redirect()
             ->route('content.admin.types.builder.status', $contentType)
-            ->with('status', 'Content type created. Migration plan queued #' . $plan->id . '.');
+            ->with('status', __('content::messages.status.content_type_created', ['plan_id' => $plan->id]));
     }
 
     public function edit(ContentType $contentType): Response
@@ -141,7 +141,7 @@ class ContentTypeController extends Controller
 
         return redirect()
             ->route('content.admin.types.builder.status', $contentType)
-            ->with('status', 'Content type updated. Migration plan queued #' . $plan->id . '.');
+            ->with('status', __('content::messages.status.content_type_updated', ['plan_id' => $plan->id]));
     }
 
     public function destroy(ContentType $contentType): RedirectResponse
@@ -152,6 +152,6 @@ class ContentTypeController extends Controller
 
         return redirect()
             ->route('content.admin.types.index')
-            ->with('status', 'Content type deleted successfully.');
+            ->with('status', __('content::messages.status.content_type_deleted'));
     }
 }

@@ -1,5 +1,6 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
     items: {
@@ -11,6 +12,9 @@ const props = defineProps({
         default: '/',
     },
 });
+
+const page = usePage();
+const t = computed(() => page.props.translations?.ui ?? {});
 
 const containerRef = ref(null);
 const moreMeasureRef = ref(null);
@@ -260,7 +264,7 @@ watch(
                 <button
                     type="button"
                     class="pf-nav-pill h-9 w-9 p-0 text-base text-[#4b5563] hover:bg-[#f3f0ff]"
-                    aria-label="More menu"
+                    :aria-label="t.more_menu ?? 'More menu'"
                     @click="overflowOpened = !overflowOpened"
                 >
                     ⋮

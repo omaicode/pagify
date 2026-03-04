@@ -23,6 +23,7 @@ class ContentServiceProvider extends ServiceProvider
 		$this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
 		$this->loadRoutesFrom(__DIR__ . '/../../routes/content-routes.php');
 		$this->loadViewsFrom(__DIR__ . '/../../resources/views', 'content');
+		$this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'content');
 
 		$this->publishes([
 			__DIR__ . '/../../config/content.php' => config_path('content.php'),

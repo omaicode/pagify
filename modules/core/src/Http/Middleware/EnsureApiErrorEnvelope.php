@@ -24,7 +24,7 @@ class EnsureApiErrorEnvelope
 
             if ($response->getStatusCode() === 302 && str_contains((string) $response->headers->get('Location'), '/admin/login')) {
                 return $this->error(
-                    message: 'Authentication required.',
+                    message: __('core::messages.api.authentication_required'),
                     code: 'AUTHENTICATION_REQUIRED',
                     status: 401,
                 );
@@ -33,32 +33,32 @@ class EnsureApiErrorEnvelope
             return $response;
         } catch (ValidationException $exception) {
             return $this->error(
-                message: 'Validation failed.',
+                message: __('core::messages.api.validation_failed'),
                 code: 'VALIDATION_FAILED',
                 status: 422,
                 errors: $exception->errors(),
             );
         } catch (AuthenticationException $exception) {
             return $this->error(
-                message: 'Authentication required.',
+                message: __('core::messages.api.authentication_required'),
                 code: 'AUTHENTICATION_REQUIRED',
                 status: 401,
             );
         } catch (AuthorizationException $exception) {
             return $this->error(
-                message: 'Forbidden.',
+                message: __('core::messages.api.forbidden'),
                 code: 'FORBIDDEN',
                 status: 403,
             );
         } catch (ModelNotFoundException $exception) {
             return $this->error(
-                message: 'Resource not found.',
+                message: __('core::messages.api.resource_not_found'),
                 code: 'RESOURCE_NOT_FOUND',
                 status: 404,
             );
         } catch (HttpExceptionInterface $exception) {
             return $this->error(
-                message: $exception->getMessage() !== '' ? $exception->getMessage() : 'HTTP error.',
+                message: $exception->getMessage() !== '' ? $exception->getMessage() : __('core::messages.api.http_error'),
                 code: 'HTTP_ERROR',
                 status: $exception->getStatusCode(),
             );
@@ -66,7 +66,7 @@ class EnsureApiErrorEnvelope
             report($exception);
 
             return $this->error(
-                message: 'Internal server error.',
+                message: __('core::messages.api.internal_server_error'),
                 code: 'INTERNAL_SERVER_ERROR',
                 status: 500,
             );

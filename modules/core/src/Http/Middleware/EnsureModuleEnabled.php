@@ -31,7 +31,7 @@ class EnsureModuleEnabled
         return response()->json([
             'success' => false,
             'code' => 'MODULE_DISABLED',
-            'message' => 'Module is disabled.',
+            'message' => __('core::messages.api.module_disabled'),
             'errors' => [],
         ], 404);
     }

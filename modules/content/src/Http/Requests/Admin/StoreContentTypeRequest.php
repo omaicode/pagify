@@ -37,4 +37,20 @@ class StoreContentTypeRequest extends FormRequest
             ...$this->schemaFieldRules(),
         ];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return trans('content::validation.messages');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return trans('content::validation.attributes');
+    }
 }

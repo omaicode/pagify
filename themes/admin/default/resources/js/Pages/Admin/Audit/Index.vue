@@ -87,7 +87,7 @@ const resetFilters = () => {
                 <option v-for="entityType in filterOptions.entity_types" :key="entityType" :value="entityType">{{ entityType }}</option>
             </select>
 
-            <input v-model="filterForm.entity_id" type="text" placeholder="Entity ID" class="rounded border border-slate-300 px-2 py-1 text-sm">
+            <input v-model="filterForm.entity_id" type="text" :placeholder="label('entity_id', 'Entity ID')" class="rounded border border-slate-300 px-2 py-1 text-sm">
 
             <select v-model="filterForm.site_id" class="rounded border border-slate-300 px-2 py-1 text-sm">
                 <option value="">{{ label('all_sites', 'All sites') }}</option>
@@ -103,22 +103,22 @@ const resetFilters = () => {
             <input v-model="filterForm.date_to" type="date" class="rounded border border-slate-300 px-2 py-1 text-sm">
 
             <select v-model="filterForm.per_page" class="rounded border border-slate-300 px-2 py-1 text-sm">
-                <option :value="10">10 / page</option>
-                <option :value="20">20 / page</option>
-                <option :value="50">50 / page</option>
-                <option :value="100">100 / page</option>
+                <option :value="10">{{ label('per_page_10', '10 / page') }}</option>
+                <option :value="20">{{ label('per_page_20', '20 / page') }}</option>
+                <option :value="50">{{ label('per_page_50', '50 / page') }}</option>
+                <option :value="100">{{ label('per_page_100', '100 / page') }}</option>
             </select>
 
             <select v-model="filterForm.sort_by" class="rounded border border-slate-300 px-2 py-1 text-sm">
-                <option value="created_at">Sort by created at</option>
-                <option value="id">Sort by ID</option>
-                <option value="action">Sort by action</option>
-                <option value="entity_type">Sort by entity type</option>
+                <option value="created_at">{{ label('sort_created_at', 'Sort by created at') }}</option>
+                <option value="id">{{ label('sort_id', 'Sort by ID') }}</option>
+                <option value="action">{{ label('sort_action', 'Sort by action') }}</option>
+                <option value="entity_type">{{ label('sort_entity_type', 'Sort by entity type') }}</option>
             </select>
 
             <select v-model="filterForm.sort_dir" class="rounded border border-slate-300 px-2 py-1 text-sm">
-                <option value="desc">Newest first</option>
-                <option value="asc">Oldest first</option>
+                <option value="desc">{{ label('newest_first', 'Newest first') }}</option>
+                <option value="asc">{{ label('oldest_first', 'Oldest first') }}</option>
             </select>
 
             <div class="flex gap-2 md:col-span-5">
@@ -135,7 +135,7 @@ const resetFilters = () => {
                         <th class="px-3 py-2 text-left">{{ label('action', 'Action') }}</th>
                         <th class="px-3 py-2 text-left">{{ label('entity', 'Entity') }}</th>
                         <th class="px-3 py-2 text-left">{{ label('ip', 'IP') }}</th>
-                        <th class="px-3 py-2 text-left">Admin</th>
+                        <th class="px-3 py-2 text-left">{{ label('admin', 'Admin') }}</th>
                         <th class="px-3 py-2 text-left">{{ label('site', 'Site') }}</th>
                     </tr>
                 </thead>

@@ -73,7 +73,7 @@ class ContentTypeBuilderController extends Controller
 
         return redirect()
             ->route('content.admin.types.builder.status', $contentType)
-            ->with('status', 'Schema builder saved. Migration plan queued #' . $plan->id . '.');
+            ->with('status', __('content::messages.status.schema_builder_saved', ['plan_id' => $plan->id]));
     }
 
     public function status(ContentType $contentType): Response
@@ -128,6 +128,6 @@ class ContentTypeBuilderController extends Controller
 
         return redirect()
             ->route('content.admin.types.builder.status', $contentType)
-            ->with('status', 'Migration plan #' . $plan->id . ' queued for retry.');
+            ->with('status', __('content::messages.status.migration_retry_queued', ['plan_id' => $plan->id]));
     }
 }

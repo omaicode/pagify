@@ -22,4 +22,20 @@ class UpdateLocaleRequest extends FormRequest
             'locale' => ['required', 'string', 'in:' . implode(',', $supported)],
         ];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return trans('core::validation.messages');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return trans('core::validation.attributes');
+    }
 }

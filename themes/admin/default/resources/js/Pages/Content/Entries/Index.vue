@@ -1,4 +1,6 @@
 <script setup>
+import { computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import AdminLayout from '@admin-theme/Layouts/AdminLayout.vue';
 
 defineProps({
@@ -15,6 +17,9 @@ defineProps({
         default: () => ({}),
     },
 });
+
+const page = usePage();
+const t = computed(() => page.props.translations?.ui ?? {});
 </script>
 
 <template>
@@ -22,19 +27,19 @@ defineProps({
         <div class="space-y-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-xl font-semibold text-slate-900">Entries for {{ contentType.name }} ({{ contentType.slug }})</h1>
+                    <h1 class="text-xl font-semibold text-slate-900">{{ t.entries_for ?? 'Entries for' }} {{ contentType.name }} ({{ contentType.slug }})</h1>
                 </div>
-                <a :href="routes.create" class="rounded bg-slate-900 px-3 py-2 text-sm text-white hover:bg-slate-800">Create entry</a>
+                <a :href="routes.create" class="rounded bg-slate-900 px-3 py-2 text-sm text-white hover:bg-slate-800">{{ t.create_entry ?? 'Create entry' }}</a>
             </div>
 
             <div class="overflow-hidden rounded border border-slate-200 bg-white">
                 <table class="min-w-full divide-y divide-slate-200 text-sm">
                     <thead class="bg-slate-50">
                         <tr>
-                            <th class="px-3 py-2 text-left">Slug</th>
-                            <th class="px-3 py-2 text-left">Status</th>
-                            <th class="px-3 py-2 text-left">Relations</th>
-                            <th class="px-3 py-2 text-left">Actions</th>
+                            <th class="px-3 py-2 text-left">{{ t.slug ?? 'Slug' }}</th>
+                            <th class="px-3 py-2 text-left">{{ t.status ?? 'Status' }}</th>
+                            <th class="px-3 py-2 text-left">{{ t.relations ?? 'Relations' }}</th>
+                            <th class="px-3 py-2 text-left">{{ t.actions ?? 'Actions' }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200">
@@ -43,18 +48,18 @@ defineProps({
                             <td class="px-3 py-2 text-slate-700">{{ entry.status }}</td>
                             <td class="px-3 py-2 text-slate-700">{{ (entry.relation_slugs ?? []).join(', ') || '-' }}</td>
                             <td class="px-3 py-2">
-                                <a :href="entry.routes.edit" class="rounded border border-slate-300 px-2 py-1 text-xs text-slate-700">Edit</a>
+                                <a :href="entry.routes.edit" class="rounded border border-slate-300 px-2 py-1 text-xs text-slate-700">{{ t.edit ?? 'Edit' }}</a>
                             </td>
                         </tr>
                         <tr v-if="(entries.data ?? []).length === 0">
-                            <td colspan="4" class="px-3 py-6 text-center text-slate-500">No entries yet.</td>
+                            <td colspan="4" class="px-3 py-6 text-center text-slate-500">{{ t.no_entries ?? 'No entries yet.' }}</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
             <div>
-                <a :href="routes.typeEdit" class="text-sm text-slate-700 underline">Back to content type</a>
+                <a :href="routes.typeEdit" class="text-sm text-slate-700 underline">{{ t.back_to_content_type ?? 'Back to content type' }}</a>
             </div>
         </div>
     </AdminLayout>

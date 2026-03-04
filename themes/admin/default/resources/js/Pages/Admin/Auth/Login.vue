@@ -15,15 +15,15 @@ const errors = computed(() => page.props.errors ?? {});
 </script>
 
 <template>
-    <Head title="Admin Login" />
+    <Head :title="t.login_page_title ?? 'Admin Login'" />
 
     <main class="pf-page flex min-h-screen items-center justify-center px-4 py-10">
         <section class="w-full max-w-md rounded-2xl border border-[#e5deff] bg-white p-6 shadow-lg">
             <div class="mb-5 flex items-center gap-3">
                 <div class="h-10 w-10 rounded-xl" style="background-image: var(--pagify-gradient)" />
                 <div>
-                    <h1 class="text-2xl font-semibold text-[#1e1b4b]">{{ t.admin ?? 'Admin' }} Login</h1>
-                    <p class="text-sm text-[#6b7280]">Sign in to continue.</p>
+                    <h1 class="text-2xl font-semibold text-[#1e1b4b]">{{ t.login_title ?? 'Admin Login' }}</h1>
+                    <p class="text-sm text-[#6b7280]">{{ t.login_subtitle ?? 'Sign in to continue.' }}</p>
                 </div>
             </div>
 
@@ -35,7 +35,7 @@ const errors = computed(() => page.props.errors ?? {});
                 <input type="hidden" name="_token" :value="page.props.csrf_token">
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700" for="username">Username or email</label>
+                    <label class="mb-1 block text-sm font-medium text-slate-700" for="username">{{ t.username_or_email ?? 'Username or email' }}</label>
                     <input
                         id="username"
                         name="username"
@@ -47,7 +47,7 @@ const errors = computed(() => page.props.errors ?? {});
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700" for="password">Password</label>
+                    <label class="mb-1 block text-sm font-medium text-slate-700" for="password">{{ t.password ?? 'Password' }}</label>
                     <input
                         id="password"
                         name="password"
@@ -59,14 +59,14 @@ const errors = computed(() => page.props.errors ?? {});
 
                 <label class="flex items-center gap-2 text-sm text-slate-700">
                     <input name="remember" type="checkbox" value="1" class="rounded border-slate-300">
-                    Remember me
+                    {{ t.remember_me ?? 'Remember me' }}
                 </label>
 
                 <button
                     type="submit"
                     class="pf-btn-primary w-full !rounded-lg py-2.5"
                 >
-                    Sign in
+                    {{ t.sign_in ?? 'Sign in' }}
                 </button>
             </form>
         </section>

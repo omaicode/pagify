@@ -35,7 +35,7 @@ class AdminRelationPickerController extends ApiController
             ->first(static fn ($item): bool => (string) $item->key === $fieldKey && (string) $item->field_type === 'relation');
 
         if ($field === null) {
-            return $this->error('Relation field not found.', 422, 'RELATION_FIELD_NOT_FOUND');
+            return $this->error(__('content::messages.api.relation_field_not_found'), 422, 'RELATION_FIELD_NOT_FOUND');
         }
 
         $config = (array) ($field->config_json ?? []);

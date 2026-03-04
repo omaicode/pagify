@@ -64,7 +64,7 @@ const switchLocale = async (nextLocale) => {
                         <img :src="logo" alt="Pagify logo" class="h-full w-full object-cover">
                     </div>
                     <div>
-                        <p class="text-sm font-semibold text-[#1e1b4b]">Pagify Admin</p>
+                        <p class="text-sm font-semibold text-[#1e1b4b]">{{ translation.app_title ?? 'Pagify Admin' }}</p>
                         <p class="text-xs text-[#6b7280]">{{ currentSite?.name ?? (translation.no_site ?? 'No site selected') }}</p>
                     </div>
                 </div>

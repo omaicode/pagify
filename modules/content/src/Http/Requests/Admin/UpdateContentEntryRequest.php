@@ -24,4 +24,20 @@ class UpdateContentEntryRequest extends FormRequest
             'scheduled_unpublish_at' => ['nullable', 'date', 'after:scheduled_publish_at'],
         ];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return trans('content::validation.messages');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return trans('content::validation.attributes');
+    }
 }

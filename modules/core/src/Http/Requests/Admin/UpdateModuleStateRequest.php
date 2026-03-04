@@ -20,4 +20,20 @@ class UpdateModuleStateRequest extends FormRequest
             'enabled' => ['required', 'boolean'],
         ];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return trans('core::validation.messages');
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return trans('core::validation.attributes');
+    }
 }

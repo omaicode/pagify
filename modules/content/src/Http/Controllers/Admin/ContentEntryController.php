@@ -127,7 +127,7 @@ class ContentEntryController extends Controller
 
         return redirect()
             ->route('content.admin.entries.edit', [$contentType->slug, $entry->id])
-            ->with('status', 'Content entry created successfully.');
+            ->with('status', __('content::messages.status.content_entry_created'));
     }
 
     public function edit(string $contentTypeSlug, int $entryId): Response
@@ -198,7 +198,7 @@ class ContentEntryController extends Controller
 
         return redirect()
             ->route('content.admin.entries.edit', [$contentType->slug, $updated->id])
-            ->with('status', 'Content entry updated successfully.');
+            ->with('status', __('content::messages.status.content_entry_updated'));
     }
 
     public function destroy(Request $request, string $contentTypeSlug, int $entryId): RedirectResponse
@@ -225,7 +225,7 @@ class ContentEntryController extends Controller
 
         return redirect()
             ->route('content.admin.entries.index', $contentType->slug)
-            ->with('status', 'Content entry deleted successfully.');
+            ->with('status', __('content::messages.status.content_entry_deleted'));
     }
 
     public function publish(Request $request, string $contentTypeSlug, int $entryId): RedirectResponse
@@ -241,7 +241,7 @@ class ContentEntryController extends Controller
 
         return redirect()
             ->route('content.admin.entries.edit', [$contentType->slug, $entry->id])
-            ->with('status', 'Content entry published successfully.');
+            ->with('status', __('content::messages.status.content_entry_published'));
     }
 
     public function unpublish(Request $request, string $contentTypeSlug, int $entryId): RedirectResponse
@@ -257,7 +257,7 @@ class ContentEntryController extends Controller
 
         return redirect()
             ->route('content.admin.entries.edit', [$contentType->slug, $entry->id])
-            ->with('status', 'Content entry moved to draft successfully.');
+            ->with('status', __('content::messages.status.content_entry_moved_to_draft'));
     }
 
     public function schedule(Request $request, string $contentTypeSlug, int $entryId): RedirectResponse
@@ -286,7 +286,7 @@ class ContentEntryController extends Controller
 
         return redirect()
             ->route('content.admin.entries.edit', [$contentType->slug, $entry->id])
-            ->with('status', 'Content schedule updated successfully.');
+            ->with('status', __('content::messages.status.content_schedule_updated'));
     }
 
     private function resolveType(string $contentTypeSlug): ContentType

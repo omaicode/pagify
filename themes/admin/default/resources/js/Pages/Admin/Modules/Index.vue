@@ -101,7 +101,7 @@ onMounted(async () => {
           </span>
         </div>
 
-        <p v-if="healthLoading" class="mt-2 text-sm text-slate-500">Loading...</p>
+        <p v-if="healthLoading" class="mt-2 text-sm text-slate-500">{{ label('loading', 'Loading...') }}</p>
         <div v-else-if="health" class="mt-3 grid grid-cols-1 gap-3 text-sm text-slate-700 md:grid-cols-3">
           <div>
             <p class="text-slate-500">{{ label('modules_total_configured', 'Configured modules') }}</p>
@@ -123,7 +123,7 @@ onMounted(async () => {
           <h2 class="text-base font-semibold text-slate-900">{{ label('modules_list_title', 'Module States') }}</h2>
         </header>
 
-        <div v-if="loading" class="p-4 text-sm text-slate-500">Loading...</div>
+        <div v-if="loading" class="p-4 text-sm text-slate-500">{{ label('loading', 'Loading...') }}</div>
 
         <ul v-else class="divide-y divide-slate-100">
           <li
@@ -146,9 +146,9 @@ onMounted(async () => {
               @click="toggleModule(item)"
             >
               {{ item.can_disable === false
-                ? 'Locked'
+                ? label('locked', 'Locked')
                 : (updating[item.slug]
-                  ? 'Loading...'
+                  ? label('loading', 'Loading...')
                   : (item.enabled ? label('modules_enabled', 'Enabled') : label('modules_disabled', 'Disabled')))
               }}
             </button>

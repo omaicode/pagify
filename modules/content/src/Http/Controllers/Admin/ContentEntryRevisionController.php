@@ -115,7 +115,7 @@ class ContentEntryRevisionController extends Controller
 
         return redirect()
             ->route('content.admin.entries.revisions.index', [$contentType->slug, $entry->id])
-            ->with('status', 'Entry rollback completed.');
+            ->with('status', __('content::messages.status.entry_rollback_completed'));
     }
 
     private function resolveType(string $contentTypeSlug): ContentType
