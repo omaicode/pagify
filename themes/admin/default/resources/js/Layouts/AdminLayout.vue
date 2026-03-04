@@ -16,6 +16,7 @@ const locale = computed(() => page.props.locale ?? 'en');
 const admin = computed(() => page.props.auth?.admin ?? null);
 const supportedLocales = computed(() => page.props.supportedLocales ?? ['en']);
 const localeUpdateUrl = computed(() => page.props.localeUpdateUrl ?? null);
+const settingsUrl = computed(() => page.props.settingsUrl ?? '#');
 const translation = computed(() => page.props.translations?.ui ?? {});
 const currentUrl = computed(() => page.url ?? '/');
 
@@ -83,6 +84,7 @@ const switchLocale = async (nextLocale) => {
 
                     <AvatarMenu
                         :initials="adminInitials"
+                        :settings-href="settingsUrl"
                         @logout="logout"
                     />
                 </div>

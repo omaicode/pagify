@@ -50,6 +50,13 @@ class CoreRoutesTest extends TestCase
         $response->assertRedirect('/admin/login');
     }
 
+    public function test_admin_settings_page_redirects_guest_to_login(): void
+    {
+        $response = $this->get('/admin/settings');
+
+        $response->assertRedirect('/admin/login');
+    }
+
     public function test_admin_modules_api_redirects_guest_to_login(): void
     {
         $response = $this->get('/api/v1/admin/modules');
@@ -91,6 +98,22 @@ class CoreRoutesTest extends TestCase
         $response = $this->get('/admin/modules');
 
         $response->assertForbidden();
+    }
+
+    public function test_admin_settings_page_is_accessible_for_authenticated_admin(): void
+    {
+        /** @var Admin $admin */
+        $admin = Admin::factory()->create();
+
+        $this->actingAs($admin, 'web');
+
+        $response = $this->get('/admin/settings');
+
+        $response
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Settings/Index')
+                ->has('groups'));
     }
 
     public function test_admin_modules_api_returns_403_for_authenticated_user_without_permission(): void

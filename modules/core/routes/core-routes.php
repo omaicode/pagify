@@ -7,6 +7,7 @@ use Modules\Core\Http\Controllers\Admin\AuthController;
 use Modules\Core\Http\Controllers\Admin\DashboardController;
 use Modules\Core\Http\Controllers\Admin\LocaleController;
 use Modules\Core\Http\Controllers\Admin\ModulePageController;
+use Modules\Core\Http\Controllers\Admin\SettingsPageController;
 use Modules\Core\Http\Controllers\Api\AdminModuleController;
 use Modules\Core\Http\Controllers\Api\AdminTokenController;
 use Modules\Core\Http\Middleware\EnsureApiErrorEnvelope;
@@ -40,6 +41,7 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.index');
         Route::get('/api-tokens', ApiTokenPageController::class)->name('tokens.index');
         Route::get('/modules', ModulePageController::class)->name('modules.index');
+        Route::get('/settings', SettingsPageController::class)->name('settings.index');
         });
     });
 });

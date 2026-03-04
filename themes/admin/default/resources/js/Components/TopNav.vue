@@ -43,38 +43,66 @@ const normalizePath = (value) => {
     }
 };
 
-const isItemActive = (href) => {
-    if (!activeItemPath.value) {
+const itemPatterns = (item) => {
+    if (!item || typeof item !== 'object') {
+        return [];
+    }
+
+    const rawPatterns = [item.href];
+
+    if (Array.isArray(item.active_patterns)) {
+        rawPatterns.push(...item.active_patterns);
+    }
+
+    return rawPatterns
+        .map((pattern) => normalizePath(pattern))
+        .filter((pattern, index, array) => pattern && array.indexOf(pattern) === index);
+};
+
+const matchScore = (item, currentPath) => {
+    const patterns = itemPatterns(item);
+    let score = -1;
+
+    for (const pattern of patterns) {
+        const matched = pattern === '/'
+            ? currentPath === '/'
+            : currentPath === pattern || currentPath.startsWith(`${pattern}/`);
+
+        if (!matched) {
+            continue;
+        }
+
+        score = Math.max(score, pattern.length);
+    }
+
+    return score;
+};
+
+const activeItemIndex = computed(() => {
+    const currentPath = normalizePath(props.activeHref);
+
+    let bestIndex = -1;
+    let bestScore = -1;
+
+    navItems.value.forEach((item, index) => {
+        const score = matchScore(item, currentPath);
+
+        if (score > bestScore) {
+            bestScore = score;
+            bestIndex = index;
+        }
+    });
+
+    return bestIndex;
+});
+
+const isItemActive = (item) => {
+    if (activeItemIndex.value < 0) {
         return false;
     }
 
-    return normalizePath(href) === activeItemPath.value;
+    return navItems.value[activeItemIndex.value] === item;
 };
-
-const activeItemPath = computed(() => {
-    const currentPath = normalizePath(props.activeHref);
-
-    const matches = navItems.value
-        .map((item) => normalizePath(item?.href))
-        .filter((path, index, array) => {
-            if (!path) {
-                return false;
-            }
-
-            if (array.indexOf(path) !== index) {
-                return false;
-            }
-
-            if (path === '/') {
-                return currentPath === '/';
-            }
-
-            return currentPath === path || currentPath.startsWith(`${path}/`);
-        })
-        .sort((left, right) => right.length - left.length);
-
-    return matches[0] ?? null;
-});
 
 const setMeasureItemRef = (el, index) => {
     if (!el) {
@@ -217,12 +245,12 @@ watch(
 
 <template>
     <div class="relative" data-top-nav>
-        <div ref="containerRef" class="flex min-w-0 items-center gap-2">
+        <div ref="containerRef" class="flex min-w-0 items-center justify-center gap-2">
             <a
                 v-for="item in visibleItems"
                 :key="item.route ?? item.href"
                 :href="item.href"
-                :class="isItemActive(item.href) ? 'pf-nav-pill-active' : 'pf-nav-pill hover:bg-[#f3f0ff]'"
+                :class="isItemActive(item) ? 'pf-nav-pill-active' : 'pf-nav-pill hover:bg-[#f3f0ff]'"
                 class="shrink-0"
             >
                 {{ item.label }}
@@ -246,7 +274,7 @@ watch(
                         v-for="item in overflowItems"
                         :key="`overflow-${item.route ?? item.href}`"
                         :href="item.href"
-                        :class="isItemActive(item.href) ? 'pf-nav-pill-active' : 'pf-nav-pill hover:bg-[#f3f0ff]'"
+                        :class="isItemActive(item) ? 'pf-nav-pill-active' : 'pf-nav-pill hover:bg-[#f3f0ff]'"
                         class="mb-1 block w-full last:mb-0"
                         @click="closeOverflow"
                     >
@@ -261,7 +289,7 @@ watch(
                 v-for="(item, index) in navItems"
                 :key="`measure-${item.route ?? item.href}`"
                 :ref="(el) => setMeasureItemRef(el, index)"
-                :class="isItemActive(item.href) ? 'pf-nav-pill-active' : 'pf-nav-pill'"
+                :class="isItemActive(item) ? 'pf-nav-pill-active' : 'pf-nav-pill'"
                 class="inline-flex"
             >
                 {{ item.label }}
