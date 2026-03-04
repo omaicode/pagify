@@ -8,7 +8,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Validation\ValidationException;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 use Modules\Content\Http\Requests\Admin\StoreContentEntryRequest;
 use Modules\Content\Http\Requests\Admin\UpdateContentEntryRequest;
 use Modules\Content\Models\ContentEntry;
@@ -32,7 +33,7 @@ class ContentEntryController extends Controller
     ) {
     }
 
-    public function index(string $contentTypeSlug): View
+    public function index(string $contentTypeSlug): Response
     {
         $contentType = $this->resolveType($contentTypeSlug);
         $this->authorize('viewAny', [ContentEntry::class, $contentType]);
@@ -44,23 +45,58 @@ class ContentEntryController extends Controller
 
         $hydratedRelations = $this->relationResolver->hydrateForEntries($entries->getCollection());
 
-        return view('content::entries.index', [
-            'contentType' => $contentType,
-            'entries' => $entries,
+        $entriesPayload = $entries->through(static function (ContentEntry $entry) use ($contentType, $hydratedRelations): array {
+            $relations = (array) ($hydratedRelations[$entry->id] ?? []);
+
+            return [
+                'id' => $entry->id,
+                'slug' => $entry->slug,
+                'status' => $entry->status,
+                'relations' => $relations,
+                'relation_slugs' => collect($relations)
+                    ->flatMap(static fn (array $items): array => array_values($items))
+                    ->pluck('target_slug')
+                    ->filter()
+                    ->values()
+                    ->all(),
+                'routes' => [
+                    'edit' => route('content.admin.entries.edit', [$contentType->slug, $entry->id]),
+                ],
+            ];
+        });
+
+        return Inertia::render('Content/Entries/Index', [
+            'contentType' => [
+                'id' => $contentType->id,
+                'name' => $contentType->name,
+                'slug' => $contentType->slug,
+            ],
+            'entries' => $entriesPayload,
             'formFields' => $this->schemaResolver->formDefinition($contentType),
-            'hydratedRelations' => $hydratedRelations,
+            'routes' => [
+                'create' => route('content.admin.entries.create', $contentType->slug),
+                'typeEdit' => route('content.admin.types.edit', $contentType),
+            ],
         ]);
     }
 
-    public function create(string $contentTypeSlug): View
+    public function create(string $contentTypeSlug): Response
     {
         $contentType = $this->resolveType($contentTypeSlug);
         $this->authorize('create', [ContentEntry::class, $contentType]);
 
-        return view('content::entries.create', [
-            'contentType' => $contentType,
+        return Inertia::render('Content/Entries/Create', [
+            'contentType' => [
+                'id' => $contentType->id,
+                'name' => $contentType->name,
+                'slug' => $contentType->slug,
+            ],
             'formFields' => $this->schemaResolver->formDefinition($contentType),
             'defaultStatus' => 'draft',
+            'routes' => [
+                'store' => route('content.admin.entries.store', $contentType->slug),
+                'index' => route('content.admin.entries.index', $contentType->slug),
+            ],
         ]);
     }
 
@@ -94,21 +130,42 @@ class ContentEntryController extends Controller
             ->with('status', 'Content entry created successfully.');
     }
 
-    public function edit(string $contentTypeSlug, int $entryId): View
+    public function edit(string $contentTypeSlug, int $entryId): Response
     {
         $contentType = $this->resolveType($contentTypeSlug);
         $entry = $this->resolveEntry($contentType, $entryId);
         $this->authorize('update', [ContentEntry::class, $contentType, $entry]);
 
-        return view('content::entries.edit', [
-            'contentType' => $contentType,
-            'entry' => $entry,
+        return Inertia::render('Content/Entries/Edit', [
+            'contentType' => [
+                'id' => $contentType->id,
+                'name' => $contentType->name,
+                'slug' => $contentType->slug,
+            ],
+            'entry' => [
+                'id' => $entry->id,
+                'slug' => $entry->slug,
+                'status' => $entry->status,
+                'data' => (array) ($entry->data_json ?? []),
+                'published_at' => $entry->published_at?->toDateTimeString(),
+                'scheduled_publish_at' => $entry->scheduled_publish_at?->format('Y-m-d\\TH:i'),
+                'scheduled_unpublish_at' => $entry->scheduled_unpublish_at?->format('Y-m-d\\TH:i'),
+            ],
             'formFields' => $this->schemaResolver->formDefinition($contentType),
             'resolvedRelations' => $this->relationResolver->hydrateForEntry($entry),
             'publishActionsAllowed' => [
                 'publish' => request()->user('web')?->can('publish', [ContentEntry::class, $contentType, $entry]) ?? false,
                 'unpublish' => request()->user('web')?->can('unpublish', [ContentEntry::class, $contentType, $entry]) ?? false,
                 'schedule' => request()->user('web')?->can('schedule', [ContentEntry::class, $contentType, $entry]) ?? false,
+            ],
+            'routes' => [
+                'update' => route('content.admin.entries.update', [$contentType->slug, $entry->id]),
+                'destroy' => route('content.admin.entries.destroy', [$contentType->slug, $entry->id]),
+                'publish' => route('content.admin.entries.publish', [$contentType->slug, $entry->id]),
+                'unpublish' => route('content.admin.entries.unpublish', [$contentType->slug, $entry->id]),
+                'schedule' => route('content.admin.entries.schedule', [$contentType->slug, $entry->id]),
+                'revisions' => route('content.admin.entries.revisions.index', [$contentType->slug, $entry->id]),
+                'index' => route('content.admin.entries.index', $contentType->slug),
             ],
         ]);
     }

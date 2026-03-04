@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Core\Models\Admin;
 use Tests\TestCase;
 
@@ -25,7 +26,31 @@ class ContentModuleBootstrapTest extends TestCase
         $response = $this->actingAs($admin, 'web')->get('/admin/content');
 
         $response->assertOk();
-        $response->assertSee('Content module');
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Content/Dashboard')
+            ->has('title')
+            ->has('description')
+            ->has('stats')
+            ->has('routes')
+        );
+    }
+
+    public function test_content_admin_legacy_route_aliases_are_removed(): void
+    {
+        /** @var Admin $admin */
+        $admin = Admin::factory()->create();
+
+        $this->actingAs($admin, 'web')
+            ->get('/admin/content/dashboard')
+            ->assertNotFound();
+
+        $this->actingAs($admin, 'web')
+            ->get('/admin/content/content-types')
+            ->assertNotFound();
+
+        $this->actingAs($admin, 'web')
+            ->get('/admin/content/content-types/create')
+            ->assertNotFound();
     }
 
     public function test_content_admin_health_api_redirects_guest_to_login(): void

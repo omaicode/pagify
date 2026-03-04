@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Content\Models\ContentEntry;
 use Modules\Content\Models\ContentRelation;
 use Modules\Content\Models\ContentType;
@@ -100,13 +101,21 @@ class ContentRelationEngineTest extends TestCase
         $this->actingAs($admin, 'web')
             ->get('/admin/content/article/entries/' . $articleEntry->id . '/edit')
             ->assertOk()
-            ->assertSee('Resolved relations')
-            ->assertSee('author-jane');
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Content/Entries/Edit')
+                ->where('entry.slug', 'article-one')
+                ->has('resolvedRelations.author_ref', 1)
+                ->where('resolvedRelations.author_ref.0.target_slug', 'author-jane')
+            );
 
         $this->actingAs($admin, 'web')
             ->get('/admin/content/article/entries')
             ->assertOk()
-            ->assertSee('author-jane');
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Content/Entries/Index')
+                ->has('entries.data', 1)
+                ->where('entries.data.0.relation_slugs.0', 'author-jane')
+            );
 
         $pickerResponse = $this->actingAs($admin, 'web')
             ->get('/api/v1/admin/content/article/relations/picker?field_key=author_ref&q=author-');

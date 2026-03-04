@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Content\Models\ContentEntry;
 use Modules\Content\Models\ContentEntryRevision;
 use Modules\Content\Models\ContentType;
@@ -57,8 +58,11 @@ class ContentEntryRevisionTest extends TestCase
 
         $revisionsPage = $this->actingAs($admin, 'web')->get('/admin/content/article/entries/' . $entry->id . '/revisions');
         $revisionsPage->assertOk();
-        $revisionsPage->assertSee('Revisions for revision-entry');
-        $revisionsPage->assertSee('data.title');
+        $revisionsPage->assertInertia(fn (Assert $page) => $page
+            ->component('Content/Entries/Revisions/Index')
+            ->where('entry.slug', 'revision-entry')
+            ->has('diff.changes')
+        );
     }
 
     public function test_rollback_creates_new_revision_head(): void

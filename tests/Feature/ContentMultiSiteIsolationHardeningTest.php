@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
 use Modules\Content\Models\ContentEntry;
 use Modules\Content\Models\ContentEntryRevision;
@@ -143,8 +144,11 @@ class ContentMultiSiteIsolationHardeningTest extends TestCase
             ->withServerVariables(['HTTP_HOST' => 'a.local'])
             ->get('/admin/content/article/entries')
             ->assertOk()
-            ->assertSee('entry-a')
-            ->assertDontSee('entry-b');
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Content/Entries/Index')
+                ->has('entries.data', 1)
+                ->where('entries.data.0.slug', 'entry-a')
+            );
 
         $this->actingAs($admin, 'web')
             ->withServerVariables(['HTTP_HOST' => 'a.local'])
@@ -155,8 +159,10 @@ class ContentMultiSiteIsolationHardeningTest extends TestCase
             ->withServerVariables(['HTTP_HOST' => 'a.local'])
             ->get('/admin/content/types/' . $typeA->id . '/builder/status')
             ->assertOk()
-            ->assertSee('Schema migration plans')
-            ->assertDontSee('Article B');
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Content/Types/Builder/Status')
+                ->has('plans.data', 1)
+            );
 
         Sanctum::actingAs($admin, ['*']);
 

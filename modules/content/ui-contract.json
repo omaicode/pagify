@@ -1,0 +1,74 @@
+{
+  "module": {
+    "key": "content",
+    "name": "Content",
+    "version": "1.0.0",
+    "description": "Content modeling and entry management module"
+  },
+  "menus": [
+    {
+      "key": "content.dashboard",
+      "label": "Content",
+      "icon": "document-text",
+      "route": "content.admin.dashboard",
+      "order": 100,
+      "group": "Content",
+      "permission": "content.type.viewAny"
+    },
+    {
+      "key": "content.types.index",
+      "label": "Content types",
+      "icon": "rectangle-group",
+      "route": "content.admin.types.index",
+      "order": 110,
+      "group": "Content",
+      "permission": "content.type.viewAny"
+    }
+  ],
+  "pages": [
+    {
+      "key": "content.dashboard",
+      "title": "Content",
+      "route": "content.admin.dashboard",
+      "layout": "admin.default",
+      "permission": "content.type.viewAny",
+      "breadcrumb": ["Content", "Dashboard"]
+    },
+    {
+      "key": "content.types.index",
+      "title": "Content types",
+      "route": "content.admin.types.index",
+      "layout": "admin.default",
+      "permission": "content.type.viewAny",
+      "breadcrumb": ["Content", "Types"]
+    }
+  ],
+  "actions": [
+    {
+      "key": "content.types.create",
+      "label": "Create content type",
+      "route": "content.admin.types.create",
+      "method": "GET",
+      "surface": "page-header",
+      "permission": "content.type.create"
+    },
+    {
+      "key": "content.entries.publish",
+      "label": "Publish now",
+      "route": "content.admin.entries.publish",
+      "method": "POST",
+      "surface": "row-action",
+      "permission": "content.entry.publish"
+    }
+  ],
+  "widgets": [
+    {
+      "key": "content.stats.total-types",
+      "title": "Total content types",
+      "type": "stat",
+      "surface": "dashboard",
+      "permission": "content.type.viewAny",
+      "refresh_seconds": 300
+    }
+  ]
+}

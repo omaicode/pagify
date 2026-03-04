@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
 use Modules\Content\Models\ContentEntry;
 use Modules\Content\Models\ContentType;
@@ -87,7 +88,10 @@ class ContentAuthoringLifecycleTest extends TestCase
             ->get('/admin/content/article/entries/' . $entry->id . '/revisions');
 
         $revisionsResponse->assertOk();
-        $revisionsResponse->assertSee('Revisions for article-lifecycle');
+        $revisionsResponse->assertInertia(fn (Assert $page) => $page
+            ->component('Content/Entries/Revisions/Index')
+            ->where('entry.slug', 'article-lifecycle')
+        );
 
         $this->assertGreaterThanOrEqual(3, $entry->revisions()->count());
 

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Content\Models\ContentEntry;
 use Modules\Content\Models\ContentType;
 use Modules\Core\Models\Admin;
@@ -203,8 +204,11 @@ class ContentEntryCrudTest extends TestCase
             ->get('/admin/content/article/entries');
 
         $response->assertOk();
-        $response->assertSee('entry-a');
-        $response->assertDontSee('entry-b');
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Content/Entries/Index')
+            ->has('entries.data', 1)
+            ->where('entries.data.0.slug', 'entry-a')
+        );
     }
 
     /**

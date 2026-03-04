@@ -6,7 +6,8 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 use Modules\Content\Models\ContentEntry;
 use Modules\Content\Models\ContentEntryRevision;
 use Modules\Content\Models\ContentType;
@@ -25,7 +26,7 @@ class ContentEntryRevisionController extends Controller
     ) {
     }
 
-    public function index(Request $request, string $contentTypeSlug, int $entryId): View
+    public function index(Request $request, string $contentTypeSlug, int $entryId): Response
     {
         $contentType = $this->resolveType($contentTypeSlug);
         $entry = $this->resolveEntry($contentType, $entryId);
@@ -55,13 +56,36 @@ class ContentEntryRevisionController extends Controller
             }
         }
 
-        return view('content::entries.revisions', [
-            'contentType' => $contentType,
-            'entry' => $entry,
-            'revisions' => $revisions,
-            'leftRevision' => $leftRevision,
-            'rightRevision' => $rightRevision,
+        return Inertia::render('Content/Entries/Revisions/Index', [
+            'contentType' => [
+                'id' => $contentType->id,
+                'name' => $contentType->name,
+                'slug' => $contentType->slug,
+            ],
+            'entry' => [
+                'id' => $entry->id,
+                'slug' => $entry->slug,
+            ],
+            'revisions' => $revisions->map(static fn (ContentEntryRevision $revision): array => [
+                'id' => $revision->id,
+                'revision_no' => $revision->revision_no,
+                'action' => $revision->action,
+                'created_at' => $revision->created_at?->toDateTimeString(),
+            ])->values()->all(),
+            'leftRevision' => $leftRevision === null ? null : [
+                'id' => $leftRevision->id,
+                'revision_no' => $leftRevision->revision_no,
+            ],
+            'rightRevision' => $rightRevision === null ? null : [
+                'id' => $rightRevision->id,
+                'revision_no' => $rightRevision->revision_no,
+            ],
             'diff' => $diff,
+            'routes' => [
+                'compare' => route('content.admin.entries.revisions.index', [$contentType->slug, $entry->id]),
+                'rollbackBase' => route('content.admin.entries.revisions.rollback', [$contentType->slug, $entry->id, 0]),
+                'entryEdit' => route('content.admin.entries.edit', [$contentType->slug, $entry->id]),
+            ],
         ]);
     }
 

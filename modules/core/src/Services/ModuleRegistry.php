@@ -86,6 +86,24 @@ class ModuleRegistry
             }
         }
 
+        usort($menu, static function (array $left, array $right): int {
+            $leftGroup = (string) ($left['group'] ?? 'zzz');
+            $rightGroup = (string) ($right['group'] ?? 'zzz');
+
+            if ($leftGroup !== $rightGroup) {
+                return $leftGroup <=> $rightGroup;
+            }
+
+            $leftOrder = (int) ($left['order'] ?? PHP_INT_MAX);
+            $rightOrder = (int) ($right['order'] ?? PHP_INT_MAX);
+
+            if ($leftOrder !== $rightOrder) {
+                return $leftOrder <=> $rightOrder;
+            }
+
+            return ((string) ($left['label'] ?? '')) <=> ((string) ($right['label'] ?? ''));
+        });
+
         return $menu;
     }
 

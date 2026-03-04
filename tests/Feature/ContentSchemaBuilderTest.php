@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
+use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Content\Jobs\QueueSchemaMigrationPlanJob;
 use Modules\Content\Models\ContentSchemaMigrationPlan;
 use Modules\Content\Models\ContentType;
@@ -42,7 +43,11 @@ class ContentSchemaBuilderTest extends TestCase
         $this->actingAs($admin, 'web')
             ->get('/admin/content/types/' . $contentType->id . '/builder')
             ->assertOk()
-            ->assertSee('Schema builder');
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Content/Types/Builder/Edit')
+                ->where('contentType.slug', 'article')
+                ->has('initialFields', 1)
+            );
 
         $response = $this->actingAs($admin, 'web')
             ->put('/admin/content/types/' . $contentType->id . '/builder', [
@@ -120,9 +125,12 @@ class ContentSchemaBuilderTest extends TestCase
         $this->actingAs($admin, 'web')
             ->get('/admin/content/types/' . $contentType->id . '/builder/status')
             ->assertOk()
-            ->assertSee('Schema migration plans')
-            ->assertSee('#' . $plan->id)
-            ->assertSee('additions: 1');
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Content/Types/Builder/Status')
+                ->has('plans.data', 1)
+                ->where('plans.data.0.id', $plan->id)
+                ->where('plans.data.0.summary.additions', 1)
+            );
     }
 
     /**

@@ -27,12 +27,15 @@ use Modules\Core\Services\ModuleRegistry;
 use Modules\Core\Services\ModuleStateService;
 use Modules\Core\Services\SettingsManager;
 use Modules\Core\Support\SiteContext;
+use JsonException;
 
 class CoreServiceProvider extends ServiceProvider
 {
 	public function register(): void
 	{
 		$this->mergeConfigFrom(__DIR__ . '/../../config/core.php', 'core');
+
+		$this->mergeModuleUiContractsIntoConfig();
 
 		$this->app->singleton(SiteContext::class);
 
@@ -71,6 +74,64 @@ class CoreServiceProvider extends ServiceProvider
 		});
 
 		$this->app->alias(EventBus::class, 'core.event-bus');
+	}
+
+	private function mergeModuleUiContractsIntoConfig(): void
+	{
+		$modules = config('core.modules', []);
+
+		if (! is_array($modules) || $modules === []) {
+			return;
+		}
+
+		$resolvedModules = [];
+
+		foreach ($modules as $moduleKey => $moduleConfig) {
+			if (! is_array($moduleConfig)) {
+				continue;
+			}
+
+			$contractPath = $moduleConfig['ui_contract_path'] ?? null;
+
+			if (! is_string($contractPath) || $contractPath === '' || ! is_file($contractPath)) {
+				$resolvedModules[$moduleKey] = $moduleConfig;
+				continue;
+			}
+
+			$payload = file_get_contents($contractPath);
+
+			if (! is_string($payload) || trim($payload) === '') {
+				$resolvedModules[$moduleKey] = $moduleConfig;
+				continue;
+			}
+
+			try {
+				/** @var array<string, mixed> $decoded */
+				$decoded = json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
+			} catch (JsonException) {
+				$resolvedModules[$moduleKey] = $moduleConfig;
+				continue;
+			}
+
+			$contractMenus = $decoded['menus'] ?? [];
+			$contractPages = $decoded['pages'] ?? [];
+			$contractActions = $decoded['actions'] ?? [];
+			$contractWidgets = $decoded['widgets'] ?? [];
+
+			$resolvedModules[$moduleKey] = [
+				...$moduleConfig,
+				'menu' => is_array($contractMenus) ? $contractMenus : ($moduleConfig['menu'] ?? []),
+				'pages' => is_array($contractPages) ? $contractPages : [],
+				'actions' => is_array($contractActions) ? $contractActions : [],
+				'widgets' => is_array($contractWidgets) ? $contractWidgets : [],
+				'ui_contract' => [
+					'path' => $contractPath,
+					'loaded' => true,
+				],
+			];
+		}
+
+		config(['core.modules' => $resolvedModules]);
 	}
 
 	public function boot(): void

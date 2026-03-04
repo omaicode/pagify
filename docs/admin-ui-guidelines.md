@@ -20,6 +20,21 @@ This document standardizes how to build the admin interface so modules in Pagify
 - Routes must follow this naming convention: `module.admin.<resource>.<action>`.
 - Every menu item/action must have explicit permission guards.
 
+## Route deprecation policy
+
+- Canonical admin routes are the only routes that should be referenced by new code.
+- Legacy aliases may be temporarily kept for compatibility and must redirect to canonical routes.
+- Every alias must include:
+  - deprecation start date
+  - planned removal date
+  - automated test coverage to ensure redirect behavior remains stable during the grace period
+- Alias grace period target: maximum 90 days unless release constraints require extension.
+
+### Current deprecated aliases (Content module)
+
+- No active aliases.
+- Legacy aliases were removed on 2026-03-04.
+
 ## Standard module page layout
 
 Each admin page should follow this shared layout:

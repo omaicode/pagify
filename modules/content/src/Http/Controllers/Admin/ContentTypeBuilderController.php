@@ -5,7 +5,8 @@ namespace Modules\Content\Http\Controllers\Admin;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controller;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 use Modules\Content\Http\Requests\Admin\SaveSchemaBuilderRequest;
 use Modules\Content\Models\ContentSchemaMigrationPlan;
 use Modules\Content\Models\ContentType;
@@ -22,12 +23,18 @@ class ContentTypeBuilderController extends Controller
     ) {
     }
 
-    public function edit(ContentType $contentType): View
+    public function edit(ContentType $contentType): Response
     {
         $this->authorize('update', $contentType);
 
-        return view('content::types.builder', [
-            'contentType' => $contentType->load('fields'),
+        $contentType->load('fields');
+
+        return Inertia::render('Content/Types/Builder/Edit', [
+            'contentType' => [
+                'id' => $contentType->id,
+                'name' => $contentType->name,
+                'slug' => $contentType->slug,
+            ],
             'fieldTypes' => config('content.field_types', []),
             'relationTypes' => config('content.relation_types', []),
             'initialFields' => $contentType->fields
@@ -45,6 +52,11 @@ class ContentTypeBuilderController extends Controller
                 ])
                 ->values()
                 ->all(),
+            'routes' => [
+                'update' => route('content.admin.types.builder.update', $contentType),
+                'status' => route('content.admin.types.builder.status', $contentType),
+                'typeEdit' => route('content.admin.types.edit', $contentType),
+            ],
         ]);
     }
 
@@ -63,7 +75,7 @@ class ContentTypeBuilderController extends Controller
             ->with('status', 'Schema builder saved. Migration plan queued #' . $plan->id . '.');
     }
 
-    public function status(ContentType $contentType): View
+    public function status(ContentType $contentType): Response
     {
         $this->authorize('update', $contentType);
 
@@ -72,9 +84,27 @@ class ContentTypeBuilderController extends Controller
             ->latest('id')
             ->paginate(20);
 
-        return view('content::types.builder-status', [
-            'contentType' => $contentType,
-            'plans' => $plans,
+        return Inertia::render('Content/Types/Builder/Status', [
+            'contentType' => [
+                'id' => $contentType->id,
+                'name' => $contentType->name,
+                'slug' => $contentType->slug,
+            ],
+            'plans' => $plans->through(static fn (ContentSchemaMigrationPlan $plan): array => [
+                'id' => $plan->id,
+                'status' => $plan->status,
+                'planned_at' => $plan->planned_at?->toDateTimeString(),
+                'summary' => [
+                    'additions' => (int) ($plan->plan_json['summary']['additions'] ?? 0),
+                    'removals' => (int) ($plan->plan_json['summary']['removals'] ?? 0),
+                    'updates' => (int) ($plan->plan_json['summary']['updates'] ?? 0),
+                ],
+                'error_message' => $plan->error_message,
+            ]),
+            'routes' => [
+                'builderEdit' => route('content.admin.types.builder.edit', $contentType),
+                'typeEdit' => route('content.admin.types.edit', $contentType),
+            ],
         ]);
     }
 }
