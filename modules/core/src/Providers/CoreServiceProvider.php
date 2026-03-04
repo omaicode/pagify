@@ -34,15 +34,19 @@ class CoreServiceProvider extends ServiceProvider
 	public function register(): void
 	{
 		$this->mergeConfigFrom(__DIR__ . '/../../config/core.php', 'core');
+		$this->mergeConfigFrom(__DIR__ . '/../../config/menu.php', 'core.menu');
 
 		$this->mergeModuleUiContractsIntoConfig();
 
 		$this->app->singleton(SiteContext::class);
 
 		$this->app->singleton(ModuleRegistry::class, function (): ModuleRegistry {
+			$modules = config('core.modules', []);
+
 			return new ModuleRegistry(
-				config('core.modules', []),
+				$modules,
 				$this->app->make(ModuleStateService::class),
+				moduleMenus: $this->resolveModuleMenus($modules),
 			);
 		});
 
@@ -113,14 +117,12 @@ class CoreServiceProvider extends ServiceProvider
 				continue;
 			}
 
-			$contractMenus = $decoded['menus'] ?? [];
 			$contractPages = $decoded['pages'] ?? [];
 			$contractActions = $decoded['actions'] ?? [];
 			$contractWidgets = $decoded['widgets'] ?? [];
 
 			$resolvedModules[$moduleKey] = [
 				...$moduleConfig,
-				'menu' => is_array($contractMenus) ? $contractMenus : ($moduleConfig['menu'] ?? []),
 				'pages' => is_array($contractPages) ? $contractPages : [],
 				'actions' => is_array($contractActions) ? $contractActions : [],
 				'widgets' => is_array($contractWidgets) ? $contractWidgets : [],
@@ -134,6 +136,35 @@ class CoreServiceProvider extends ServiceProvider
 		config(['core.modules' => $resolvedModules]);
 	}
 
+	/**
+	 * @param array<string, array<string, mixed>> $modules
+	 * @return array<string, array<int, array<string, mixed>>>
+	 */
+	private function resolveModuleMenus(array $modules): array
+	{
+		$resolved = [];
+
+		foreach ($modules as $moduleKey => $moduleConfig) {
+			if (! is_array($moduleConfig)) {
+				continue;
+			}
+
+			$configKey = $moduleConfig['config_key'] ?? $moduleConfig['slug'] ?? $moduleKey;
+
+			if (! is_string($configKey) || trim($configKey) === '') {
+				continue;
+			}
+
+			$menu = config(sprintf('%s.menu', $configKey), []);
+
+			if (is_array($menu)) {
+				$resolved[(string) $moduleKey] = $menu;
+			}
+		}
+
+		return $resolved;
+	}
+
 	public function boot(): void
 	{
 		$this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
@@ -143,6 +174,7 @@ class CoreServiceProvider extends ServiceProvider
 
 		$this->publishes([
 			__DIR__ . '/../../config/core.php' => config_path('core.php'),
+			__DIR__ . '/../../config/menu.php' => config_path('core-menu.php'),
 		], 'core-config');
 
 		$this->registerSiteContextFromRequest();

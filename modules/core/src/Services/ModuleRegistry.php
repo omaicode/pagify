@@ -12,6 +12,8 @@ class ModuleRegistry
         private readonly array $modules,
         private readonly ?ModuleStateService $moduleStateService = null,
         private readonly array $runtimeStates = [],
+        /** @var array<string, array<int, array<string, mixed>>> */
+        private readonly array $moduleMenus = [],
     )
     {
     }
@@ -58,12 +60,12 @@ class ModuleRegistry
     {
         $menu = [];
 
-        foreach ($this->all() as $module) {
+        foreach ($this->all() as $moduleKey => $module) {
             if (! (bool) ($module['enabled'] ?? false)) {
                 continue;
             }
 
-            $moduleMenu = $module['menu'] ?? [];
+            $moduleMenu = $this->resolveModuleMenu((string) $moduleKey);
 
             if (is_array($moduleMenu)) {
                 foreach ($moduleMenu as $menuItem) {
@@ -87,13 +89,6 @@ class ModuleRegistry
         }
 
         usort($menu, static function (array $left, array $right): int {
-            $leftGroup = (string) ($left['group'] ?? 'zzz');
-            $rightGroup = (string) ($right['group'] ?? 'zzz');
-
-            if ($leftGroup !== $rightGroup) {
-                return $leftGroup <=> $rightGroup;
-            }
-
             $leftOrder = (int) ($left['order'] ?? PHP_INT_MAX);
             $rightOrder = (int) ($right['order'] ?? PHP_INT_MAX);
 
@@ -101,10 +96,27 @@ class ModuleRegistry
                 return $leftOrder <=> $rightOrder;
             }
 
+            $leftGroup = (string) ($left['group'] ?? 'zzz');
+            $rightGroup = (string) ($right['group'] ?? 'zzz');
+
+            if ($leftGroup !== $rightGroup) {
+                return $leftGroup <=> $rightGroup;
+            }
+
             return ((string) ($left['label'] ?? '')) <=> ((string) ($right['label'] ?? ''));
         });
 
         return $menu;
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function resolveModuleMenu(string $moduleKey): array
+    {
+        $resolved = $this->moduleMenus[$moduleKey] ?? null;
+
+        return is_array($resolved) ? $resolved : [];
     }
 
     /**

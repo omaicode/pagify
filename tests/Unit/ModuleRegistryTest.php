@@ -12,17 +12,18 @@ class ModuleRegistryTest extends TestCase
         $registry = new ModuleRegistry([
             'core' => [
                 'enabled' => true,
-                'menu' => [
-                    [
-                        'label' => 'Dashboard',
-                        'route' => 'core.admin.dashboard',
-                        'permission' => null,
-                    ],
-                    [
-                        'label' => 'API tokens',
-                        'route' => 'core.admin.tokens.index',
-                        'permission' => 'core.token.manage',
-                    ],
+            ],
+        ], moduleMenus: [
+            'core' => [
+                [
+                    'label' => 'Dashboard',
+                    'route' => 'core.admin.dashboard',
+                    'permission' => null,
+                ],
+                [
+                    'label' => 'API tokens',
+                    'route' => 'core.admin.tokens.index',
+                    'permission' => 'core.token.manage',
                 ],
             ],
         ]);
@@ -37,17 +38,18 @@ class ModuleRegistryTest extends TestCase
         $registry = new ModuleRegistry([
             'core' => [
                 'enabled' => true,
-                'menu' => [
-                    [
-                        'label' => 'Dashboard',
-                        'route' => 'core.admin.dashboard',
-                        'permission' => null,
-                    ],
-                    [
-                        'label' => 'API tokens',
-                        'route' => 'core.admin.tokens.index',
-                        'permission' => 'core.token.manage',
-                    ],
+            ],
+        ], moduleMenus: [
+            'core' => [
+                [
+                    'label' => 'Dashboard',
+                    'route' => 'core.admin.dashboard',
+                    'permission' => null,
+                ],
+                [
+                    'label' => 'API tokens',
+                    'route' => 'core.admin.tokens.index',
+                    'permission' => 'core.token.manage',
                 ],
             ],
         ]);
@@ -56,5 +58,77 @@ class ModuleRegistryTest extends TestCase
 
         $this->assertCount(1, $menu);
         $this->assertSame('Dashboard', $menu[0]['label']);
+    }
+
+    public function test_admin_menu_merges_module_menus_and_sorts_by_order(): void
+    {
+        $registry = new ModuleRegistry([
+            'core' => [
+                'enabled' => true,
+            ],
+            'content' => [
+                'enabled' => true,
+            ],
+        ], moduleMenus: [
+            'core' => [
+                [
+                    'label' => 'Modules',
+                    'route' => 'core.admin.modules.index',
+                    'permission' => null,
+                    'order' => 40,
+                ],
+            ],
+            'content' => [
+                [
+                    'label' => 'Content',
+                    'route' => 'content.admin.dashboard',
+                    'permission' => null,
+                    'order' => 10,
+                ],
+            ],
+        ]);
+
+        $menu = $registry->adminMenu();
+
+        $this->assertCount(2, $menu);
+        $this->assertSame('Content', $menu[0]['label']);
+        $this->assertSame('Modules', $menu[1]['label']);
+    }
+
+    public function test_admin_menu_order_takes_priority_over_group_name(): void
+    {
+        $registry = new ModuleRegistry([
+            'core' => [
+                'enabled' => true,
+            ],
+            'content' => [
+                'enabled' => true,
+            ],
+        ], moduleMenus: [
+            'core' => [
+                [
+                    'label' => 'Modules',
+                    'route' => 'core.admin.modules.index',
+                    'permission' => null,
+                    'group' => 'Core',
+                    'order' => 40,
+                ],
+            ],
+            'content' => [
+                [
+                    'label' => 'Content',
+                    'route' => 'content.admin.dashboard',
+                    'permission' => null,
+                    'group' => 'Content',
+                    'order' => 100,
+                ],
+            ],
+        ]);
+
+        $menu = $registry->adminMenu();
+
+        $this->assertCount(2, $menu);
+        $this->assertSame('Modules', $menu[0]['label']);
+        $this->assertSame('Content', $menu[1]['label']);
     }
 }
