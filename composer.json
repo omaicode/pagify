@@ -25,6 +25,7 @@
         "laravel/tinker": "^2.10.1",
         "modules/content": "*",
         "modules/core": "*",
+        "modules/media": "*",
         "spatie/laravel-permission": "^6.10"
     },
     "require-dev": {
