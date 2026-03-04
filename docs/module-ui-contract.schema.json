@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pagify.local/schemas/module-ui-contract.schema.json",
+  "title": "Module UI Contract",
+  "description": "Contract metadata for admin menu/page/action/widget integration.",
+  "type": "object",
+  "required": ["module", "menus", "pages", "actions", "widgets"],
+  "additionalProperties": false,
+  "properties": {
+    "module": {
+      "type": "object",
+      "required": ["key", "name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]{1,63}$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 500
+        }
+      }
+    },
+    "menus": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/menuItem"
+      }
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/pageItem"
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/actionItem"
+      }
+    },
+    "widgets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/widgetItem"
+      }
+    }
+  },
+  "$defs": {
+    "visibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "feature_flag": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "roles_any": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 120 }
+        },
+        "site_scoped": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "menuItem": {
+      "type": "object",
+      "required": ["key", "label", "route", "order", "group"],
+      "additionalProperties": false,
+      "properties": {
+        "key": { "type": "string", "pattern": "^[a-z0-9._-]{3,120}$" },
+        "label": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "icon": { "type": "string", "maxLength": 80 },
+        "route": { "type": "string", "pattern": "^[a-z0-9._-]{3,160}$" },
+        "order": { "type": "integer", "minimum": 0, "maximum": 10000 },
+        "group": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "permission": { "type": "string", "maxLength": 160 },
+        "visibility": { "$ref": "#/$defs/visibility" }
+      }
+    },
+    "pageItem": {
+      "type": "object",
+      "required": ["key", "title", "route", "layout"],
+      "additionalProperties": false,
+      "properties": {
+        "key": { "type": "string", "pattern": "^[a-z0-9._-]{3,120}$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "route": { "type": "string", "pattern": "^[a-z0-9._-]{3,160}$" },
+        "layout": {
+          "type": "string",
+          "enum": ["admin.default", "admin.fullwidth", "admin.split"]
+        },
+        "permission": { "type": "string", "maxLength": 160 },
+        "breadcrumb": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 120 }
+        },
+        "visibility": { "$ref": "#/$defs/visibility" }
+      }
+    },
+    "actionItem": {
+      "type": "object",
+      "required": ["key", "label", "route", "method", "surface"],
+      "additionalProperties": false,
+      "properties": {
+        "key": { "type": "string", "pattern": "^[a-z0-9._-]{3,120}$" },
+        "label": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "route": { "type": "string", "pattern": "^[a-z0-9._-]{3,160}$" },
+        "method": {
+          "type": "string",
+          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+        },
+        "surface": {
+          "type": "string",
+          "enum": ["page-header", "row-action", "bulk-action", "command-palette"]
+        },
+        "permission": { "type": "string", "maxLength": 160 },
+        "destructive": { "type": "boolean", "default": false },
+        "confirm": { "type": "boolean", "default": false },
+        "visibility": { "$ref": "#/$defs/visibility" }
+      }
+    },
+    "widgetItem": {
+      "type": "object",
+      "required": ["key", "title", "type", "surface"],
+      "additionalProperties": false,
+      "properties": {
+        "key": { "type": "string", "pattern": "^[a-z0-9._-]{3,120}$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "type": {
+          "type": "string",
+          "enum": ["stat", "list", "chart", "activity"]
+        },
+        "surface": {
+          "type": "string",
+          "enum": ["dashboard", "page-sidebar", "page-footer"]
+        },
+        "permission": { "type": "string", "maxLength": 160 },
+        "refresh_seconds": { "type": "integer", "minimum": 0, "maximum": 3600 },
+        "visibility": { "$ref": "#/$defs/visibility" }
+      }
+    }
+  }
+}
