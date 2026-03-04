@@ -1,6 +1,6 @@
 <script setup>
 import { router } from '@inertiajs/vue3';
-import AdminLayout from '../../../../../../../core/resources/js/Layouts/AdminLayout.vue';
+import AdminLayout from '@admin-theme/Layouts/AdminLayout.vue';
 
 const props = defineProps({
     contentType: { type: Object, required: true },

@@ -54,12 +54,12 @@
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
             "@php artisan migrate --force",
-            "npm install",
-            "npm run build"
+            "cd themes/admin/default && npm install",
+            "cd themes/admin/default && npm run build"
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
+            "cd themes/admin/default && npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"cd ../../.. && php artisan serve\" \"cd ../../.. && php artisan queue:listen --tries=1 --timeout=0\" \"cd ../../.. && php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
         ],
         "test": [
             "@php artisan config:clear --ansi"

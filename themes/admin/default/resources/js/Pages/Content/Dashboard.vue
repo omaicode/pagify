@@ -1,5 +1,5 @@
 <script setup>
-import AdminLayout from '../../../../../core/resources/js/Layouts/AdminLayout.vue';
+import AdminLayout from '@admin-theme/Layouts/AdminLayout.vue';
 
 defineProps({
     title: {

@@ -138,7 +138,10 @@ class CoreServiceProvider extends ServiceProvider
 	{
 		$this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
 		$this->loadRoutesFrom(__DIR__ . '/../../routes/core-routes.php');
-		$this->loadViewsFrom(__DIR__ . '/../../resources/views', 'core');
+		$this->loadViewsFrom([
+			base_path('themes/admin/default/resources/views'),
+			__DIR__ . '/../../resources/views',
+		], 'core');
 		$this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'core');
 
 		$this->publishes([
