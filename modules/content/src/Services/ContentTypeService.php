@@ -10,6 +10,15 @@ use Modules\Content\Models\ContentType;
 class ContentTypeService
 {
     /**
+     * @param array<int, array<string, mixed>> $fields
+     * @return array<int, array<string, mixed>>
+     */
+    public function normalizeBuilderFields(array $fields): array
+    {
+        return $this->normalizeFields($fields);
+    }
+
+    /**
      * @param array<string, mixed> $payload
      */
     public function create(array $payload): ContentType
@@ -118,6 +127,10 @@ class ContentTypeService
             $validation = $this->normalizeOptionalArray($field['validation'] ?? []);
             $conditional = $this->normalizeOptionalArray($field['conditional'] ?? []);
 
+            if (isset($config['target_type_slug']) && ! isset($config['target_content_type_slug'])) {
+                $config['target_content_type_slug'] = (string) $config['target_type_slug'];
+            }
+
             $this->validateByFieldType($fieldType, $config, $index);
 
             $normalized[] = [
@@ -152,7 +165,7 @@ class ContentTypeService
         if ($fieldType === 'relation') {
             $relationTypes = config('content.relation_types', []);
             $relationType = (string) ($config['relation_type'] ?? '');
-            $targetTypeSlug = (string) ($config['target_type_slug'] ?? '');
+            $targetTypeSlug = (string) ($config['target_content_type_slug'] ?? $config['target_type_slug'] ?? '');
 
             if ($relationType === '' || ! in_array($relationType, $relationTypes, true) || $targetTypeSlug === '') {
                 throw ValidationException::withMessages([

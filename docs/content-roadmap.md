@@ -27,7 +27,7 @@ Roadmap này định nghĩa lộ trình triển khai module `content` cho Pagify
 - Phase C4: completed
 - Phase C5: completed
 - Phase C6: completed
-- Phase C7: planned
+- Phase C7: completed
 - Phase C8: planned
 
 ---
@@ -148,12 +148,12 @@ Deliverables:
 
 ## Phase C7 — Visual Schema Builder (UI drag-drop + queue trigger)
 
-- [ ] Build drag-drop schema editor UI for content type fields.
-- [ ] Support conditional field blocks and repeater nesting metadata.
-- [ ] Save builder output to schema JSON.
-- [ ] Create migration plan job on schema save (queue trigger).
-- [ ] Add admin status view for queued migration plans.
-- [ ] Prevent direct DDL execution from web request thread.
+- [x] Build drag-drop schema editor UI for content type fields.
+- [x] Support conditional field blocks and repeater nesting metadata.
+- [x] Save builder output to schema JSON.
+- [x] Create migration plan job on schema save (queue trigger).
+- [x] Add admin status view for queued migration plans.
+- [x] Prevent direct DDL execution from web request thread.
 
 Deliverables:
 - `modules/content/resources/js/Pages/Admin/Types/Builder.vue`
