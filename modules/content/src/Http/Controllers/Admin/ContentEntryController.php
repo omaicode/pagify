@@ -61,8 +61,11 @@ class ContentEntryController extends Controller
         $contentType = $this->resolveType($contentTypeSlug);
         $this->authorize('create', [ContentEntry::class, $contentType]);
 
+        /** @var \Modules\Core\Models\Admin|null $admin */
+        $admin = $request->user('web');
+
         try {
-            $entry = $this->contentEntryService->create($contentType, $request->validated());
+            $entry = $this->contentEntryService->create($contentType, $request->validated(), $admin?->id);
         } catch (ValidationException $exception) {
             throw $exception;
         }
@@ -102,8 +105,11 @@ class ContentEntryController extends Controller
         $entry = $this->resolveEntry($contentType, $entryId);
         $this->authorize('update', [ContentEntry::class, $contentType, $entry]);
 
+        /** @var \Modules\Core\Models\Admin|null $admin */
+        $admin = $request->user('web');
+
         try {
-            $updated = $this->contentEntryService->update($contentType, $entry, $request->validated());
+            $updated = $this->contentEntryService->update($contentType, $entry, $request->validated(), $admin?->id);
         } catch (ValidationException $exception) {
             throw $exception;
         }

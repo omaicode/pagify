@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Content\Http\Controllers\Admin\ContentDashboardController;
 use Modules\Content\Http\Controllers\Admin\ContentEntryController;
+use Modules\Content\Http\Controllers\Admin\ContentEntryRevisionController;
 use Modules\Content\Http\Controllers\Admin\ContentTypeController;
 use Modules\Content\Http\Controllers\Api\ContentHealthController;
 use Modules\Core\Http\Middleware\EnsureApiErrorEnvelope;
@@ -30,6 +31,8 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
 			Route::get('/{contentTypeSlug}/entries/{entryId}/edit', [ContentEntryController::class, 'edit'])->name('entries.edit');
 			Route::put('/{contentTypeSlug}/entries/{entryId}', [ContentEntryController::class, 'update'])->name('entries.update');
 			Route::delete('/{contentTypeSlug}/entries/{entryId}', [ContentEntryController::class, 'destroy'])->name('entries.destroy');
+			Route::get('/{contentTypeSlug}/entries/{entryId}/revisions', [ContentEntryRevisionController::class, 'index'])->name('entries.revisions.index');
+			Route::post('/{contentTypeSlug}/entries/{entryId}/revisions/{revisionId}/rollback', [ContentEntryRevisionController::class, 'rollback'])->name('entries.revisions.rollback');
 		});
 });
 

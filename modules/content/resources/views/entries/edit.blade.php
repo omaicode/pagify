@@ -75,6 +75,7 @@
             <button type="submit">Delete</button>
         </form>
 
+        <p><a href="{{ route('content.admin.entries.revisions.index', [$contentType->slug, $entry->id]) }}">View revisions</a></p>
         <p><a href="{{ route('content.admin.entries.index', $contentType->slug) }}">Back to entries</a></p>
     </main>
 </body>

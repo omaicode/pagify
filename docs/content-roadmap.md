@@ -23,7 +23,7 @@ Roadmap này định nghĩa lộ trình triển khai module `content` cho Pagify
 - Phase C0: completed
 - Phase C1: completed
 - Phase C2: completed
-- Phase C3: planned
+- Phase C3: completed
 - Phase C4: planned
 - Phase C5: planned
 - Phase C6: planned
@@ -83,12 +83,12 @@ Deliverables:
 
 ## Phase C3 — Versioning (revision history, diff, rollback)
 
-- [ ] Add migration/model for `content_entry_revisions`.
-- [ ] Auto-create revision snapshot on create/update/publish/rollback.
-- [ ] Implement key-level diff calculation for revision compare view.
-- [ ] Implement rollback endpoint/action creating a new revision head.
-- [ ] Add UI history timeline + diff + rollback actions.
-- [ ] Ensure revision operations are permission-protected and audited.
+- [x] Add migration/model for `content_entry_revisions`.
+- [x] Auto-create revision snapshot on create/update/publish/rollback.
+- [x] Implement key-level diff calculation for revision compare view.
+- [x] Implement rollback endpoint/action creating a new revision head.
+- [x] Add UI history timeline + diff + rollback actions.
+- [x] Ensure revision operations are permission-protected and audited.
 
 Deliverables:
 - `modules/content/src/Models/ContentEntryRevision.php`

@@ -46,4 +46,24 @@ class ContentEntryPolicy
                 || $admin->can('content.entry.delete.' . $contentType->slug)
             );
     }
+
+    public function viewRevisions(Admin $admin, ContentType $contentType, ContentEntry $entry): bool
+    {
+        return $entry->content_type_id === $contentType->id
+            && (
+                $admin->can('content.entry.revision.view')
+                || $admin->can('content.entry.revision.view.' . $contentType->slug)
+                || $admin->can('content.entry.update')
+            );
+    }
+
+    public function rollbackRevision(Admin $admin, ContentType $contentType, ContentEntry $entry): bool
+    {
+        return $entry->content_type_id === $contentType->id
+            && (
+                $admin->can('content.entry.revision.rollback')
+                || $admin->can('content.entry.revision.rollback.' . $contentType->slug)
+                || $admin->can('content.entry.update')
+            );
+    }
 }

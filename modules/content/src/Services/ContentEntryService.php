@@ -12,40 +12,60 @@ use Modules\Content\Models\ContentType;
 
 class ContentEntryService
 {
-    public function __construct(private readonly EntrySchemaResolver $schemaResolver)
-    {
+    public function __construct(
+        private readonly EntrySchemaResolver $schemaResolver,
+        private readonly EntryRevisionService $entryRevisionService,
+    ) {
     }
 
     /**
      * @param array<string, mixed> $payload
      */
-    public function create(ContentType $contentType, array $payload): ContentEntry
+    public function create(ContentType $contentType, array $payload, ?int $adminId = null): ContentEntry
     {
         $validated = $this->validatePayload($contentType, $payload);
 
-        return DB::transaction(function () use ($contentType, $validated): ContentEntry {
-            return ContentEntry::query()->create([
+        return DB::transaction(function () use ($contentType, $validated, $adminId): ContentEntry {
+            $entry = ContentEntry::query()->create([
                 'content_type_id' => $contentType->id,
                 'slug' => (string) $validated['slug'],
                 'status' => (string) ($validated['status'] ?? 'draft'),
                 'data_json' => $this->normalizeData($contentType, (array) $validated['data']),
             ]);
+
+            $this->entryRevisionService->snapshot(
+                entry: $entry,
+                action: 'created',
+                adminId: $adminId,
+                beforeSnapshot: [],
+            );
+
+            return $entry;
         });
     }
 
     /**
      * @param array<string, mixed> $payload
      */
-    public function update(ContentType $contentType, ContentEntry $entry, array $payload): ContentEntry
+    public function update(ContentType $contentType, ContentEntry $entry, array $payload, ?int $adminId = null): ContentEntry
     {
         $validated = $this->validatePayload($contentType, $payload, $entry);
 
-        return DB::transaction(function () use ($entry, $contentType, $validated): ContentEntry {
+        return DB::transaction(function () use ($entry, $contentType, $validated, $adminId): ContentEntry {
+            $beforeSnapshot = $this->entryRevisionService->snapshotFromEntry($entry);
+
             $entry->fill([
                 'slug' => (string) $validated['slug'],
                 'status' => (string) ($validated['status'] ?? $entry->status),
                 'data_json' => $this->normalizeData($contentType, (array) $validated['data']),
             ])->save();
+
+            $this->entryRevisionService->snapshot(
+                entry: $entry,
+                action: 'updated',
+                adminId: $adminId,
+                beforeSnapshot: $beforeSnapshot,
+            );
 
             return $entry->refresh();
         });

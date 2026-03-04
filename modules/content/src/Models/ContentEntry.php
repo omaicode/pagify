@@ -5,6 +5,7 @@ namespace Modules\Content\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Core\Traits\BelongsToSite;
 
 class ContentEntry extends Model
@@ -27,5 +28,11 @@ class ContentEntry extends Model
     public function contentType(): BelongsTo
     {
         return $this->belongsTo(ContentType::class);
+    }
+
+    public function revisions(): HasMany
+    {
+        return $this->hasMany(ContentEntryRevision::class, 'content_entry_id')
+            ->orderByDesc('revision_no');
     }
 }
