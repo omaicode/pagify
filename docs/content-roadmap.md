@@ -26,7 +26,7 @@ Roadmap này định nghĩa lộ trình triển khai module `content` cho Pagify
 - Phase C3: completed
 - Phase C4: completed
 - Phase C5: completed
-- Phase C6: planned
+- Phase C6: completed
 - Phase C7: planned
 - Phase C8: planned
 
@@ -132,12 +132,12 @@ Deliverables:
 
 ## Phase C6 — Content API auto-generation
 
-- [ ] Build REST endpoints by content type slug (`list`, `get`).
-- [ ] Add filtering, sorting, pagination contract.
-- [ ] Add API resources for consistent payload shape.
-- [ ] Enforce per-content-type permissions for API access.
-- [ ] Keep envelope compatibility with core API contract.
-- [ ] Add feature tests for query/filter/pagination/security.
+- [x] Build REST endpoints by content type slug (`list`, `get`).
+- [x] Add filtering, sorting, pagination contract.
+- [x] Add API resources for consistent payload shape.
+- [x] Enforce per-content-type permissions for API access.
+- [x] Keep envelope compatibility with core API contract.
+- [x] Add feature tests for query/filter/pagination/security.
 
 Deliverables:
 - `modules/content/src/Http/Controllers/Api/ContentApiController.php`

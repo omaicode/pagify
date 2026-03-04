@@ -85,4 +85,10 @@ class ContentEntryPolicy
     {
         return $this->publish($admin, $contentType, $entry);
     }
+
+    public function apiRead(Admin $admin, ContentType $contentType): bool
+    {
+        return $admin->can('content.api.read')
+            || $admin->can('content.api.read.' . $contentType->slug);
+    }
 }

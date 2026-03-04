@@ -6,6 +6,7 @@ use Modules\Content\Http\Controllers\Admin\ContentEntryController;
 use Modules\Content\Http\Controllers\Admin\ContentEntryRevisionController;
 use Modules\Content\Http\Controllers\Admin\ContentTypeController;
 use Modules\Content\Http\Controllers\Api\AdminRelationPickerController;
+use Modules\Content\Http\Controllers\Api\ContentApiController;
 use Modules\Content\Http\Controllers\Api\ContentHealthController;
 use Modules\Core\Http\Middleware\EnsureApiErrorEnvelope;
 use Modules\Core\Http\Middleware\HandleInertiaRequests;
@@ -45,6 +46,8 @@ Route::prefix('api/v1/content')
 	->name('content.api.v1.')
 	->group(function (): void {
 		Route::get('/health', [ContentHealthController::class, 'public'])->name('health');
+		Route::get('/{contentTypeSlug}', [ContentApiController::class, 'index'])->name('entries.index');
+		Route::get('/{contentTypeSlug}/{entrySlug}', [ContentApiController::class, 'show'])->name('entries.show');
 	});
 
 Route::prefix('api/v1/admin/content')
