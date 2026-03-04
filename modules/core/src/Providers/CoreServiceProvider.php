@@ -89,6 +89,10 @@ class CoreServiceProvider extends ServiceProvider
 			$moduleConfig = config(sprintf('%s.module', $moduleSlug), []);
 
 			if (! is_array($moduleConfig) || $moduleConfig === []) {
+				$moduleConfig = $this->loadModuleConfigFromFile($moduleSlug);
+			}
+
+			if (! is_array($moduleConfig) || $moduleConfig === []) {
 				continue;
 			}
 
@@ -105,6 +109,22 @@ class CoreServiceProvider extends ServiceProvider
 		}
 
 		return $resolvedModules;
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	private function loadModuleConfigFromFile(string $moduleSlug): array
+	{
+		$path = base_path(sprintf('modules/%s/config/module.php', $moduleSlug));
+
+		if (! is_file($path)) {
+			return [];
+		}
+
+		$data = require $path;
+
+		return is_array($data) ? $data : [];
 	}
 
 	/**

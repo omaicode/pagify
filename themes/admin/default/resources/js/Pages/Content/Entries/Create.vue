@@ -3,6 +3,7 @@ import { useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import AdminLayout from '@admin-theme/Layouts/AdminLayout.vue';
+import AssetPicker from '@admin-theme/Components/AssetPicker.vue';
 
 const props = defineProps({
     contentType: {
@@ -68,8 +69,13 @@ const submit = () => {
                 <fieldset v-for="field in formFields" :key="field.key" class="rounded border border-slate-200 p-3">
                     <legend class="px-1 text-sm font-medium">{{ field.label }} ({{ field.field_type }})</legend>
 
+                    <AssetPicker
+                        v-if="field.field_type === 'media'"
+                        v-model="form.data[field.key]"
+                    />
+
                     <input
-                        v-if="field.field_type !== 'boolean' && field.field_type !== 'select'"
+                        v-else-if="field.field_type !== 'boolean' && field.field_type !== 'select'"
                         v-model="form.data[field.key]"
                         type="text"
                         class="mt-1 w-full rounded border border-slate-300 px-2 py-1"

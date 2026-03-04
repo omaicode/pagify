@@ -4,11 +4,13 @@ namespace Modules\Content\Services;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Modules\Content\Models\ContentEntry;
 use Modules\Content\Models\ContentType;
+use Modules\Media\Models\MediaAsset;
 
 class ContentEntryService
 {
@@ -35,6 +37,7 @@ class ContentEntryService
             ]);
 
             $this->relationResolver->syncForEntry($entry, $contentType, (array) $validated['data']);
+            $this->syncMediaUsages($entry, $contentType, (array) $validated['data']);
 
             $this->entryRevisionService->snapshot(
                 entry: $entry,
@@ -64,6 +67,7 @@ class ContentEntryService
             ])->save();
 
             $this->relationResolver->syncForEntry($entry, $contentType, (array) $validated['data']);
+            $this->syncMediaUsages($entry, $contentType, (array) $validated['data']);
 
             $this->entryRevisionService->snapshot(
                 entry: $entry,
@@ -78,7 +82,10 @@ class ContentEntryService
 
     public function delete(ContentEntry $entry): void
     {
-        $entry->delete();
+        DB::transaction(function () use ($entry): void {
+            $this->removeMediaUsages($entry);
+            $entry->delete();
+        });
     }
 
     /**
@@ -167,5 +174,94 @@ class ContentEntryService
         }
 
         return $result;
+    }
+
+    /**
+     * @param array<string, mixed> $payloadData
+     */
+    private function syncMediaUsages(ContentEntry $entry, ContentType $contentType, array $payloadData): void
+    {
+        if (! Schema::hasTable('media_usages') || ! Schema::hasTable('media_assets')) {
+            return;
+        }
+
+        $this->removeMediaUsages($entry);
+
+        $mediaFieldKeys = $contentType->fields
+            ->filter(static fn ($field): bool => (string) $field->field_type === 'media')
+            ->pluck('key')
+            ->map(static fn ($key): string => (string) $key)
+            ->values();
+
+        if ($mediaFieldKeys->isEmpty()) {
+            return;
+        }
+
+        $recordsByField = [];
+        foreach ($mediaFieldKeys as $fieldKey) {
+            $raw = $payloadData[$fieldKey] ?? null;
+            $values = is_array($raw) ? $raw : [$raw];
+
+            $uuids = collect($values)
+                ->map(static fn ($value): string => trim((string) $value))
+                ->filter(static fn (string $value): bool => $value !== '')
+                ->unique()
+                ->values();
+
+            if ($uuids->isNotEmpty()) {
+                $recordsByField[$fieldKey] = $uuids->all();
+            }
+        }
+
+        if ($recordsByField === []) {
+            return;
+        }
+
+        $allUuids = collect($recordsByField)->flatten()->unique()->values()->all();
+        $assetIdByUuid = MediaAsset::query()
+            ->whereIn('uuid', $allUuids)
+            ->pluck('id', 'uuid');
+
+        $rows = [];
+        foreach ($recordsByField as $fieldKey => $uuids) {
+            foreach ($uuids as $uuid) {
+                $assetId = $assetIdByUuid[$uuid] ?? null;
+
+                if ($assetId === null) {
+                    continue;
+                }
+
+                $rows[] = [
+                    'site_id' => $entry->site_id,
+                    'asset_id' => (int) $assetId,
+                    'context_type' => 'content_entry',
+                    'context_id' => (string) $entry->id,
+                    'field_key' => $fieldKey,
+                    'reference_path' => 'data.' . $fieldKey,
+                    'meta' => json_encode([
+                        'content_type_id' => $contentType->id,
+                        'content_type_slug' => $contentType->slug,
+                    ]),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+        }
+
+        if ($rows !== []) {
+            DB::table('media_usages')->insert($rows);
+        }
+    }
+
+    private function removeMediaUsages(ContentEntry $entry): void
+    {
+        if (! Schema::hasTable('media_usages')) {
+            return;
+        }
+
+        DB::table('media_usages')
+            ->where('context_type', 'content_entry')
+            ->where('context_id', (string) $entry->id)
+            ->delete();
     }
 }

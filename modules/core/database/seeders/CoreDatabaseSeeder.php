@@ -55,6 +55,13 @@ class CoreDatabaseSeeder extends Seeder
             'content.entry.revision.view',
             'content.entry.revision.rollback',
             'content.api.read',
+            'media.asset.viewAny',
+            'media.asset.view',
+            'media.asset.create',
+            'media.asset.update',
+            'media.asset.delete',
+            'media.folder.manage',
+            'media.tag.manage',
         ];
 
         foreach ($permissions as $permissionName) {
