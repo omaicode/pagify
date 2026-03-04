@@ -6,18 +6,21 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 use Modules\Core\Services\AuditLogger;
 
 class AuthController extends Controller
 {
-    public function create(): View|RedirectResponse
+    public function create(): Response|RedirectResponse
     {
         if (Auth::guard('web')->check()) {
             return redirect()->route('core.admin.dashboard');
         }
 
-        return view('core::admin.auth.login');
+        return Inertia::render('Admin/Auth/Login', [
+            'loginAction' => route('core.admin.login.store'),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -27,7 +30,31 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (Auth::guard('web')->attempt($credentials, (bool) $request->boolean('remember'))) {
+        $identifier = trim((string) $credentials['username']);
+        $password = (string) $credentials['password'];
+        $remember = (bool) $request->boolean('remember');
+
+        $attemptCredentials = [
+            [
+                'username' => $identifier,
+                'password' => $password,
+            ],
+            [
+                'email' => $identifier,
+                'password' => $password,
+            ],
+        ];
+
+        $authenticated = false;
+
+        foreach ($attemptCredentials as $attempt) {
+            if (Auth::guard('web')->attempt($attempt, $remember)) {
+                $authenticated = true;
+                break;
+            }
+        }
+
+        if ($authenticated) {
             $request->session()->regenerate();
 
             app(AuditLogger::class)->log(
@@ -35,7 +62,7 @@ class AuthController extends Controller
                 entityType: 'admin',
                 entityId: (string) Auth::guard('web')->id(),
                 metadata: [
-                    'username' => $credentials['username'],
+                    'identifier' => $identifier,
                 ],
             );
 

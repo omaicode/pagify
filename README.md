@@ -36,5 +36,26 @@ To install Pagify, follow these steps:
 composer create pagify/pagify your-project-name
 ```
 
+## Development workflow
+
+Project commands are standardized in the runbook:
+
+- [docs/runbook.md](docs/runbook.md)
+
+Quick commands:
+
+```bash
+composer setup
+composer dev
+php artisan test
+```
+
+Admin UI theme can be switched by setting `ADMIN_THEME` (default: `default`):
+
+```bash
+export ADMIN_THEME=v2
+composer dev
+```
+
 ## Contributing
 We welcome contributions to Pagify! If you would like to contribute, please fork the repository and submit a pull request with your changes. Make sure to follow our coding standards and include tests for any new features or bug fixes.

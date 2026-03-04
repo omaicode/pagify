@@ -138,10 +138,7 @@ class CoreServiceProvider extends ServiceProvider
 	{
 		$this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
 		$this->loadRoutesFrom(__DIR__ . '/../../routes/core-routes.php');
-		$this->loadViewsFrom([
-			base_path('themes/admin/default/resources/views'),
-			__DIR__ . '/../../resources/views',
-		], 'core');
+		$this->loadViewsFrom($this->adminThemeViewPaths(), 'core');
 		$this->loadTranslationsFrom(__DIR__ . '/../../resources/lang', 'core');
 
 		$this->publishes([
@@ -256,5 +253,34 @@ class CoreServiceProvider extends ServiceProvider
 
 			$modelClass::observe($observer);
 		}
+	}
+
+	/**
+	 * @return array<int, string>
+	 */
+	private function adminThemeViewPaths(): array
+	{
+		$themesBasePath = trim((string) config('core.admin_ui.themes_base_path', 'themes/admin'), '/');
+		$activeTheme = trim((string) config('core.admin_ui.theme', 'default'), '/');
+		$fallbackTheme = trim((string) config('core.admin_ui.fallback_theme', 'default'), '/');
+
+		$themes = array_values(array_unique(array_filter([
+			$activeTheme,
+			$fallbackTheme,
+		], static fn (string $theme): bool => $theme !== '')));
+
+		$paths = [];
+
+		foreach ($themes as $theme) {
+			$themeViewPath = base_path(sprintf('%s/%s/resources/views', $themesBasePath, $theme));
+
+			if (is_dir($themeViewPath)) {
+				$paths[] = $themeViewPath;
+			}
+		}
+
+		$paths[] = __DIR__ . '/../../resources/views';
+
+		return $paths;
 	}
 }

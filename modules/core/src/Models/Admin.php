@@ -36,8 +36,7 @@ class Admin extends Authenticatable
     ];
 
     protected $casts = [
-        "email_verified_at" => "datetime",
-        "password" => "hashed",
+        "email_verified_at" => "datetime"
     ];
 
     protected static function newFactory()

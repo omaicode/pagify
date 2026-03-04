@@ -57,6 +57,12 @@ return [
         ],
     ],
 
+    'admin_ui' => [
+        'themes_base_path' => env('ADMIN_THEMES_BASE_PATH', 'themes/admin'),
+        'theme' => env('ADMIN_THEME', 'default'),
+        'fallback_theme' => env('ADMIN_THEME_FALLBACK', 'default'),
+    ],
+
     'locales' => [
         'default' => 'en',
         'supported' => ['en', 'vi'],

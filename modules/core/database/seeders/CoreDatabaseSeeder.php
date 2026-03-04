@@ -13,6 +13,10 @@ class CoreDatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $defaultAdminUsername = (string) env('CORE_ADMIN_USERNAME', 'admin');
+        $defaultAdminEmail = (string) env('CORE_ADMIN_EMAIL', 'admin@localhost');
+        $defaultAdminPassword = (string) env('CORE_ADMIN_PASSWORD', 'password');
+
         $site = Site::query()->firstOrCreate(
             ['slug' => 'default'],
             [
@@ -89,14 +93,14 @@ class CoreDatabaseSeeder extends Seeder
             $role->syncPermissions($rolePermissions);
         }
 
-        $admin = Admin::query()->firstOrCreate(
-            ['username' => 'admin'],
+        $admin = Admin::query()->updateOrCreate(
+            ['username' => $defaultAdminUsername],
             [
                 'site_id' => $site->id,
                 'name' => 'System Admin',
-                'email' => 'admin@localhost',
+                'email' => $defaultAdminEmail,
                 'locale' => 'en',
-                'password' => Hash::make('password'),
+                'password' => Hash::make($defaultAdminPassword),
             ]
         );
 

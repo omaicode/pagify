@@ -23,7 +23,9 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
 
     Route::prefix('admin')->name('core.admin.')->group(function (): void {
         Route::middleware('guest:web')->group(function (): void {
-            Route::get('/login', [AuthController::class, 'create'])->name('login');
+            Route::get('/login', [AuthController::class, 'create'])
+                ->middleware(HandleInertiaRequests::class)
+                ->name('login');
             Route::post('/login', [AuthController::class, 'store'])->name('login.store');
         });
 

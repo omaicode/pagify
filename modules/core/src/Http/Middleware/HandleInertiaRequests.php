@@ -14,6 +14,11 @@ class HandleInertiaRequests extends Middleware
     protected $rootView = 'core::admin.app';
 
     /**
+     * @var array<string, array<string, mixed>>
+     */
+    private array $translationCache = [];
+
+    /**
      * @return array<string, mixed>
      */
     public function share(Request $request): array
@@ -44,11 +49,12 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'appName' => config('app.name'),
+            'csrf_token' => csrf_token(),
             'locale' => app()->getLocale(),
             'supportedLocales' => config('core.locales.supported', ['en']),
             'localeUpdateUrl' => Route::has('core.admin.locale.update') ? route('core.admin.locale.update') : null,
             'translations' => [
-                'ui' => trans('core::ui'),
+                'ui' => $this->adminUiTranslations(),
             ],
             'menu' => $menu,
             'currentSite' => $siteContext->site()?->only(['id', 'name', 'domain', 'locale']),
@@ -56,5 +62,60 @@ class HandleInertiaRequests extends Middleware
                 'admin' => $admin?->only(['id', 'name', 'username', 'email', 'locale']),
             ],
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function adminUiTranslations(): array
+    {
+        $locale = (string) app()->getLocale();
+        $fallbackLocale = (string) config('app.fallback_locale', 'en');
+        $cacheKey = sprintf('%s|%s', $locale, $fallbackLocale);
+
+        if (isset($this->translationCache[$cacheKey])) {
+            return $this->translationCache[$cacheKey];
+        }
+
+        $themesBasePath = trim((string) config('core.admin_ui.themes_base_path', 'themes/admin'), '/');
+        $activeTheme = trim((string) config('core.admin_ui.theme', 'default'), '/');
+        $fallbackTheme = trim((string) config('core.admin_ui.fallback_theme', 'default'), '/');
+
+        $themes = array_values(array_unique(array_filter([
+            $fallbackTheme,
+            $activeTheme,
+        ], static fn (string $theme): bool => $theme !== '')));
+
+        $locales = array_values(array_unique(array_filter([
+            $fallbackLocale,
+            $locale,
+        ], static fn (string $item): bool => $item !== '')));
+
+        $translations = [];
+
+        foreach ($themes as $theme) {
+            foreach ($locales as $targetLocale) {
+                $path = base_path(sprintf('%s/%s/lang/%s/ui.php', $themesBasePath, $theme, $targetLocale));
+                $translations = array_replace_recursive($translations, $this->loadUiTranslationFile($path));
+            }
+        }
+
+        $this->translationCache[$cacheKey] = $translations;
+
+        return $translations;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function loadUiTranslationFile(string $path): array
+    {
+        if (! is_file($path)) {
+            return [];
+        }
+
+        $data = require $path;
+
+        return is_array($data) ? $data : [];
     }
 }

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Core\Models\Admin;
 use Tests\TestCase;
 
@@ -21,7 +22,11 @@ class CoreRoutesTest extends TestCase
     {
         $response = $this->get('/admin/login');
 
-        $response->assertOk();
+        $response
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Auth/Login')
+                ->has('loginAction'));
     }
 
     public function test_admin_dashboard_redirects_guest_to_login(): void
@@ -105,5 +110,41 @@ class CoreRoutesTest extends TestCase
         $response = $this->get('/api/v1/admin/tokens');
 
         $response->assertRedirect('/admin/login');
+    }
+
+    public function test_admin_can_login_with_username_and_password(): void
+    {
+        /** @var Admin $admin */
+        $admin = Admin::factory()->create([
+            'username' => 'system-admin',
+            'email' => 'system-admin@localhost',
+            'password' => bcrypt('secret-password'),
+        ]);
+
+        $response = $this->post('/admin/login', [
+            'username' => 'system-admin',
+            'password' => 'secret-password',
+        ]);
+
+        $response->assertRedirect('/admin');
+        $this->assertAuthenticatedAs($admin, 'web');
+    }
+
+    public function test_admin_can_login_with_email_and_password(): void
+    {
+        /** @var Admin $admin */
+        $admin = Admin::factory()->create([
+            'username' => 'site-admin',
+            'email' => 'site-admin@localhost',
+            'password' => bcrypt('secret-password'),
+        ]);
+
+        $response = $this->post('/admin/login', [
+            'username' => 'site-admin@localhost',
+            'password' => 'secret-password',
+        ]);
+
+        $response->assertRedirect('/admin');
+        $this->assertAuthenticatedAs($admin, 'web');
     }
 }
