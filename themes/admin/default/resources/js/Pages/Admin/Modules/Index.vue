@@ -57,6 +57,10 @@ const loadHealth = async () => {
 }
 
 const toggleModule = async (item) => {
+  if (item.can_disable === false) {
+    return
+  }
+
   const nextValue = !item.enabled
   updating.value = {
     ...updating.value,
@@ -135,11 +139,18 @@ onMounted(async () => {
 
             <button
               class="rounded-lg px-3 py-2 text-sm font-medium transition"
-              :class="item.enabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700'"
-              :disabled="updating[item.slug]"
+              :class="item.can_disable === false
+                ? 'bg-slate-100 text-slate-500 cursor-not-allowed'
+                : (item.enabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700')"
+              :disabled="updating[item.slug] || item.can_disable === false"
               @click="toggleModule(item)"
             >
-              {{ updating[item.slug] ? 'Loading...' : item.enabled ? label('modules_enabled', 'Enabled') : label('modules_disabled', 'Disabled') }}
+              {{ item.can_disable === false
+                ? 'Locked'
+                : (updating[item.slug]
+                  ? 'Loading...'
+                  : (item.enabled ? label('modules_enabled', 'Enabled') : label('modules_disabled', 'Disabled')))
+              }}
             </button>
           </li>
         </ul>

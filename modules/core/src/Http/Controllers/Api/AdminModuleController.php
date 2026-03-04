@@ -21,6 +21,7 @@ class AdminModuleController extends ApiController
                 'name' => $module['name'] ?? ucfirst($slug),
                 'description' => $module['description'] ?? null,
                 'enabled' => (bool) ($module['enabled'] ?? false),
+                'can_disable' => $slug !== 'core',
             ])
             ->values();
 
@@ -36,6 +37,10 @@ class AdminModuleController extends ApiController
         }
 
         $payload = $request->validated();
+
+        if ($module === 'core' && (bool) $payload['enabled'] === false) {
+            return $this->error('Core module cannot be disabled.', 422, 'MODULE_LOCKED');
+        }
 
         $stateService->setEnabled($module, (bool) $payload['enabled']);
 

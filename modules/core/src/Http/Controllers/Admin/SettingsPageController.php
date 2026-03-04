@@ -8,12 +8,15 @@ use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Core\Models\Admin;
+use Modules\Core\Services\ModuleRegistry;
 
 class SettingsPageController extends Controller
 {
     public function __invoke(Request $request): Response
     {
         $admin = $request->user('web');
+        /** @var ModuleRegistry $modules */
+        $modules = app(ModuleRegistry::class);
 
         return Inertia::render('Admin/Settings/Index', [
             'groups' => array_values(array_filter([
@@ -25,7 +28,9 @@ class SettingsPageController extends Controller
                             label: 'Content',
                             description: 'Manage content types, schema builder, and entries.',
                             href: Route::has('content.admin.dashboard') ? route('content.admin.dashboard') : '#',
-                            allowed: Route::has('content.admin.dashboard') && ($admin?->can('content.type.viewAny') === true),
+                            allowed: $modules->enabled('content')
+                                && Route::has('content.admin.dashboard')
+                                && ($admin?->can('content.type.viewAny') === true),
                         ),
                         $this->makeItem(
                             label: 'Modules',

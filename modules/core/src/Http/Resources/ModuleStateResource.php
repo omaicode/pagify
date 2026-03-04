@@ -17,6 +17,7 @@ class ModuleStateResource extends JsonResource
             'name' => $this['name'],
             'description' => $this['description'],
             'enabled' => (bool) $this['enabled'],
+            'can_disable' => (bool) ($this['can_disable'] ?? true),
         ];
     }
 }

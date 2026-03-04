@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Core\Models\Admin;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class CoreRoutesTest extends TestCase
@@ -133,6 +134,25 @@ class CoreRoutesTest extends TestCase
         $response = $this->get('/api/v1/admin/tokens');
 
         $response->assertRedirect('/admin/login');
+    }
+
+    public function test_core_module_cannot_be_disabled(): void
+    {
+        /** @var Admin $admin */
+        $admin = Admin::factory()->create();
+        Permission::findOrCreate('core.module.manage', 'web');
+        $admin->givePermissionTo('core.module.manage');
+
+        $response = $this
+            ->actingAs($admin, 'web')
+            ->patchJson('/api/v1/admin/modules/core', [
+                'enabled' => false,
+            ]);
+
+        $response
+            ->assertStatus(422)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('code', 'MODULE_LOCKED');
     }
 
     public function test_admin_can_login_with_username_and_password(): void
