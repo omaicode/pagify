@@ -86,7 +86,11 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": []
+            "dont-discover": [
+                "modules/core",
+                "modules/content",
+                "modules/media"
+            ]
         }
     },
     "config": {

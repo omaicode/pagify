@@ -11,4 +11,7 @@ return [
     | this array to grant expanded functionality to your applications.
     |
     */
+    Modules\Core\Providers\CoreServiceProvider::class,
+    Modules\Content\Providers\ContentServiceProvider::class,
+    Modules\Media\Providers\MediaServiceProvider::class,
 ];
