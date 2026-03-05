@@ -3,6 +3,9 @@ import { computed, onMounted, ref } from 'vue'
 import axios from 'axios'
 import { usePage } from '@inertiajs/vue3'
 import AdminLayout from '../../../Layouts/AdminLayout.vue'
+import UiCard from '../../../Components/UI/UiCard.vue'
+import UiButton from '../../../Components/UI/UiButton.vue'
+import UiStatusBadge from '../../../Components/UI/UiStatusBadge.vue'
 
 const props = defineProps({
   apiRoutes: {
@@ -90,15 +93,12 @@ onMounted(async () => {
 <template>
   <AdminLayout>
     <div class="space-y-6">
-      <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <UiCard tag="section" class="p-4 shadow-sm">
         <div class="flex items-center justify-between">
           <h2 class="text-base font-semibold text-slate-900">{{ label('modules_health_title', 'Registry Health') }}</h2>
-          <span
-            class="rounded-full px-2 py-1 text-xs font-medium"
-            :class="hasIssues ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'"
-          >
+          <UiStatusBadge :tone="hasIssues ? 'warning' : 'success'">
             {{ hasIssues ? label('modules_status_warning', 'Needs Attention') : label('modules_status_healthy', 'Healthy') }}
-          </span>
+          </UiStatusBadge>
         </div>
 
         <p v-if="healthLoading" class="mt-2 text-sm text-slate-500">{{ label('loading', 'Loading...') }}</p>
@@ -116,9 +116,9 @@ onMounted(async () => {
             <p class="font-medium">{{ (health.unknown_runtime_modules ?? []).join(', ') || '-' }}</p>
           </div>
         </div>
-      </section>
+      </UiCard>
 
-      <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
+      <UiCard tag="section" class="shadow-sm" padding="none">
         <header class="border-b border-slate-100 px-4 py-3">
           <h2 class="text-base font-semibold text-slate-900">{{ label('modules_list_title', 'Module States') }}</h2>
         </header>
@@ -137,8 +137,10 @@ onMounted(async () => {
               <p v-if="item.description" class="text-sm text-slate-600">{{ item.description }}</p>
             </div>
 
-            <button
-              class="rounded-lg px-3 py-2 text-sm font-medium transition"
+            <UiButton
+              type="button"
+              tone="neutral"
+              radius="lg"
               :class="item.can_disable === false
                 ? 'bg-slate-100 text-slate-500 cursor-not-allowed'
                 : (item.enabled ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700')"
@@ -151,10 +153,10 @@ onMounted(async () => {
                   ? label('loading', 'Loading...')
                   : (item.enabled ? label('modules_enabled', 'Enabled') : label('modules_disabled', 'Disabled')))
               }}
-            </button>
+            </UiButton>
           </li>
         </ul>
-      </section>
+      </UiCard>
     </div>
   </AdminLayout>
 </template>

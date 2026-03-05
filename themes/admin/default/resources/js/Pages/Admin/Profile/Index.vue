@@ -4,6 +4,11 @@ import { computed, reactive, ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
 import { toast } from 'vue3-toastify';
+import UiCard from '../../../Components/UI/UiCard.vue';
+import UiButton from '../../../Components/UI/UiButton.vue';
+import UiInput from '../../../Components/UI/UiInput.vue';
+import UiField from '../../../Components/UI/UiField.vue';
+import UiPageHeader from '../../../Components/UI/UiPageHeader.vue';
 
 const props = defineProps({
     profile: {
@@ -147,13 +152,14 @@ const removeAvatar = async () => {
 
 <template>
     <AdminLayout>
-        <div class="mb-4">
-            <h1 class="pf-section-title">{{ t.profile_title ?? 'Profile' }}</h1>
-            <p class="pf-section-subtitle">{{ t.profile_subtitle ?? 'Manage your account details, avatar, and password.' }}</p>
-        </div>
+        <UiPageHeader
+            class="mb-4"
+            :title="t.profile_title ?? 'Profile'"
+            :subtitle="t.profile_subtitle ?? 'Manage your account details, avatar, and password.'"
+        />
 
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <div class="pf-card text-center">
+            <UiCard class="text-center">
                 <h2 class="mb-4 text-base font-semibold text-[#1e1b4b]">{{ t.profile_avatar_title ?? 'Avatar' }}</h2>
 
                 <div class="mb-4 flex flex-col items-center gap-4">
@@ -168,63 +174,59 @@ const removeAvatar = async () => {
                     </div>
 
                     <div class="flex flex-wrap gap-2">
-                        <label class="pf-btn-primary !rounded-lg !px-3 !py-2 !text-xs cursor-pointer">
+                        <UiButton tag="label" radius="lg" size="sm" class="cursor-pointer">
                             {{ uploadingAvatar ? (t.profile_uploading_avatar ?? 'Uploading...') : (t.profile_upload_avatar ?? 'Upload avatar') }}
                             <input type="file" accept="image/png,image/jpeg,image/webp" class="hidden" :disabled="uploadingAvatar" @change="uploadAvatar">
-                        </label>
-                        <button
+                        </UiButton>
+                        <UiButton
                             type="button"
-                            class="rounded-lg border border-rose-300 px-3 py-2 text-xs text-rose-700 disabled:opacity-50"
+                            tone="danger"
+                            radius="lg"
+                            size="sm"
                             :disabled="uploadingAvatar || !avatarUrl"
                             @click="removeAvatar"
                         >
                             {{ t.profile_remove_avatar ?? 'Remove avatar' }}
-                        </button>
+                        </UiButton>
                     </div>
                 </div>
 
                 <p v-if="avatarError" class="mb-2 text-sm text-rose-700">{{ avatarError }}</p>
                 <p v-if="avatarSuccess" class="text-sm text-emerald-700">{{ avatarSuccess }}</p>
-            </div>
+            </UiCard>
 
-            <div class="pf-card">
+            <UiCard>
                 <h2 class="mb-3 text-base font-semibold text-[#1e1b4b]">{{ t.profile_info_title ?? 'Profile information' }}</h2>
                 <form class="space-y-3" @submit.prevent="submitProfile">
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-[#1e1b4b]">{{ t.name ?? 'Name' }}</label>
-                        <input v-model="profileForm.name" type="text" required class="pf-input">
-                    </div>
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-[#1e1b4b]">{{ t.profile_nickname ?? 'Nickname' }}</label>
-                        <input v-model="profileForm.nickname" type="text" class="pf-input">
-                    </div>
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-[#1e1b4b]">{{ t.profile_bio ?? 'Bio' }}</label>
-                        <textarea v-model="profileForm.bio" rows="4" class="pf-input"></textarea>
-                    </div>
+                    <UiField :label="t.name ?? 'Name'">
+                        <UiInput v-model="profileForm.name" type="text" required />
+                    </UiField>
+                    <UiField :label="t.profile_nickname ?? 'Nickname'">
+                        <UiInput v-model="profileForm.nickname" type="text" />
+                    </UiField>
+                    <UiField :label="t.profile_bio ?? 'Bio'">
+                        <UiInput v-model="profileForm.bio" tag="textarea" :rows="4" />
+                    </UiField>
                     <p v-if="profileError" class="text-sm text-rose-700">{{ profileError }}</p>
                     <p v-if="profileSuccess" class="text-sm text-emerald-700">{{ profileSuccess }}</p>
-                    <button type="submit" class="pf-btn-primary !rounded-lg" :disabled="savingProfile">
+                    <UiButton type="submit" radius="lg" :disabled="savingProfile">
                         {{ savingProfile ? (t.loading ?? 'Loading...') : (t.save ?? 'Save') }}
-                    </button>
+                    </UiButton>
                 </form>
-            </div>
+            </UiCard>
 
-            <div class="pf-card lg:col-span-2">
+            <UiCard class="lg:col-span-2">
                 <h2 class="mb-3 text-base font-semibold text-[#1e1b4b]">{{ t.profile_password_title ?? 'Change password' }}</h2>
                 <form class="grid grid-cols-1 gap-3 md:grid-cols-3" @submit.prevent="submitPassword">
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-[#1e1b4b]">{{ t.profile_current_password ?? 'Current password' }}</label>
-                        <input v-model="passwordForm.current_password" type="password" required class="pf-input">
-                    </div>
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-[#1e1b4b]">{{ t.profile_new_password ?? 'New password' }}</label>
-                        <input v-model="passwordForm.new_password" type="password" required class="pf-input">
-                    </div>
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-[#1e1b4b]">{{ t.profile_new_password_confirmation ?? 'Confirm new password' }}</label>
-                        <input v-model="passwordForm.new_password_confirmation" type="password" required class="pf-input">
-                    </div>
+                    <UiField :label="t.profile_current_password ?? 'Current password'">
+                        <UiInput v-model="passwordForm.current_password" type="password" required />
+                    </UiField>
+                    <UiField :label="t.profile_new_password ?? 'New password'">
+                        <UiInput v-model="passwordForm.new_password" type="password" required />
+                    </UiField>
+                    <UiField :label="t.profile_new_password_confirmation ?? 'Confirm new password'">
+                        <UiInput v-model="passwordForm.new_password_confirmation" type="password" required />
+                    </UiField>
 
                     <div class="md:col-span-3">
                         <p v-if="passwordError" class="text-sm text-rose-700">{{ passwordError }}</p>
@@ -232,12 +234,12 @@ const removeAvatar = async () => {
                     </div>
 
                     <div class="md:col-span-3">
-                        <button type="submit" class="pf-btn-primary !rounded-lg" :disabled="savingPassword">
+                        <UiButton type="submit" radius="lg" :disabled="savingPassword">
                             {{ savingPassword ? (t.loading ?? 'Loading...') : (t.profile_change_password ?? 'Change password') }}
-                        </button>
+                        </UiButton>
                     </div>
                 </form>
-            </div>
+            </UiCard>
         </div>
     </AdminLayout>
 </template>

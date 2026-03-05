@@ -3,6 +3,11 @@ import axios from 'axios'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import AdminLayout from '../../../Layouts/AdminLayout.vue'
+import UiCard from '../../../Components/UI/UiCard.vue'
+import UiButton from '../../../Components/UI/UiButton.vue'
+import UiAlert from '../../../Components/UI/UiAlert.vue'
+import UiTableShell from '../../../Components/UI/UiTableShell.vue'
+import UiStatusBadge from '../../../Components/UI/UiStatusBadge.vue'
 
 const props = defineProps({
   apiRoutes: {
@@ -38,11 +43,11 @@ const rollbackRoute = (executionId) => props.apiRoutes.rollbackBase.replace('__E
 
 const isRateLimited = (error) => Number(error?.response?.status) === 429
 
-const statusBadgeClass = (status) => {
-  if (status === 'succeeded') return 'bg-emerald-100 text-emerald-700'
-  if (status === 'failed') return 'bg-rose-100 text-rose-700'
-  if (status === 'running') return 'bg-amber-100 text-amber-700'
-  return 'bg-slate-100 text-slate-700'
+const statusBadgeVariant = (status) => {
+  if (status === 'succeeded') return 'success'
+  if (status === 'failed') return 'danger'
+  if (status === 'running') return 'warning'
+  return 'neutral'
 }
 
 const fetchExecutions = async () => {
@@ -217,77 +222,84 @@ onUnmounted(() => {
 <template>
   <AdminLayout>
     <div class="space-y-6">
-      <section class="pf-card p-5">
+      <UiCard tag="section" class="p-5">
         <h1 class="text-lg font-semibold text-[#1e1b4b]">{{ label('updater_title', 'Updater') }}</h1>
         <p class="mt-1 text-sm text-slate-600">
           {{ label('updater_subtitle', 'Queue module updates, monitor execution status, and rollback when needed.') }}
         </p>
-      </section>
+      </UiCard>
 
-      <div v-if="errorMessage" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+      <UiAlert v-if="errorMessage" tone="danger" class="rounded-xl px-4 py-3">
         {{ errorMessage }}
-      </div>
+      </UiAlert>
 
-      <section class="pf-card p-5">
+      <UiCard tag="section" class="p-5">
         <div class="flex flex-wrap items-center gap-3">
-          <button
-            class="pf-btn-primary !rounded-lg disabled:opacity-50"
+          <UiButton
+            type="button"
+            radius="lg"
             :disabled="runningAction"
             @click="queueUpdateAll"
           >
             {{ label('updater_action_update_all', 'Update all modules') }}
-          </button>
+          </UiButton>
 
-          <button
-            class="rounded-lg border border-[#e5deff] bg-white px-3 py-2 text-sm font-medium text-[#1e1b4b] transition hover:bg-[#f8f6ff] disabled:opacity-50"
+          <UiButton
+            type="button"
+            tone="neutral"
+            radius="lg"
             :disabled="loadingPlan"
             @click="runDryPlan"
           >
             {{ loadingPlan ? label('loading', 'Loading...') : label('updater_action_refresh_plan', 'Refresh plan') }}
-          </button>
+          </UiButton>
         </div>
-      </section>
+      </UiCard>
 
-      <section class="pf-card p-5">
+      <UiCard tag="section" class="p-5">
         <h2 class="text-base font-semibold text-[#1e1b4b]">{{ label('updater_plan_title', 'Dry-run plan') }}</h2>
 
         <p v-if="loadingPlan" class="mt-3 text-sm text-slate-500">{{ label('loading', 'Loading...') }}</p>
 
         <div v-else class="mt-4 overflow-x-auto">
-          <table class="min-w-full divide-y divide-[#ece8ff] text-sm">
-            <thead class="bg-[#f8f6ff]">
+          <UiTableShell table-class="min-w-full divide-y divide-[#ece8ff] text-sm" head-class="bg-[#f8f6ff]" body-class="divide-y divide-slate-100">
+            <template #head>
               <tr>
                 <th class="px-3 py-2 text-left">{{ label('slug', 'Slug') }}</th>
                 <th class="px-3 py-2 text-left">{{ label('updater_package_name', 'Package') }}</th>
                 <th class="px-3 py-2 text-left">{{ label('updater_installed_version', 'Installed version') }}</th>
                 <th class="px-3 py-2 text-left">{{ label('actions', 'Actions') }}</th>
               </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
+            </template>
+
+            <template #body>
               <tr v-for="item in planItems" :key="item.module_slug">
                 <td class="px-3 py-2">{{ item.module_slug }}</td>
                 <td class="px-3 py-2">{{ item.package_name }}</td>
                 <td class="px-3 py-2">{{ item.installed_version ?? '-' }}</td>
                 <td class="px-3 py-2">
-                  <button
-                    class="rounded-lg border border-[#e5deff] bg-white px-3 py-1.5 text-xs font-medium text-[#1e1b4b] transition hover:bg-[#f8f6ff] disabled:opacity-50"
+                  <UiButton
+                    type="button"
+                    tone="neutral"
+                    size="sm"
+                    radius="lg"
                     :disabled="runningAction"
                     @click="queueUpdateModule(item.module_slug)"
                   >
                     {{ label('updater_action_update_module', 'Update module') }}
-                  </button>
+                  </UiButton>
                 </td>
               </tr>
               <tr v-if="planItems.length === 0">
                 <td colspan="4" class="px-3 py-6 text-center text-slate-500">{{ label('updater_no_plan_items', 'No modules resolved for update plan.') }}</td>
               </tr>
-            </tbody>
-          </table>
+            </template>
+          </UiTableShell>
         </div>
-      </section>
+      </UiCard>
 
       <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <section class="pf-card p-5">
+        <UiCard tag="section" class="p-5">
           <h2 class="text-base font-semibold text-[#1e1b4b]">{{ label('updater_executions_title', 'Executions') }}</h2>
 
           <p v-if="loadingExecutions" class="mt-3 text-sm text-slate-500">{{ label('loading', 'Loading...') }}</p>
@@ -300,35 +312,41 @@ onUnmounted(() => {
             >
               <div class="flex items-center justify-between gap-3">
                 <p class="text-sm font-medium text-[#1e1b4b]">#{{ execution.id }} · {{ execution.target_type }}{{ execution.target_value ? `:${execution.target_value}` : '' }}</p>
-                <span class="rounded-full px-2 py-1 text-xs font-medium" :class="statusBadgeClass(execution.status)">
+                <UiStatusBadge :tone="statusBadgeVariant(execution.status)">
                   {{ execution.status }}
-                </span>
+                </UiStatusBadge>
               </div>
 
               <div class="mt-3 flex flex-wrap items-center gap-2">
-                <button
-                  class="rounded-lg border border-[#e5deff] bg-white px-3 py-1.5 text-xs font-medium text-[#1e1b4b] transition hover:bg-[#f8f6ff]"
+                <UiButton
+                  type="button"
+                  tone="neutral"
+                  size="sm"
+                  radius="lg"
                   @click="fetchExecutionDetail(execution.id)"
                 >
                   {{ label('updater_action_view_detail', 'View detail') }}
-                </button>
+                </UiButton>
 
-                <button
-                  class="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-medium text-rose-700 transition hover:bg-rose-50 disabled:opacity-50"
+                <UiButton
+                  type="button"
+                  tone="danger"
+                  size="sm"
+                  radius="lg"
                   :disabled="runningAction"
                   @click="rollbackExecution(execution.id)"
                 >
                   {{ label('updater_action_rollback', 'Rollback') }}
-                </button>
+                </UiButton>
               </div>
             </li>
             <li v-if="executions.length === 0" class="rounded-xl border border-dashed border-[#e5deff] p-4 text-sm text-slate-500">
               {{ label('updater_no_executions', 'No updater executions yet.') }}
             </li>
           </ul>
-        </section>
+        </UiCard>
 
-        <section class="pf-card p-5">
+        <UiCard tag="section" class="p-5">
           <h2 class="text-base font-semibold text-[#1e1b4b]">{{ label('updater_execution_detail_title', 'Execution detail') }}</h2>
 
           <p v-if="loadingDetail" class="mt-3 text-sm text-slate-500">{{ label('loading', 'Loading...') }}</p>
@@ -357,7 +375,7 @@ onUnmounted(() => {
           </div>
 
           <p v-else class="mt-3 text-sm text-slate-500">{{ label('updater_select_execution_hint', 'Select an execution to view details.') }}</p>
-        </section>
+        </UiCard>
       </div>
     </div>
   </AdminLayout>

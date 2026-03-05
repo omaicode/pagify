@@ -2,6 +2,9 @@
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import AdminLayout from '../../Layouts/AdminLayout.vue';
+import UiCard from '../../Components/UI/UiCard.vue';
+import UiButton from '../../Components/UI/UiButton.vue';
+import UiPageHeader from '../../Components/UI/UiPageHeader.vue';
 
 defineProps({
     message: {
@@ -25,37 +28,34 @@ const t = computed(() => page.props.translations?.ui ?? {});
 <template>
     <AdminLayout>
         <div class="space-y-4">
-            <div>
-                <h1 class="pf-section-title">{{ t.dashboard ?? 'Dashboard' }}</h1>
-                <p class="pf-section-subtitle">{{ message }}</p>
-            </div>
+            <UiPageHeader :title="t.dashboard ?? 'Dashboard'" :subtitle="message" />
 
             <div class="grid gap-3 md:grid-cols-3">
                 <article class="pf-card-highlight">
                     <p class="text-xs uppercase tracking-wide text-white/80">{{ t.total_admins ?? 'Total admins' }}</p>
                     <p class="mt-2 text-3xl font-semibold">1</p>
                 </article>
-                <article class="pf-card">
+                <UiCard tag="article">
                     <p class="text-xs uppercase tracking-wide text-[#6b7280]">{{ t.current_admin ?? 'Current admin' }}</p>
                     <p class="mt-2 text-base font-semibold text-[#1e1b4b]">{{ admin?.name ?? '-' }}</p>
                     <p class="text-sm text-[#6b7280]">{{ admin?.username ?? '-' }}</p>
-                </article>
-                <article class="pf-card">
+                </UiCard>
+                <UiCard tag="article">
                     <p class="text-xs uppercase tracking-wide text-[#6b7280]">{{ t.role ?? 'Role' }}</p>
                     <p class="mt-2 text-base font-semibold text-[#1e1b4b]">{{ t.system_administrator ?? 'System Administrator' }}</p>
-                </article>
+                </UiCard>
             </div>
 
-            <div class="pf-card">
+            <UiCard>
                 <p class="text-sm text-[#6b7280]">{{ t.logged_in_as ?? 'Logged in as' }}</p>
                 <p class="text-base font-medium text-[#1e1b4b]">{{ admin?.name }} ({{ admin?.username }})</p>
 
                 <div v-if="canManageTokens" class="mt-3">
-                    <a href="/admin/api-tokens" class="pf-btn-primary inline-block">
+                    <UiButton tag="a" href="/admin/api-tokens" class="inline-block">
                         {{ t.manage_api_tokens ?? 'Manage API tokens' }}
-                    </a>
+                    </UiButton>
                 </div>
-            </div>
+            </UiCard>
         </div>
     </AdminLayout>
 </template>

@@ -1,6 +1,11 @@
 <script setup>
 import { Head, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import UiCard from '../../../Components/UI/UiCard.vue';
+import UiButton from '../../../Components/UI/UiButton.vue';
+import UiInput from '../../../Components/UI/UiInput.vue';
+import UiField from '../../../Components/UI/UiField.vue';
+import UiAlert from '../../../Components/UI/UiAlert.vue';
 
 const props = defineProps({
     loginAction: {
@@ -18,7 +23,7 @@ const errors = computed(() => page.props.errors ?? {});
     <Head :title="t.login_page_title ?? 'Admin Login'" />
 
     <main class="pf-page flex min-h-screen items-center justify-center px-4 py-10">
-        <section class="w-full max-w-md rounded-2xl border border-[#e5deff] bg-white p-6 shadow-lg">
+        <UiCard tag="section" class="w-full max-w-md rounded-2xl p-6 shadow-lg">
             <div class="mb-5 flex items-center gap-3">
                 <div class="h-10 w-10 rounded-xl" style="background-image: var(--pagify-gradient)" />
                 <div>
@@ -27,48 +32,41 @@ const errors = computed(() => page.props.errors ?? {});
                 </div>
             </div>
 
-            <div v-if="errors.username" class="mb-4 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            <UiAlert v-if="errors.username" tone="danger" class="mb-4">
                 {{ errors.username }}
-            </div>
+            </UiAlert>
 
             <form :action="props.loginAction" method="POST" class="space-y-4">
                 <input type="hidden" name="_token" :value="page.props.csrf_token">
 
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700" for="username">{{ t.username_or_email ?? 'Username or email' }}</label>
-                    <input
+                <UiField :label="t.username_or_email ?? 'Username or email'" for="username" label-tone="muted">
+                    <UiInput
                         id="username"
                         name="username"
                         type="text"
-                        class="pf-input"
                         required
                         autofocus
-                    >
-                </div>
+                    />
+                </UiField>
 
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700" for="password">{{ t.password ?? 'Password' }}</label>
-                    <input
+                <UiField :label="t.password ?? 'Password'" for="password" label-tone="muted">
+                    <UiInput
                         id="password"
                         name="password"
                         type="password"
-                        class="pf-input"
                         required
-                    >
-                </div>
+                    />
+                </UiField>
 
                 <label class="flex items-center gap-2 text-sm text-slate-700">
                     <input name="remember" type="checkbox" value="1" class="rounded border-slate-300">
                     {{ t.remember_me ?? 'Remember me' }}
                 </label>
 
-                <button
-                    type="submit"
-                    class="pf-btn-primary w-full !rounded-lg py-2.5"
-                >
+                <UiButton type="submit" radius="lg" full-width size="lg">
                     {{ t.sign_in ?? 'Sign in' }}
-                </button>
+                </UiButton>
             </form>
-        </section>
+        </UiCard>
     </main>
 </template>

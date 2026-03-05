@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import AdminLayout from '../../../Layouts/AdminLayout.vue'
+import UiCard from '../../../Components/UI/UiCard.vue'
 
 defineProps({
   groups: {
@@ -17,17 +18,18 @@ const t = computed(() => page.props.translations?.ui ?? {})
 <template>
   <AdminLayout>
     <div class="space-y-6">
-      <section class="pf-card p-5">
+      <UiCard tag="section" class="p-5">
         <h1 class="text-lg font-semibold text-[#1e1b4b]">{{ t.settings ?? 'Settings' }}</h1>
         <p class="mt-1 text-sm text-slate-600">
           {{ t.settings_subtitle ?? 'Advanced configuration is grouped here to keep daily CMS navigation focused on core editing tasks.' }}
         </p>
-      </section>
+      </UiCard>
 
-      <section
+      <UiCard
+        tag="section"
         v-for="group in groups"
         :key="group.key"
-        class="pf-card p-5"
+        class="p-5"
       >
         <h2 class="text-base font-semibold text-[#1e1b4b]">{{ t[group.label_key] ?? group.label }}</h2>
 
@@ -42,7 +44,7 @@ const t = computed(() => page.props.translations?.ui ?? {})
             <p class="mt-1 text-xs text-slate-600">{{ t[item.description_key] ?? item.description }}</p>
           </a>
         </div>
-      </section>
+      </UiCard>
     </div>
   </AdminLayout>
 </template>

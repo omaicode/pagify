@@ -3,6 +3,12 @@ import axios from 'axios';
 import { computed, onMounted, reactive, ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
+import UiCard from '../../../Components/UI/UiCard.vue';
+import UiButton from '../../../Components/UI/UiButton.vue';
+import UiInput from '../../../Components/UI/UiInput.vue';
+import UiAlert from '../../../Components/UI/UiAlert.vue';
+import UiTableShell from '../../../Components/UI/UiTableShell.vue';
+import UiPageHeader from '../../../Components/UI/UiPageHeader.vue';
 
 const props = defineProps({
     apiRoutes: {
@@ -104,56 +110,56 @@ onMounted(loadTokens);
 
 <template>
     <AdminLayout>
-        <div class="mb-4">
-            <h1 class="pf-section-title">{{ t.api_tokens ?? 'API tokens' }}</h1>
-            <p class="pf-section-subtitle">{{ t.api_tokens_description ?? 'Create personal access tokens for admin API usage.' }}</p>
-        </div>
+        <UiPageHeader
+            class="mb-4"
+            :title="t.api_tokens ?? 'API tokens'"
+            :subtitle="t.api_tokens_description ?? 'Create personal access tokens for admin API usage.'"
+        />
 
-        <div v-if="errorMessage" class="mb-3 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+        <UiAlert v-if="errorMessage" tone="danger" class="mb-3">
             {{ errorMessage }}
-        </div>
+        </UiAlert>
 
-        <div v-if="createdToken" class="mb-4 rounded border border-amber-200 bg-amber-50 p-3">
+        <UiAlert v-if="createdToken" tone="warning" class="mb-4 p-3">
             <p class="mb-2 text-sm font-medium text-amber-900">{{ t.copy_token_once ?? 'Copy this token now (shown one time only):' }}</p>
             <div class="flex items-center gap-2">
-                <input :value="createdToken" readonly class="pf-input text-xs">
-                <button type="button" class="pf-btn-primary !rounded-lg !px-3 !py-1 !text-xs" @click="copyToken">{{ t.copy ?? 'Copy' }}</button>
+                <UiInput :model-value="createdToken" readonly class="text-xs" />
+                <UiButton type="button" radius="lg" size="sm" @click="copyToken">{{ t.copy ?? 'Copy' }}</UiButton>
             </div>
-        </div>
+        </UiAlert>
 
-        <form class="pf-card mb-4 grid grid-cols-1 gap-2 md:grid-cols-4" @submit.prevent="createToken">
-            <input v-model="form.name" type="text" required :placeholder="t.token_name ?? 'Token name'" class="pf-input">
-            <input v-model="form.abilities" type="text" :placeholder="t.token_abilities ?? 'Abilities (* or comma-separated)'" class="pf-input">
-            <input v-model="form.expires_at" type="datetime-local" class="pf-input">
-            <button type="submit" :disabled="loading" class="pf-btn-primary !rounded-lg disabled:opacity-50">{{ t.create_token ?? 'Create token' }}</button>
-        </form>
+        <UiCard tag="form" class="mb-4 grid grid-cols-1 gap-2 md:grid-cols-4" @submit.prevent="createToken">
+            <UiInput v-model="form.name" type="text" required :placeholder="t.token_name ?? 'Token name'" />
+            <UiInput v-model="form.abilities" type="text" :placeholder="t.token_abilities ?? 'Abilities (* or comma-separated)'" />
+            <UiInput v-model="form.expires_at" type="datetime-local" />
+            <UiButton type="submit" radius="lg" :disabled="loading">{{ t.create_token ?? 'Create token' }}</UiButton>
+        </UiCard>
 
-        <div class="pf-card overflow-hidden p-0">
-            <table class="min-w-full divide-y divide-[#ece8ff] text-sm">
-                <thead class="bg-[#f8f6ff]">
-                    <tr>
-                        <th class="px-3 py-2 text-left">{{ t.token_name ?? 'Name' }}</th>
-                        <th class="px-3 py-2 text-left">{{ t.abilities ?? 'Abilities' }}</th>
-                        <th class="px-3 py-2 text-left">{{ t.last_used ?? 'Last used' }}</th>
-                        <th class="px-3 py-2 text-left">{{ t.expires ?? 'Expires' }}</th>
-                        <th class="px-3 py-2 text-left">{{ t.actions ?? 'Actions' }}</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200">
-                    <tr v-for="token in tokens" :key="token.id">
-                        <td class="px-3 py-2">{{ token.name }}</td>
-                        <td class="px-3 py-2">{{ Array.isArray(token.abilities) ? token.abilities.join(', ') : '*' }}</td>
-                        <td class="px-3 py-2">{{ token.last_used_at ?? '-' }}</td>
-                        <td class="px-3 py-2">{{ token.expires_at ?? '-' }}</td>
-                        <td class="px-3 py-2">
-                            <button type="button" class="rounded-full border border-rose-300 px-2 py-1 text-xs text-rose-700" @click="revokeToken(token.id)">{{ t.revoke ?? 'Revoke' }}</button>
-                        </td>
-                    </tr>
-                    <tr v-if="tokens.length === 0">
-                        <td colspan="5" class="px-3 py-6 text-center text-slate-500">{{ t.no_active_tokens ?? 'No active tokens.' }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <UiTableShell table-class="min-w-full divide-y divide-[#ece8ff] text-sm" head-class="bg-[#f8f6ff]">
+            <template #head>
+                <tr>
+                    <th class="px-3 py-2 text-left">{{ t.token_name ?? 'Name' }}</th>
+                    <th class="px-3 py-2 text-left">{{ t.abilities ?? 'Abilities' }}</th>
+                    <th class="px-3 py-2 text-left">{{ t.last_used ?? 'Last used' }}</th>
+                    <th class="px-3 py-2 text-left">{{ t.expires ?? 'Expires' }}</th>
+                    <th class="px-3 py-2 text-left">{{ t.actions ?? 'Actions' }}</th>
+                </tr>
+            </template>
+
+            <template #body>
+                <tr v-for="token in tokens" :key="token.id">
+                    <td class="px-3 py-2">{{ token.name }}</td>
+                    <td class="px-3 py-2">{{ Array.isArray(token.abilities) ? token.abilities.join(', ') : '*' }}</td>
+                    <td class="px-3 py-2">{{ token.last_used_at ?? '-' }}</td>
+                    <td class="px-3 py-2">{{ token.expires_at ?? '-' }}</td>
+                    <td class="px-3 py-2">
+                        <UiButton type="button" tone="danger" size="xs" @click="revokeToken(token.id)">{{ t.revoke ?? 'Revoke' }}</UiButton>
+                    </td>
+                </tr>
+                <tr v-if="tokens.length === 0">
+                    <td colspan="5" class="px-3 py-6 text-center text-slate-500">{{ t.no_active_tokens ?? 'No active tokens.' }}</td>
+                </tr>
+            </template>
+        </UiTableShell>
     </AdminLayout>
 </template>
