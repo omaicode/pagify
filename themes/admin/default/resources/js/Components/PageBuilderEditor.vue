@@ -227,11 +227,27 @@ const svgPaths = {
     generic: '<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/>',
 };
 
+const iconTones = {
+    Typography: ['#5b21b6', '#8b5cf6'],
+    Actions: ['#4338ca', '#6366f1'],
+    Media: ['#7c3aed', '#a855f7'],
+    Layout: ['#4f46e5', '#7c3aed'],
+    Sections: ['#6d28d9', '#8b5cf6'],
+    Data: ['#0f766e', '#14b8a6'],
+    'Social Proof': ['#be185d', '#ec4899'],
+    Commerce: ['#b45309', '#f59e0b'],
+    Support: ['#0369a1', '#38bdf8'],
+    Forms: ['#065f46', '#10b981'],
+    'Plugin Blocks': ['#1d4ed8', '#60a5fa'],
+    General: ['#5b21b6', '#8b5cf6'],
+};
+
 const resolveBlockIconSvg = (block) => {
     const iconKey = iconByKey[block?.key] ?? 'generic';
     const paths = svgPaths[iconKey] ?? svgPaths.generic;
+    const [primary, accent] = iconTones[block?.category] ?? iconTones.General;
 
-    return `<div style="display:flex;justify-content:center;align-items:center;padding:6px 0;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#5b21b6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg></div>`;
+    return `<div style="display:flex;justify-content:center;align-items:center;padding:6px 0;"><div style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;background:linear-gradient(145deg,${primary},${accent});box-shadow:0 8px 16px color-mix(in srgb, ${primary} 35%, transparent);"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg><span style="position:absolute;right:-3px;bottom:-3px;width:9px;height:9px;border-radius:999px;background:${accent};border:2px solid #fff;"></span></div></div>`;
 };
 
 const insertReusableSection = () => {
