@@ -8,6 +8,7 @@ use Inertia\Middleware;
 use Pagify\Core\Models\Admin;
 use Pagify\Media\Services\MediaAssetManager;
 use Pagify\Core\Services\ModuleRegistry;
+use Pagify\Core\Services\PluginExtensionRegistry;
 use Pagify\Core\Support\SiteContext;
 
 class HandleInertiaRequests extends Middleware
@@ -30,10 +31,15 @@ class HandleInertiaRequests extends Middleware
         $siteContext = app(SiteContext::class);
         $admin = $request->user('web');
         $assetManager = app(MediaAssetManager::class);
+        $pluginExtensionRegistry = app(PluginExtensionRegistry::class);
 
         $menu = array_map(static function (array $item): array {
             $routeName = (string) ($item['route'] ?? '');
-            $item['href'] = Route::has($routeName) ? route($routeName) : '#';
+            if ($routeName !== '' && Route::has($routeName)) {
+                $item['href'] = route($routeName);
+            } else {
+                $item['href'] = (string) ($item['href'] ?? '#');
+            }
 
             return $item;
         }, $modules->adminMenu(static function (string $permission) use ($admin): bool {
@@ -47,6 +53,22 @@ class HandleInertiaRequests extends Middleware
 
             return $admin->can($permission);
         }));
+
+        foreach ($pluginExtensionRegistry->menuItems() as $item) {
+            $permission = $item['permission'] ?? null;
+
+            if (is_string($permission) && $permission !== '' && ($admin === null || ! $admin->can($permission))) {
+                continue;
+            }
+
+            $menu[] = [
+                'label' => $item['label'] ?? ucfirst((string) ($item['plugin'] ?? 'plugin')),
+                'route' => $item['route'] ?? null,
+                'href' => (string) ($item['href'] ?? '#'),
+                'group' => $item['group'] ?? 'Extensions',
+                'order' => (int) ($item['order'] ?? 900),
+            ];
+        }
 
         return [
             ...parent::share($request),

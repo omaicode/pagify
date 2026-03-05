@@ -44,6 +44,14 @@ class SettingsPageController extends Controller
                             allowed: $admin?->can('manageModules', Admin::class) === true,
                         ),
                         $this->makeItem(
+                            label: 'Plugins',
+                            labelKey: 'settings_item_plugins',
+                            description: 'Install, uninstall, and control plugins from marketplace sources.',
+                            descriptionKey: 'settings_item_plugins_description',
+                            href: route('core.admin.plugins.index'),
+                            allowed: $admin?->can('manageModules', Admin::class) === true,
+                        ),
+                        $this->makeItem(
                             label: 'Updater',
                             labelKey: 'settings_item_updater',
                             description: 'Queue updates, monitor progress, and rollback failed executions.',

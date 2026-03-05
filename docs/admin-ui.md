@@ -193,6 +193,13 @@ If you create a new UI primitive:
 
 **All admin pages now use canonical props exclusively.** Legacy aliases remain supported for backwards compatibility in modules/extensions.
 
+## Plugins Manager UI
+
+- Location: `Admin > Settings > Modules`
+- Includes plugin lifecycle actions: install (Composer/ZIP), enable/disable, uninstall
+- Shows compatibility state and safe-mode disable marker
+- Surfaces extension point counts for: field types, blocks, dashboard widgets, automation actions, menu items
+
 ---
 
 ## Testing

@@ -9,6 +9,7 @@ use Pagify\Core\Events\EntryCreated;
 use Pagify\Core\Events\EntryPublished;
 use Pagify\Core\Contracts\CoreHookSubscriber;
 use Pagify\Core\Console\Commands\CleanupAuditLogsCommand;
+use Pagify\Core\Console\Commands\MakePluginCommand;
 use Pagify\Core\Models\Admin;
 use Pagify\Core\Models\AuditLog;
 use Pagify\Core\Models\Setting;
@@ -25,6 +26,10 @@ use Pagify\Core\Services\EventBus;
 use Pagify\Core\Services\HookRegistry;
 use Pagify\Core\Services\ModuleRegistry;
 use Pagify\Core\Services\ModuleStateService;
+use Pagify\Core\Services\PluginCompatibilityService;
+use Pagify\Core\Services\PluginExtensionRegistry;
+use Pagify\Core\Services\PluginManagerService;
+use Pagify\Core\Services\PluginManifestService;
 use Pagify\Core\Services\SettingsManager;
 use Pagify\Core\Support\SiteContext;
 
@@ -35,6 +40,7 @@ class CoreServiceProvider extends ServiceProvider
 		$this->mergeConfigFrom(__DIR__ . '/../../config/core.php', 'core');
 		$this->mergeConfigFrom(__DIR__ . '/../../config/menu.php', 'core.menu');
 		$this->mergeConfigFrom(__DIR__ . '/../../config/module.php', 'core.module');
+		$this->mergeConfigFrom(__DIR__ . '/../../config/plugins.php', 'plugins');
 
 		$this->app->singleton(SiteContext::class);
 
@@ -76,6 +82,13 @@ class CoreServiceProvider extends ServiceProvider
 		});
 
 		$this->app->alias(EventBus::class, 'core.event-bus');
+
+		$this->app->singleton(PluginManifestService::class);
+		$this->app->singleton(PluginCompatibilityService::class);
+		$this->app->singleton(PluginManagerService::class);
+		$this->app->singleton(PluginExtensionRegistry::class);
+
+		$this->app->alias(PluginManagerService::class, 'core.plugins');
 	}
 
 	/**
@@ -196,11 +209,14 @@ class CoreServiceProvider extends ServiceProvider
 		$this->registerPolicies();
 		$this->registerEventHookBridges();
 		$this->registerConfiguredHookSubscribers();
+		$this->registerPluginRuntimeContributions();
+		$this->applyPluginFieldTypeExtensions();
 		$this->registerAuditObservers();
 
 		if ($this->app->runningInConsole()) {
 			$this->commands([
 				CleanupAuditLogsCommand::class,
+				MakePluginCommand::class,
 			]);
 		}
 	}
@@ -277,6 +293,69 @@ class CoreServiceProvider extends ServiceProvider
 
 			$eventBus->registerSubscriber($subscriber);
 		}
+	}
+
+	private function registerPluginRuntimeContributions(): void
+	{
+		$pluginManager = $this->app->make(PluginManagerService::class);
+		$eventBus = $this->app->make(EventBus::class);
+
+		foreach ($pluginManager->all() as $plugin) {
+			if (! ((bool) ($plugin['enabled'] ?? false)) || ! ((bool) ($plugin['is_compatible'] ?? false))) {
+				continue;
+			}
+
+			$manifest = $plugin['manifest'] ?? [];
+
+			if (! is_array($manifest)) {
+				continue;
+			}
+
+			$providers = $manifest['providers'] ?? [];
+
+			if (is_array($providers)) {
+				foreach ($providers as $providerClass) {
+					if (! is_string($providerClass) || $providerClass === '' || ! class_exists($providerClass)) {
+						continue;
+					}
+
+					try {
+						$this->app->register($providerClass);
+					} catch (Throwable $exception) {
+						report($exception);
+						$pluginManager->disablePluginFromThrowable($exception);
+					}
+				}
+			}
+
+			$hookSubscribers = $manifest['hooks']['subscribers'] ?? [];
+
+			if (is_array($hookSubscribers)) {
+				foreach ($hookSubscribers as $subscriberClass) {
+					if (! is_string($subscriberClass) || $subscriberClass === '' || ! class_exists($subscriberClass)) {
+						continue;
+					}
+
+					$subscriber = $this->app->make($subscriberClass);
+
+					if ($subscriber instanceof CoreHookSubscriber) {
+						$eventBus->registerSubscriber($subscriber);
+					}
+				}
+			}
+		}
+	}
+
+	private function applyPluginFieldTypeExtensions(): void
+	{
+		$fieldTypes = config('content.field_types', []);
+
+		if (! is_array($fieldTypes)) {
+			$fieldTypes = [];
+		}
+
+		$extensions = $this->app->make(PluginExtensionRegistry::class)->fieldTypes();
+		config()->set('content.field_types', array_values(array_unique(array_merge($fieldTypes, $extensions))));
 	}
 
 	private function registerAuditObservers(): void

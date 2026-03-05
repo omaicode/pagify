@@ -72,11 +72,11 @@ const variantClass = computed(() => {
   }
 
   if (resolvedTone.value === 'danger') {
-    return 'rounded-lg border border-rose-300 bg-white text-rose-700 transition hover:bg-rose-50'
+    return 'pf-btn-outline !rounded-lg !border-rose-300 !text-rose-700 transition hover:!bg-rose-50'
   }
 
   if (resolvedTone.value === 'neutral') {
-    return 'rounded-lg border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50'
+    return 'pf-btn-outline !rounded-lg !border-slate-300 !text-slate-700 transition hover:!bg-slate-50'
   }
 
   return 'pf-btn-primary'
@@ -111,7 +111,9 @@ const classes = computed(() => [
   sizeClass.value,
   roundedClass.value,
   resolvedFullWidth.value ? 'w-full' : '',
-  props.disabled ? 'disabled:opacity-50' : '',
+  props.disabled
+    ? (resolvedTag.value === 'button' ? 'disabled:opacity-50 disabled:cursor-not-allowed' : 'opacity-50 cursor-not-allowed pointer-events-none')
+    : 'cursor-pointer',
 ])
 
 const resolvedType = computed(() => (resolvedTag.value === 'button' ? props.type : undefined))

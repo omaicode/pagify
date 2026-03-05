@@ -109,6 +109,7 @@ const segmentLabel = (segment) => {
     const keyMap = {
         settings: 'settings',
         modules: 'settings_item_modules',
+        plugins: 'settings_item_plugins',
         'api-tokens': 'settings_item_api_tokens',
         'audit-logs': 'settings_item_audit_logs',
         content: 'settings_item_content',

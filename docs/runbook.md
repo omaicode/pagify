@@ -73,6 +73,16 @@ From project root:
 ADMIN_THEME=v2 composer setup
 ```
 
+### Plugin development skeleton
+
+From project root:
+
+```bash
+php artisan cms:make-plugin "My Plugin"
+```
+
+This creates a standard plugin scaffold in `plugins/{slug}` with `plugin.json`, provider stub, and starter directories.
+
 ### Run frontend dev server only
 
 From theme workspace:
@@ -129,3 +139,11 @@ php artisan db:seed --class="Pagify\\Content\\Database\\Seeders\\ContentDatabase
 ```bash
 php artisan optimize:clear
 ```
+
+- If plugin APIs return "Plugin state storage is not initialized yet", run migrations first:
+
+```bash
+php artisan migrate
+```
+
+- If a plugin crashes at runtime, safe mode will auto-disable it and return `PLUGIN_SAFE_MODE_ENABLED` on impacted request paths. Re-enable from Admin > Modules after fixing plugin code.

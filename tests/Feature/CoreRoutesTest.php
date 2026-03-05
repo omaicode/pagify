@@ -51,6 +51,13 @@ class CoreRoutesTest extends TestCase
         $response->assertRedirect('/admin/login');
     }
 
+    public function test_admin_plugins_page_redirects_guest_to_login(): void
+    {
+        $response = $this->get('/admin/plugins');
+
+        $response->assertRedirect('/admin/login');
+    }
+
     public function test_admin_settings_page_redirects_guest_to_login(): void
     {
         $response = $this->get('/admin/settings');
@@ -101,6 +108,18 @@ class CoreRoutesTest extends TestCase
         $response->assertForbidden();
     }
 
+    public function test_admin_plugins_page_returns_403_for_authenticated_user_without_permission(): void
+    {
+        /** @var Admin $admin */
+        $admin = Admin::factory()->create();
+
+        $this->actingAs($admin, 'web');
+
+        $response = $this->get('/admin/plugins');
+
+        $response->assertForbidden();
+    }
+
     public function test_admin_settings_page_is_accessible_for_authenticated_admin(): void
     {
         /** @var Admin $admin */
@@ -134,6 +153,23 @@ class CoreRoutesTest extends TestCase
                 ->where('breadcrumbs.0.label_key', 'dashboard')
                 ->where('breadcrumbs.1.label_key', 'settings')
                 ->where('breadcrumbs.2.label_key', 'settings_item_modules'));
+    }
+
+    public function test_admin_plugins_page_shows_settings_breadcrumb_for_authorized_admin(): void
+    {
+        /** @var Admin $admin */
+        $admin = Admin::factory()->create();
+        Permission::findOrCreate('core.module.manage', 'web');
+        $admin->givePermissionTo('core.module.manage');
+
+        $this->actingAs($admin, 'web')
+            ->get('/admin/plugins')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Plugins/Index')
+                ->where('breadcrumbs.0.label_key', 'dashboard')
+                ->where('breadcrumbs.1.label_key', 'settings')
+                ->where('breadcrumbs.2.label_key', 'settings_item_plugins'));
     }
 
     public function test_admin_api_tokens_page_shows_settings_breadcrumb_for_authorized_admin(): void

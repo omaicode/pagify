@@ -18,6 +18,7 @@ return [
         'order' => 900,
         'active_patterns' => [
             '/admin/modules',
+            '/admin/plugins',
             '/admin/api-tokens',
             '/admin/permissions',
             '/admin/admin-groups',

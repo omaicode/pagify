@@ -9,6 +9,7 @@ use Pagify\Core\Http\Controllers\Admin\AuthController;
 use Pagify\Core\Http\Controllers\Admin\DashboardController;
 use Pagify\Core\Http\Controllers\Admin\LocaleController;
 use Pagify\Core\Http\Controllers\Admin\ModulePageController;
+use Pagify\Core\Http\Controllers\Admin\PluginPageController;
 use Pagify\Core\Http\Controllers\Admin\PermissionPageController;
 use Pagify\Core\Http\Controllers\Admin\ProfilePageController;
 use Pagify\Core\Http\Controllers\Admin\SettingsPageController;
@@ -17,6 +18,7 @@ use Pagify\Core\Http\Controllers\Api\AdminManagerController;
 use Pagify\Core\Http\Controllers\Api\AdminPermissionController;
 use Pagify\Core\Http\Controllers\Api\AdminProfileController;
 use Pagify\Core\Http\Controllers\Api\AdminModuleController;
+use Pagify\Core\Http\Controllers\Api\AdminPluginController;
 use Pagify\Core\Http\Controllers\Api\AdminTokenController;
 use Pagify\Core\Http\Middleware\EnsureApiErrorEnvelope;
 use Pagify\Core\Http\Middleware\HandleInertiaRequests;
@@ -52,6 +54,7 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
             Route::get('/admin-groups', AdminGroupPageController::class)->name('admin-groups.index');
             Route::get('/admins', AdminManagerPageController::class)->name('admins.index');
             Route::get('/modules', ModulePageController::class)->name('modules.index');
+            Route::get('/plugins', PluginPageController::class)->name('plugins.index');
             Route::get('/profile', ProfilePageController::class)->name('profile.index');
             Route::get('/settings', SettingsPageController::class)->name('settings.index');
         });
@@ -103,4 +106,11 @@ Route::prefix('api/v1/'.config('app.admin_url_prefix'))
         Route::get('/modules', [AdminModuleController::class, 'index'])->name('modules.index');
         Route::patch('/modules/{module}', [AdminModuleController::class, 'update'])->name('modules.update');
         Route::get('/modules/health', [AdminModuleController::class, 'health'])->name('modules.health');
+
+        Route::get('/plugins', [AdminPluginController::class, 'index'])->name('plugins.index');
+        Route::patch('/plugins/{plugin}', [AdminPluginController::class, 'update'])->name('plugins.update');
+        Route::post('/plugins/install/composer', [AdminPluginController::class, 'installComposer'])->name('plugins.install.composer');
+        Route::post('/plugins/install/zip', [AdminPluginController::class, 'installZip'])->name('plugins.install.zip');
+        Route::delete('/plugins/{plugin}', [AdminPluginController::class, 'destroy'])->name('plugins.destroy');
+        Route::get('/plugins/extensions', [AdminPluginController::class, 'extensions'])->name('plugins.extensions');
     });
