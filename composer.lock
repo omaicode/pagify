@@ -3072,7 +3072,10 @@
             "dist": {
                 "type": "path",
                 "url": "modules/media",
-                "reference": "2a98d152abdfb3eec0811c3da2f371cff7d0004a"
+                "reference": "73159d121cdcbee08325e3d47700366746d7289d"
+            },
+            "require": {
+                "modules/core": "*"
             },
             "type": "library",
             "extra": {
