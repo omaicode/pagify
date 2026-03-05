@@ -61,6 +61,30 @@ class SettingsPageController extends Controller
                     'label_key' => 'settings_group_security',
                     'items' => array_values(array_filter([
                         $this->makeItem(
+                            label: 'Permissions',
+                            labelKey: 'settings_item_permissions',
+                            description: 'Manage access permissions available for administrator groups.',
+                            descriptionKey: 'settings_item_permissions_description',
+                            href: route('core.admin.permissions.index'),
+                            allowed: $admin?->can('managePermissions', Admin::class) === true,
+                        ),
+                        $this->makeItem(
+                            label: 'Administrator groups',
+                            labelKey: 'settings_item_admin_groups',
+                            description: 'Create and maintain administrator groups and their permission matrix.',
+                            descriptionKey: 'settings_item_admin_groups_description',
+                            href: route('core.admin.admin-groups.index'),
+                            allowed: $admin?->can('manageAdminGroups', Admin::class) === true,
+                        ),
+                        $this->makeItem(
+                            label: 'Administrators',
+                            labelKey: 'settings_item_admins',
+                            description: 'Manage administrator accounts and assign group memberships.',
+                            descriptionKey: 'settings_item_admins_description',
+                            href: route('core.admin.admins.index'),
+                            allowed: $admin?->can('manageAdmins', Admin::class) === true,
+                        ),
+                        $this->makeItem(
                             label: 'API tokens',
                             labelKey: 'settings_item_api_tokens',
                             description: 'Create and revoke admin API tokens.',

@@ -1,14 +1,20 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Pagify\Core\Http\Controllers\Admin\AdminGroupPageController;
+use Pagify\Core\Http\Controllers\Admin\AdminManagerPageController;
 use Pagify\Core\Http\Controllers\Admin\AuditLogController;
 use Pagify\Core\Http\Controllers\Admin\ApiTokenPageController;
 use Pagify\Core\Http\Controllers\Admin\AuthController;
 use Pagify\Core\Http\Controllers\Admin\DashboardController;
 use Pagify\Core\Http\Controllers\Admin\LocaleController;
 use Pagify\Core\Http\Controllers\Admin\ModulePageController;
+use Pagify\Core\Http\Controllers\Admin\PermissionPageController;
 use Pagify\Core\Http\Controllers\Admin\ProfilePageController;
 use Pagify\Core\Http\Controllers\Admin\SettingsPageController;
+use Pagify\Core\Http\Controllers\Api\AdminGroupController;
+use Pagify\Core\Http\Controllers\Api\AdminManagerController;
+use Pagify\Core\Http\Controllers\Api\AdminPermissionController;
 use Pagify\Core\Http\Controllers\Api\AdminProfileController;
 use Pagify\Core\Http\Controllers\Api\AdminModuleController;
 use Pagify\Core\Http\Controllers\Api\AdminTokenController;
@@ -37,14 +43,17 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
             ->name('logout');
 
         Route::middleware(['auth:web', HandleInertiaRequests::class, RecordAuditLog::class])->group(function (): void {
-        Route::get('/', DashboardController::class)->name('dashboard');
-        Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
+            Route::get('/', DashboardController::class)->name('dashboard');
+            Route::post('/locale', [LocaleController::class, 'update'])->name('locale.update');
 
-        Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.index');
-        Route::get('/api-tokens', ApiTokenPageController::class)->name('tokens.index');
-        Route::get('/modules', ModulePageController::class)->name('modules.index');
-        Route::get('/profile', ProfilePageController::class)->name('profile.index');
-        Route::get('/settings', SettingsPageController::class)->name('settings.index');
+            Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.index');
+            Route::get('/api-tokens', ApiTokenPageController::class)->name('tokens.index');
+            Route::get('/permissions', PermissionPageController::class)->name('permissions.index');
+            Route::get('/admin-groups', AdminGroupPageController::class)->name('admin-groups.index');
+            Route::get('/admins', AdminManagerPageController::class)->name('admins.index');
+            Route::get('/modules', ModulePageController::class)->name('modules.index');
+            Route::get('/profile', ProfilePageController::class)->name('profile.index');
+            Route::get('/settings', SettingsPageController::class)->name('settings.index');
         });
     });
 });
@@ -70,6 +79,21 @@ Route::prefix('api/v1/'.config('app.admin_url_prefix'))
         Route::get('/tokens', [AdminTokenController::class, 'index'])->name('tokens.index');
         Route::post('/tokens', [AdminTokenController::class, 'store'])->name('tokens.store');
         Route::delete('/tokens/{tokenId}', [AdminTokenController::class, 'destroy'])->name('tokens.destroy');
+
+        Route::get('/permissions', [AdminPermissionController::class, 'index'])->name('permissions.index');
+        Route::post('/permissions', [AdminPermissionController::class, 'store'])->name('permissions.store');
+        Route::patch('/permissions/{permissionId}', [AdminPermissionController::class, 'update'])->name('permissions.update');
+        Route::delete('/permissions/{permissionId}', [AdminPermissionController::class, 'destroy'])->name('permissions.destroy');
+
+        Route::get('/admin-groups', [AdminGroupController::class, 'index'])->name('admin-groups.index');
+        Route::post('/admin-groups', [AdminGroupController::class, 'store'])->name('admin-groups.store');
+        Route::patch('/admin-groups/{roleId}', [AdminGroupController::class, 'update'])->name('admin-groups.update');
+        Route::delete('/admin-groups/{roleId}', [AdminGroupController::class, 'destroy'])->name('admin-groups.destroy');
+
+        Route::get('/admins', [AdminManagerController::class, 'index'])->name('admins.index');
+        Route::post('/admins', [AdminManagerController::class, 'store'])->name('admins.store');
+        Route::patch('/admins/{managedAdminId}', [AdminManagerController::class, 'update'])->name('admins.update');
+        Route::delete('/admins/{managedAdminId}', [AdminManagerController::class, 'destroy'])->name('admins.destroy');
 
         Route::patch('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
         Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('profile.password.update');

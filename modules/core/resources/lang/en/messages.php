@@ -14,5 +14,11 @@ return [
         'module_not_found' => 'Module not found.',
         'module_locked' => 'Core module cannot be disabled.',
         'token_not_found' => 'Token not found.',
+        'permission_not_found' => 'Permission not found.',
+        'permission_locked' => 'Permission is locked and cannot be deleted.',
+        'admin_group_not_found' => 'Administrator group not found.',
+        'admin_group_locked' => 'Default administrator group is locked.',
+        'admin_not_found' => 'Administrator not found.',
+        'admin_delete_self_forbidden' => 'You cannot delete your own administrator account.',
     ],
 ];

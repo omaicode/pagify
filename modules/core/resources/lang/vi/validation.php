@@ -29,5 +29,13 @@ return [
         'new_password' => 'mật khẩu mới',
         'new_password_confirmation' => 'xác nhận mật khẩu mới',
         'avatar' => 'avatar',
+        'username' => 'tên đăng nhập',
+        'email' => 'email',
+        'password' => 'mật khẩu',
+        'password_confirmation' => 'xác nhận mật khẩu',
+        'permissions' => 'danh sách quyền',
+        'permissions.*' => 'quyền',
+        'roles' => 'nhóm quản trị viên',
+        'roles.*' => 'nhóm quản trị viên',
     ],
 ];

@@ -29,5 +29,13 @@ return [
         'new_password' => 'new password',
         'new_password_confirmation' => 'new password confirmation',
         'avatar' => 'avatar',
+        'username' => 'username',
+        'email' => 'email',
+        'password' => 'password',
+        'password_confirmation' => 'password confirmation',
+        'permissions' => 'permissions',
+        'permissions.*' => 'permission',
+        'roles' => 'administrator groups',
+        'roles.*' => 'administrator group',
     ],
 ];

@@ -19,6 +19,9 @@ return [
         'active_patterns' => [
             '/admin/modules',
             '/admin/api-tokens',
+            '/admin/permissions',
+            '/admin/admin-groups',
+            '/admin/admins',
             '/admin/audit-logs',
             '/admin/content',
             '/admin/updater'
