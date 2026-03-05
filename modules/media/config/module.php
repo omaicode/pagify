@@ -6,4 +6,5 @@ return [
     'slug' => 'media',
     'config_key' => 'media',
     'description' => 'Shared media and asset management module',
+    'order' => 2
 ];

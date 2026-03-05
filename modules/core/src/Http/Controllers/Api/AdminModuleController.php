@@ -16,6 +16,7 @@ class AdminModuleController extends ApiController
         $this->authorize('manageModules', Admin::class);
 
         $data = collect($modules->all())
+            ->sortBy('order', SORT_ASC)
             ->map(static fn (array $module, string $slug): array => [
                 'slug' => $slug,
                 'name' => $module['name'] ?? ucfirst($slug),
