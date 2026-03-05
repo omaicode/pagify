@@ -1,11 +1,11 @@
 <?php
 
-namespace Modules\Content\Models;
+namespace Pagify\Content\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Modules\Core\Models\Admin;
+use Pagify\Core\Models\Admin;
 
 class ContentEntryRevision extends Model
 {
@@ -39,6 +39,6 @@ class ContentEntryRevision extends Model
 
     protected static function newFactory()
     {
-        return \Modules\Content\Database\Factories\ContentEntryRevisionFactory::new();
+        return \Pagify\Content\Database\Factories\ContentEntryRevisionFactory::new();
     }
 }

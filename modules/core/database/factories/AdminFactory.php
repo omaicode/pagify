@@ -1,14 +1,14 @@
 <?php
 
-namespace Modules\Core\Database\Factories;
+namespace Pagify\Core\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
-use Modules\Core\Models\Admin;
-use Modules\Core\Models\Site;
+use Pagify\Core\Models\Admin;
+use Pagify\Core\Models\Site;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\Modules\Core\Models\Model>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\Pagify\Core\Models\Model>
  */
 class AdminFactory extends Factory
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Core\Models;
+namespace Pagify\Core\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

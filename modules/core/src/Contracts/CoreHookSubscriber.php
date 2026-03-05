@@ -1,8 +1,8 @@
 <?php
 
-namespace Modules\Core\Contracts;
+namespace Pagify\Core\Contracts;
 
-use Modules\Core\Services\EventBus;
+use Pagify\Core\Services\EventBus;
 
 interface CoreHookSubscriber
 {

@@ -1,12 +1,12 @@
 <?php
 
-namespace Modules\Content\Http\Requests\Admin;
+namespace Pagify\Content\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Modules\Content\Http\Requests\Admin\Concerns\HasSchemaFieldRules;
-use Modules\Content\Models\ContentType;
-use Modules\Core\Support\SiteContext;
+use Pagify\Content\Http\Requests\Admin\Concerns\HasSchemaFieldRules;
+use Pagify\Content\Models\ContentType;
+use Pagify\Core\Support\SiteContext;
 
 class UpdateContentTypeRequest extends FormRequest
 {

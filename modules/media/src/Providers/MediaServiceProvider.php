@@ -1,11 +1,11 @@
 <?php
 
-namespace Modules\Media\Providers;
+namespace Pagify\Media\Providers;
 
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
-use Modules\Media\Models\MediaAsset;
-use Modules\Media\Policies\MediaAssetPolicy;
+use Pagify\Media\Models\MediaAsset;
+use Pagify\Media\Policies\MediaAssetPolicy;
 
 class MediaServiceProvider extends ServiceProvider
 {

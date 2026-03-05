@@ -1,13 +1,13 @@
 <?php
 
-namespace Modules\Core\Http\Controllers\Admin;
+namespace Pagify\Core\Http\Controllers\Admin;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
-use Modules\Core\Models\Admin;
+use Pagify\Core\Models\Admin;
 
 class ApiTokenPageController extends Controller
 {

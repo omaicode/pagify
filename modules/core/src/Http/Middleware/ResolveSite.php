@@ -1,13 +1,13 @@
 <?php
 
-namespace Modules\Core\Http\Middleware;
+namespace Pagify\Core\Http\Middleware;
 
 use Closure;
 use Throwable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Modules\Core\Models\Site;
-use Modules\Core\Support\SiteContext;
+use Pagify\Core\Models\Site;
+use Pagify\Core\Support\SiteContext;
 use Symfony\Component\HttpFoundation\Response;
 
 class ResolveSite

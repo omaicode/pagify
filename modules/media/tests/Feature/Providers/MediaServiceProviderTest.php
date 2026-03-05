@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Media\Tests;
+namespace Pagify\Media\Tests;
 
 class MediaServiceProviderTest extends TestCase
 {

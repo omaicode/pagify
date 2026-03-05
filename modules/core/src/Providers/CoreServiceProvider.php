@@ -1,32 +1,32 @@
 <?php
 
-namespace Modules\Core\Providers;
+namespace Pagify\Core\Providers;
 
 use Throwable;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
-use Modules\Core\Events\EntryCreated;
-use Modules\Core\Events\EntryPublished;
-use Modules\Core\Contracts\CoreHookSubscriber;
-use Modules\Core\Console\Commands\CleanupAuditLogsCommand;
-use Modules\Core\Models\Admin;
-use Modules\Core\Models\AuditLog;
-use Modules\Core\Models\Setting;
+use Pagify\Core\Events\EntryCreated;
+use Pagify\Core\Events\EntryPublished;
+use Pagify\Core\Contracts\CoreHookSubscriber;
+use Pagify\Core\Console\Commands\CleanupAuditLogsCommand;
+use Pagify\Core\Models\Admin;
+use Pagify\Core\Models\AuditLog;
+use Pagify\Core\Models\Setting;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\ServiceProvider;
-use Modules\Core\Models\Site;
-use Modules\Core\Observers\AuditableModelObserver;
-use Modules\Core\Policies\AuditLogPolicy;
-use Modules\Core\Policies\AdminPolicy;
-use Modules\Core\Policies\SettingPolicy;
-use Modules\Core\Policies\SitePolicy;
-use Modules\Core\Services\AuditLogger;
-use Modules\Core\Services\EventBus;
-use Modules\Core\Services\HookRegistry;
-use Modules\Core\Services\ModuleRegistry;
-use Modules\Core\Services\ModuleStateService;
-use Modules\Core\Services\SettingsManager;
-use Modules\Core\Support\SiteContext;
+use Pagify\Core\Models\Site;
+use Pagify\Core\Observers\AuditableModelObserver;
+use Pagify\Core\Policies\AuditLogPolicy;
+use Pagify\Core\Policies\AdminPolicy;
+use Pagify\Core\Policies\SettingPolicy;
+use Pagify\Core\Policies\SitePolicy;
+use Pagify\Core\Services\AuditLogger;
+use Pagify\Core\Services\EventBus;
+use Pagify\Core\Services\HookRegistry;
+use Pagify\Core\Services\ModuleRegistry;
+use Pagify\Core\Services\ModuleStateService;
+use Pagify\Core\Services\SettingsManager;
+use Pagify\Core\Support\SiteContext;
 
 class CoreServiceProvider extends ServiceProvider
 {

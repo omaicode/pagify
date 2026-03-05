@@ -1,9 +1,9 @@
 <?php
 
-namespace Modules\Core\Services;
+namespace Pagify\Core\Services;
 
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
-use Modules\Core\Models\ModuleState;
+use Pagify\Core\Models\ModuleState;
 use Throwable;
 
 class ModuleStateService

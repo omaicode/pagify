@@ -1,12 +1,12 @@
 <?php
 
-namespace Modules\Content\Database\Seeders;
+namespace Pagify\Content\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
-use Modules\Content\Models\ContentEntry;
-use Modules\Content\Models\ContentType;
-use Modules\Core\Models\Site;
+use Pagify\Content\Models\ContentEntry;
+use Pagify\Content\Models\ContentType;
+use Pagify\Core\Models\Site;
 use Spatie\Permission\Models\Permission;
 
 class ContentDatabaseSeeder extends Seeder

@@ -1,13 +1,13 @@
 <?php
 
-namespace Modules\Core\Models;
+namespace Pagify\Core\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
-use Modules\Core\Traits\BelongsToSite;
+use Pagify\Core\Traits\BelongsToSite;
 use Spatie\Permission\Traits\HasRoles;
 
 class Admin extends Authenticatable
@@ -41,7 +41,7 @@ class Admin extends Authenticatable
 
     protected static function newFactory()
     {
-        return \Modules\Core\Database\Factories\AdminFactory::new();
+        return \Pagify\Core\Database\Factories\AdminFactory::new();
     }
 
     public function site(): BelongsTo

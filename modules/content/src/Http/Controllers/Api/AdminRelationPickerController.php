@@ -1,13 +1,13 @@
 <?php
 
-namespace Modules\Content\Http\Controllers\Api;
+namespace Pagify\Content\Http\Controllers\Api;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Modules\Content\Models\ContentEntry;
-use Modules\Content\Models\ContentType;
-use Modules\Core\Http\Controllers\Api\ApiController;
+use Pagify\Content\Models\ContentEntry;
+use Pagify\Content\Models\ContentType;
+use Pagify\Core\Http\Controllers\Api\ApiController;
 
 class AdminRelationPickerController extends ApiController
 {

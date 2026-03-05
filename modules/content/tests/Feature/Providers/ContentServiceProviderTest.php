@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Content\Tests;
+namespace Pagify\Content\Tests;
 
 class ContentServiceProviderTest extends TestCase
 {

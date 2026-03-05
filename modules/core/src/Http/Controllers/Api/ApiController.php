@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Core\Http\Controllers\Api;
+namespace Pagify\Core\Http\Controllers\Api;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;

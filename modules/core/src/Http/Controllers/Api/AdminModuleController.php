@@ -1,13 +1,13 @@
 <?php
 
-namespace Modules\Core\Http\Controllers\Api;
+namespace Pagify\Core\Http\Controllers\Api;
 
 use Illuminate\Http\JsonResponse;
-use Modules\Core\Http\Requests\Admin\UpdateModuleStateRequest;
-use Modules\Core\Http\Resources\ModuleStateResource;
-use Modules\Core\Models\Admin;
-use Modules\Core\Services\ModuleRegistry;
-use Modules\Core\Services\ModuleStateService;
+use Pagify\Core\Http\Requests\Admin\UpdateModuleStateRequest;
+use Pagify\Core\Http\Resources\ModuleStateResource;
+use Pagify\Core\Models\Admin;
+use Pagify\Core\Services\ModuleRegistry;
+use Pagify\Core\Services\ModuleStateService;
 
 class AdminModuleController extends ApiController
 {

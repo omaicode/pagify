@@ -1,9 +1,9 @@
 <?php
 
-namespace Modules\Core\Services;
+namespace Pagify\Core\Services;
 
-use Modules\Core\Models\Setting;
-use Modules\Core\Support\SiteContext;
+use Pagify\Core\Models\Setting;
+use Pagify\Core\Support\SiteContext;
 
 class SettingsManager
 {

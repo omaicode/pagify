@@ -5,9 +5,9 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
-use Modules\Content\Models\ContentEntry;
-use Modules\Content\Models\ContentType;
-use Modules\Core\Models\Admin;
+use Pagify\Content\Models\ContentEntry;
+use Pagify\Content\Models\ContentType;
+use Pagify\Core\Models\Admin;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 

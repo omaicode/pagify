@@ -3,10 +3,10 @@
 namespace Tests\Feature;
 
 use Illuminate\Http\Request;
-use Modules\Core\Http\Middleware\ResolveSite;
-use Modules\Core\Models\Setting;
-use Modules\Core\Models\Site;
-use Modules\Core\Support\SiteContext;
+use Pagify\Core\Http\Middleware\ResolveSite;
+use Pagify\Core\Models\Setting;
+use Pagify\Core\Models\Site;
+use Pagify\Core\Support\SiteContext;
 use Tests\TestCase;
 
 class MultiSiteCompletenessTest extends TestCase

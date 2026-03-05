@@ -1,16 +1,16 @@
 <?php
 
-namespace Modules\Content\Http\Controllers\Api;
+namespace Pagify\Content\Http\Controllers\Api;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
-use Modules\Content\Http\Requests\Api\ListContentEntriesRequest;
-use Modules\Content\Http\Requests\Api\ShowContentEntryRequest;
-use Modules\Content\Http\Resources\ContentEntryResource;
-use Modules\Content\Models\ContentEntry;
-use Modules\Content\Models\ContentType;
-use Modules\Content\Services\RelationResolver;
-use Modules\Core\Http\Controllers\Api\ApiController;
+use Pagify\Content\Http\Requests\Api\ListContentEntriesRequest;
+use Pagify\Content\Http\Requests\Api\ShowContentEntryRequest;
+use Pagify\Content\Http\Resources\ContentEntryResource;
+use Pagify\Content\Models\ContentEntry;
+use Pagify\Content\Models\ContentType;
+use Pagify\Content\Services\RelationResolver;
+use Pagify\Core\Http\Controllers\Api\ApiController;
 
 class ContentApiController extends ApiController
 {

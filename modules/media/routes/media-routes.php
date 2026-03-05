@@ -1,16 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Core\Http\Middleware\EnsureApiErrorEnvelope;
-use Modules\Core\Http\Middleware\EnsureModuleEnabled;
-use Modules\Core\Http\Middleware\HandleInertiaRequests;
-use Modules\Core\Http\Middleware\RecordAuditLog;
-use Modules\Core\Http\Middleware\ResolveSite;
-use Modules\Core\Http\Middleware\SetLocaleFromSite;
-use Modules\Media\Http\Controllers\Admin\MediaLibraryController;
-use Modules\Media\Http\Controllers\Api\AdminMediaAssetController;
-use Modules\Media\Http\Controllers\Api\AdminMediaFolderController;
-use Modules\Media\Http\Controllers\Api\AdminMediaUploadController;
+use Pagify\Core\Http\Middleware\EnsureApiErrorEnvelope;
+use Pagify\Core\Http\Middleware\EnsureModuleEnabled;
+use Pagify\Core\Http\Middleware\HandleInertiaRequests;
+use Pagify\Core\Http\Middleware\RecordAuditLog;
+use Pagify\Core\Http\Middleware\ResolveSite;
+use Pagify\Core\Http\Middleware\SetLocaleFromSite;
+use Pagify\Media\Http\Controllers\Admin\MediaLibraryController;
+use Pagify\Media\Http\Controllers\Api\AdminMediaAssetController;
+use Pagify\Media\Http\Controllers\Api\AdminMediaFolderController;
+use Pagify\Media\Http\Controllers\Api\AdminMediaUploadController;
 
 Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(function (): void {
 	Route::prefix('admin/media')

@@ -1,9 +1,9 @@
 <?php
 
-namespace Modules\Core\Policies;
+namespace Pagify\Core\Policies;
 
-use Modules\Core\Models\Admin;
-use Modules\Core\Models\Setting;
+use Pagify\Core\Models\Admin;
+use Pagify\Core\Models\Setting;
 
 class SettingPolicy
 {

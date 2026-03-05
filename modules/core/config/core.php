@@ -22,15 +22,15 @@ return [
     ],
 
     'hook_subscribers' => [
-        // Example: Modules\Blog\Hooks\BlogHookSubscriber::class,
+        // Example: Pagify\Blog\Hooks\BlogHookSubscriber::class,
     ],
 
     'audit' => [
         'audited_models' => [
-            Modules\Core\Models\Site::class,
-            Modules\Core\Models\Setting::class,
-            Modules\Core\Models\Admin::class,
-            Modules\Core\Models\ModuleState::class,
+            Pagify\Core\Models\Site::class,
+            Pagify\Core\Models\Setting::class,
+            Pagify\Core\Models\Admin::class,
+            Pagify\Core\Models\ModuleState::class,
         ],
         'redact_keys' => [
             'password',

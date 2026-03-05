@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Content\Http\Controllers\Admin;
+namespace Pagify\Content\Http\Controllers\Admin;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
@@ -8,11 +8,11 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
-use Modules\Content\Http\Requests\Admin\StoreContentTypeRequest;
-use Modules\Content\Http\Requests\Admin\UpdateContentTypeRequest;
-use Modules\Content\Models\ContentType;
-use Modules\Content\Services\ContentTypeService;
-use Modules\Content\Services\SchemaMigrationPlanner;
+use Pagify\Content\Http\Requests\Admin\StoreContentTypeRequest;
+use Pagify\Content\Http\Requests\Admin\UpdateContentTypeRequest;
+use Pagify\Content\Models\ContentType;
+use Pagify\Content\Services\ContentTypeService;
+use Pagify\Content\Services\SchemaMigrationPlanner;
 
 class ContentTypeController extends Controller
 {
@@ -71,7 +71,7 @@ class ContentTypeController extends Controller
     {
         $this->authorize('create', ContentType::class);
 
-        /** @var \Modules\Core\Models\Admin|null $admin */
+        /** @var \Pagify\Core\Models\Admin|null $admin */
         $admin = $request->user('web');
 
         $validated = $request->validated();
@@ -130,7 +130,7 @@ class ContentTypeController extends Controller
     {
         $this->authorize('update', $contentType);
 
-        /** @var \Modules\Core\Models\Admin|null $admin */
+        /** @var \Pagify\Core\Models\Admin|null $admin */
         $admin = $request->user('web');
 
         $validated = $request->validated();

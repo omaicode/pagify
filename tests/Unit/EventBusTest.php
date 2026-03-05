@@ -4,10 +4,10 @@ namespace Tests\Unit;
 
 use Illuminate\Container\Container;
 use Illuminate\Events\Dispatcher;
-use Modules\Core\Contracts\CoreHookSubscriber;
-use Modules\Core\Events\EntryCreated;
-use Modules\Core\Services\EventBus;
-use Modules\Core\Services\HookRegistry;
+use Pagify\Core\Contracts\CoreHookSubscriber;
+use Pagify\Core\Events\EntryCreated;
+use Pagify\Core\Services\EventBus;
+use Pagify\Core\Services\HookRegistry;
 use PHPUnit\Framework\TestCase;
 
 class EventBusTest extends TestCase

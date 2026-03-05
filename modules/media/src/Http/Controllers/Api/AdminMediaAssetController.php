@@ -1,20 +1,20 @@
 <?php
 
-namespace Modules\Media\Http\Controllers\Api;
+namespace Pagify\Media\Http\Controllers\Api;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Modules\Media\Jobs\GenerateMediaImageTransformsJob;
-use Modules\Core\Http\Controllers\Api\ApiController;
-use Modules\Media\Http\Requests\Admin\ListMediaAssetsRequest;
-use Modules\Media\Http\Requests\Admin\StoreMediaAssetRequest;
-use Modules\Media\Http\Requests\Admin\UpdateMediaAssetRequest;
-use Modules\Media\Http\Resources\MediaAssetResource;
-use Modules\Media\Models\MediaAsset;
-use Modules\Media\Models\MediaFolder;
-use Modules\Media\Services\MediaStorageManager;
+use Pagify\Media\Jobs\GenerateMediaImageTransformsJob;
+use Pagify\Core\Http\Controllers\Api\ApiController;
+use Pagify\Media\Http\Requests\Admin\ListMediaAssetsRequest;
+use Pagify\Media\Http\Requests\Admin\StoreMediaAssetRequest;
+use Pagify\Media\Http\Requests\Admin\UpdateMediaAssetRequest;
+use Pagify\Media\Http\Resources\MediaAssetResource;
+use Pagify\Media\Models\MediaAsset;
+use Pagify\Media\Models\MediaFolder;
+use Pagify\Media\Services\MediaStorageManager;
 
 class AdminMediaAssetController extends ApiController
 {
@@ -90,7 +90,7 @@ class AdminMediaAssetController extends ApiController
         $uploaded = $request->file('file');
         $stored = $storage->storeUploadedFile($uploaded, $folder?->slug);
 
-        /** @var \Modules\Core\Models\Admin|null $admin */
+        /** @var \Pagify\Core\Models\Admin|null $admin */
         $admin = $request->user('web');
 
         $asset = MediaAsset::query()->create([

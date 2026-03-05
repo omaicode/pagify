@@ -1,9 +1,9 @@
 <?php
 
-namespace Modules\Core\Database\Factories;
+namespace Pagify\Core\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Modules\Core\Models\Site;
+use Pagify\Core\Models\Site;
 
 class SiteFactory extends Factory
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Core\Tests;
+namespace Pagify\Core\Tests;
 
 class CoreServiceProviderTest extends TestCase
 {

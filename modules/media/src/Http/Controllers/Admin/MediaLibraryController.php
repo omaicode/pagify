@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Media\Http\Controllers\Admin;
+namespace Pagify\Media\Http\Controllers\Admin;
 
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;

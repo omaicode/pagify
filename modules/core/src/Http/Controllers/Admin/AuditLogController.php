@@ -1,16 +1,16 @@
 <?php
 
-namespace Modules\Core\Http\Controllers\Admin;
+namespace Pagify\Core\Http\Controllers\Admin;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
-use Modules\Core\Models\Admin;
-use Modules\Core\Models\AuditLog;
-use Modules\Core\Models\Site;
-use Modules\Core\Support\SiteContext;
+use Pagify\Core\Models\Admin;
+use Pagify\Core\Models\AuditLog;
+use Pagify\Core\Models\Site;
+use Pagify\Core\Support\SiteContext;
 
 class AuditLogController extends Controller
 {

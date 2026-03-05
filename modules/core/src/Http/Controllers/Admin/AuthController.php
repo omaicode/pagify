@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Core\Http\Controllers\Admin;
+namespace Pagify\Core\Http\Controllers\Admin;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -8,7 +8,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
-use Modules\Core\Services\AuditLogger;
+use Pagify\Core\Services\AuditLogger;
 
 class AuthController extends Controller
 {

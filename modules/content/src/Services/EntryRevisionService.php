@@ -1,10 +1,10 @@
 <?php
 
-namespace Modules\Content\Services;
+namespace Pagify\Content\Services;
 
 use Illuminate\Support\Facades\DB;
-use Modules\Content\Models\ContentEntry;
-use Modules\Content\Models\ContentEntryRevision;
+use Pagify\Content\Models\ContentEntry;
+use Pagify\Content\Models\ContentEntryRevision;
 
 class EntryRevisionService
 {

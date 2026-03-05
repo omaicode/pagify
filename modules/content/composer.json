@@ -1,25 +1,25 @@
 {
-	"name": "modules/content",
+	"name": "omaicode/pagify-content",
 	"description": "",
 	"type": "library",
 	"version": "1.0",
 	"license": "proprietary",
 	"require": {
-        "modules/core": "*"
+        "omaicode/pagify-core": "*"
     },
 	"autoload": {
 		"psr-4": {
-			"Modules\\Content\\": "src/",
-			"Modules\\Content\\Tests\\": "tests/",
-			"Modules\\Content\\Database\\Factories\\": "database/factories/",
-			"Modules\\Content\\Database\\Seeders\\": "database/seeders/"
+			"Pagify\\Content\\": "src/",
+			"Pagify\\Content\\Tests\\": "tests/",
+			"Pagify\\Content\\Database\\Factories\\": "database/factories/",
+			"Pagify\\Content\\Database\\Seeders\\": "database/seeders/"
 		}
 	},
 	"minimum-stability": "stable",
 	"extra": {
 		"laravel": {
 			"providers": [
-				"Modules\\Content\\Providers\\ContentServiceProvider"
+				"Pagify\\Content\\Providers\\ContentServiceProvider"
 			]
 		}
 	}

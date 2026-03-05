@@ -1,21 +1,21 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Core\Http\Controllers\Admin\AuditLogController;
-use Modules\Core\Http\Controllers\Admin\ApiTokenPageController;
-use Modules\Core\Http\Controllers\Admin\AuthController;
-use Modules\Core\Http\Controllers\Admin\DashboardController;
-use Modules\Core\Http\Controllers\Admin\LocaleController;
-use Modules\Core\Http\Controllers\Admin\ModulePageController;
-use Modules\Core\Http\Controllers\Admin\SettingsPageController;
-use Modules\Core\Http\Controllers\Api\AdminModuleController;
-use Modules\Core\Http\Controllers\Api\AdminTokenController;
-use Modules\Core\Http\Middleware\EnsureApiErrorEnvelope;
-use Modules\Core\Http\Middleware\HandleInertiaRequests;
-use Modules\Core\Http\Middleware\RecordAuditLog;
-use Modules\Core\Http\Middleware\ResolveSite;
-use Modules\Core\Http\Middleware\SetLocaleFromSite;
-use Modules\Core\Support\SiteContext;
+use Pagify\Core\Http\Controllers\Admin\AuditLogController;
+use Pagify\Core\Http\Controllers\Admin\ApiTokenPageController;
+use Pagify\Core\Http\Controllers\Admin\AuthController;
+use Pagify\Core\Http\Controllers\Admin\DashboardController;
+use Pagify\Core\Http\Controllers\Admin\LocaleController;
+use Pagify\Core\Http\Controllers\Admin\ModulePageController;
+use Pagify\Core\Http\Controllers\Admin\SettingsPageController;
+use Pagify\Core\Http\Controllers\Api\AdminModuleController;
+use Pagify\Core\Http\Controllers\Api\AdminTokenController;
+use Pagify\Core\Http\Middleware\EnsureApiErrorEnvelope;
+use Pagify\Core\Http\Middleware\HandleInertiaRequests;
+use Pagify\Core\Http\Middleware\RecordAuditLog;
+use Pagify\Core\Http\Middleware\ResolveSite;
+use Pagify\Core\Http\Middleware\SetLocaleFromSite;
+use Pagify\Core\Support\SiteContext;
 
 Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(function (): void {
     Route::get('/', function () {

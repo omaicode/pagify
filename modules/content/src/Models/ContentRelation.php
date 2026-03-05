@@ -1,11 +1,11 @@
 <?php
 
-namespace Modules\Content\Models;
+namespace Pagify\Content\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Modules\Core\Traits\BelongsToSite;
+use Pagify\Core\Traits\BelongsToSite;
 
 class ContentRelation extends Model
 {
@@ -39,6 +39,6 @@ class ContentRelation extends Model
 
     protected static function newFactory()
     {
-        return \Modules\Content\Database\Factories\ContentRelationFactory::new();
+        return \Pagify\Content\Database\Factories\ContentRelationFactory::new();
     }
 }

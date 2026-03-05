@@ -1,14 +1,14 @@
 <?php
 
-namespace Modules\Content\Jobs;
+namespace Pagify\Content\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Modules\Content\Models\ContentEntry;
-use Modules\Content\Services\PublishingWorkflowService;
+use Pagify\Content\Models\ContentEntry;
+use Pagify\Content\Services\PublishingWorkflowService;
 
 class ProcessScheduledPublicationJob implements ShouldQueue
 {

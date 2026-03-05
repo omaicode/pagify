@@ -67,7 +67,7 @@ return [
     'providers' => [
         'admins' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', \Modules\Core\Models\Admin::class),
+            'model' => env('AUTH_MODEL', \Pagify\Core\Models\Admin::class),
         ],
     ],
 

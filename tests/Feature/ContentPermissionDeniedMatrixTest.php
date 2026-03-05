@@ -4,11 +4,11 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
-use Modules\Content\Models\ContentEntry;
-use Modules\Content\Models\ContentEntryRevision;
-use Modules\Content\Models\ContentSchemaMigrationPlan;
-use Modules\Content\Models\ContentType;
-use Modules\Core\Models\Admin;
+use Pagify\Content\Models\ContentEntry;
+use Pagify\Content\Models\ContentEntryRevision;
+use Pagify\Content\Models\ContentSchemaMigrationPlan;
+use Pagify\Content\Models\ContentType;
+use Pagify\Core\Models\Admin;
 use Tests\TestCase;
 
 class ContentPermissionDeniedMatrixTest extends TestCase

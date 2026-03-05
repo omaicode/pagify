@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Content\Services;
+namespace Pagify\Content\Services;
 
 class EntryDiffService
 {

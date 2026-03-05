@@ -1,11 +1,11 @@
 <?php
 
-namespace Modules\Media\Services;
+namespace Pagify\Media\Services;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Modules\Core\Services\SettingsManager;
+use Pagify\Core\Services\SettingsManager;
 
 class MediaStorageManager
 {

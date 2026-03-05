@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Core\Models;
+namespace Pagify\Core\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,6 +23,6 @@ class Site extends Model
 
     protected static function newFactory()
     {
-        return \Modules\Core\Database\Factories\SiteFactory::new();
+        return \Pagify\Core\Database\Factories\SiteFactory::new();
     }
 }

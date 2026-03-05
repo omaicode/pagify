@@ -1,12 +1,12 @@
 <?php
 
-namespace Modules\Core\Http\Middleware;
+namespace Pagify\Core\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
-use Modules\Core\Support\SiteContext;
+use Pagify\Core\Support\SiteContext;
 use Symfony\Component\HttpFoundation\Response;
 
 class SetLocaleFromSite

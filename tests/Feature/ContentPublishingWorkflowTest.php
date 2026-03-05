@@ -4,11 +4,11 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use Modules\Content\Models\ContentEntry;
-use Modules\Content\Models\ContentType;
-use Modules\Core\Events\EntryPublished;
-use Modules\Core\Models\Admin;
-use Modules\Core\Services\EventBus;
+use Pagify\Content\Models\ContentEntry;
+use Pagify\Content\Models\ContentType;
+use Pagify\Core\Events\EntryPublished;
+use Pagify\Core\Models\Admin;
+use Pagify\Core\Services\EventBus;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 

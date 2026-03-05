@@ -1,8 +1,8 @@
 <?php
 
-namespace Modules\Core\Support;
+namespace Pagify\Core\Support;
 
-use Modules\Core\Models\Site;
+use Pagify\Core\Models\Site;
 
 class SiteContext
 {

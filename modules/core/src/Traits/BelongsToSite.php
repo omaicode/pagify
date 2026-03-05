@@ -1,9 +1,9 @@
 <?php
 
-namespace Modules\Core\Traits;
+namespace Pagify\Core\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
-use Modules\Core\Support\SiteContext;
+use Pagify\Core\Support\SiteContext;
 
 trait BelongsToSite
 {

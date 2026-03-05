@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Content\Http\Controllers\Admin;
+namespace Pagify\Content\Http\Controllers\Admin;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
@@ -8,12 +8,12 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
-use Modules\Content\Models\ContentEntry;
-use Modules\Content\Models\ContentEntryRevision;
-use Modules\Content\Models\ContentType;
-use Modules\Content\Services\EntryDiffService;
-use Modules\Content\Services\EntryRevisionService;
-use Modules\Core\Services\AuditLogger;
+use Pagify\Content\Models\ContentEntry;
+use Pagify\Content\Models\ContentEntryRevision;
+use Pagify\Content\Models\ContentType;
+use Pagify\Content\Services\EntryDiffService;
+use Pagify\Content\Services\EntryRevisionService;
+use Pagify\Core\Services\AuditLogger;
 
 class ContentEntryRevisionController extends Controller
 {
@@ -97,7 +97,7 @@ class ContentEntryRevisionController extends Controller
 
         $this->authorize('rollbackRevision', [ContentEntry::class, $contentType, $entry]);
 
-        /** @var \Modules\Core\Models\Admin|null $admin */
+        /** @var \Pagify\Core\Models\Admin|null $admin */
         $admin = $request->user('web');
 
         $this->entryRevisionService->rollback($entry, $revision, $admin?->id);

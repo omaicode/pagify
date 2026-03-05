@@ -1,9 +1,9 @@
 <?php
 
-namespace Modules\Content\Policies;
+namespace Pagify\Content\Policies;
 
-use Modules\Content\Models\ContentType;
-use Modules\Core\Models\Admin;
+use Pagify\Content\Models\ContentType;
+use Pagify\Core\Models\Admin;
 
 class ContentTypePolicy
 {

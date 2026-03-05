@@ -3,9 +3,9 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Modules\Core\Contracts\CoreHookSubscriber;
-use Modules\Core\Providers\CoreServiceProvider;
-use Modules\Core\Services\EventBus;
+use Pagify\Core\Contracts\CoreHookSubscriber;
+use Pagify\Core\Providers\CoreServiceProvider;
+use Pagify\Core\Services\EventBus;
 use Tests\TestCase;
 
 class HookSubscriberConfigTest extends TestCase

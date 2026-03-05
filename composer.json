@@ -24,9 +24,9 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "spatie/laravel-permission": "^6.10",
-        "modules/core": "*",
-        "modules/content": "*",
-        "modules/media": "*"
+        "omaicode/pagify-core": "*",
+        "omaicode/pagify-content": "*",
+        "omaicode/pagify-media": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -87,9 +87,9 @@
     "extra": {
         "laravel": {
             "dont-discover": [
-                "modules/core",
-                "modules/content",
-                "modules/media"
+                "omaicode/pagify-core",
+                "omaicode/pagify-content",
+                "omaicode/pagify-media"
             ]
         }
     },

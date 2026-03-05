@@ -3,10 +3,10 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Modules\Content\Models\ContentField;
-use Modules\Content\Models\ContentType;
-use Modules\Content\Services\ContentEntryService;
-use Modules\Media\Models\MediaAsset;
+use Pagify\Content\Models\ContentField;
+use Pagify\Content\Models\ContentType;
+use Pagify\Content\Services\ContentEntryService;
+use Pagify\Media\Models\MediaAsset;
 use Tests\TestCase;
 
 class ContentMediaUsageIndexingTest extends TestCase

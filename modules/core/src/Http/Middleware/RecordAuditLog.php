@@ -1,10 +1,10 @@
 <?php
 
-namespace Modules\Core\Http\Middleware;
+namespace Pagify\Core\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Modules\Core\Services\AuditLogger;
+use Pagify\Core\Services\AuditLogger;
 use Throwable;
 
 class RecordAuditLog

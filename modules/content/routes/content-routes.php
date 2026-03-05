@@ -1,20 +1,20 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Content\Http\Controllers\Admin\ContentDashboardController;
-use Modules\Content\Http\Controllers\Admin\ContentEntryController;
-use Modules\Content\Http\Controllers\Admin\ContentEntryRevisionController;
-use Modules\Content\Http\Controllers\Admin\ContentTypeBuilderController;
-use Modules\Content\Http\Controllers\Admin\ContentTypeController;
-use Modules\Content\Http\Controllers\Api\AdminRelationPickerController;
-use Modules\Content\Http\Controllers\Api\ContentApiController;
-use Modules\Content\Http\Controllers\Api\ContentHealthController;
-use Modules\Core\Http\Middleware\EnsureApiErrorEnvelope;
-use Modules\Core\Http\Middleware\EnsureModuleEnabled;
-use Modules\Core\Http\Middleware\HandleInertiaRequests;
-use Modules\Core\Http\Middleware\RecordAuditLog;
-use Modules\Core\Http\Middleware\ResolveSite;
-use Modules\Core\Http\Middleware\SetLocaleFromSite;
+use Pagify\Content\Http\Controllers\Admin\ContentDashboardController;
+use Pagify\Content\Http\Controllers\Admin\ContentEntryController;
+use Pagify\Content\Http\Controllers\Admin\ContentEntryRevisionController;
+use Pagify\Content\Http\Controllers\Admin\ContentTypeBuilderController;
+use Pagify\Content\Http\Controllers\Admin\ContentTypeController;
+use Pagify\Content\Http\Controllers\Api\AdminRelationPickerController;
+use Pagify\Content\Http\Controllers\Api\ContentApiController;
+use Pagify\Content\Http\Controllers\Api\ContentHealthController;
+use Pagify\Core\Http\Middleware\EnsureApiErrorEnvelope;
+use Pagify\Core\Http\Middleware\EnsureModuleEnabled;
+use Pagify\Core\Http\Middleware\HandleInertiaRequests;
+use Pagify\Core\Http\Middleware\RecordAuditLog;
+use Pagify\Core\Http\Middleware\ResolveSite;
+use Pagify\Core\Http\Middleware\SetLocaleFromSite;
 
 Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(function (): void {
 	Route::prefix('admin/content')

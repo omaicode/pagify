@@ -1,14 +1,14 @@
 <?php
 
-namespace Modules\Content\Providers;
+namespace Pagify\Content\Providers;
 
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
-use Modules\Content\Console\Commands\ProcessScheduledContentCommand;
-use Modules\Content\Models\ContentEntry;
-use Modules\Content\Models\ContentType;
-use Modules\Content\Policies\ContentEntryPolicy;
-use Modules\Content\Policies\ContentTypePolicy;
+use Pagify\Content\Console\Commands\ProcessScheduledContentCommand;
+use Pagify\Content\Models\ContentEntry;
+use Pagify\Content\Models\ContentType;
+use Pagify\Content\Policies\ContentEntryPolicy;
+use Pagify\Content\Policies\ContentTypePolicy;
 
 class ContentServiceProvider extends ServiceProvider
 {

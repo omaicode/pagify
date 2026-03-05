@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Media\Jobs;
+namespace Pagify\Media\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -9,8 +9,8 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Modules\Media\Models\MediaAsset;
-use Modules\Media\Models\MediaAssetTransform;
+use Pagify\Media\Models\MediaAsset;
+use Pagify\Media\Models\MediaAssetTransform;
 use Throwable;
 
 class GenerateMediaImageTransformsJob implements ShouldQueue

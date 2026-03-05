@@ -1,18 +1,18 @@
 <?php
 
-namespace Modules\Content\Http\Controllers\Admin;
+namespace Pagify\Content\Http\Controllers\Admin;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
-use Modules\Content\Http\Requests\Admin\SaveSchemaBuilderRequest;
-use Modules\Content\Jobs\QueueSchemaMigrationPlanJob;
-use Modules\Content\Models\ContentSchemaMigrationPlan;
-use Modules\Content\Models\ContentType;
-use Modules\Content\Services\ContentTypeService;
-use Modules\Content\Services\SchemaMigrationPlanner;
+use Pagify\Content\Http\Requests\Admin\SaveSchemaBuilderRequest;
+use Pagify\Content\Jobs\QueueSchemaMigrationPlanJob;
+use Pagify\Content\Models\ContentSchemaMigrationPlan;
+use Pagify\Content\Models\ContentType;
+use Pagify\Content\Services\ContentTypeService;
+use Pagify\Content\Services\SchemaMigrationPlanner;
 
 class ContentTypeBuilderController extends Controller
 {
@@ -65,7 +65,7 @@ class ContentTypeBuilderController extends Controller
     {
         $this->authorize('update', $contentType);
 
-        /** @var \Modules\Core\Models\Admin|null $admin */
+        /** @var \Pagify\Core\Models\Admin|null $admin */
         $admin = $request->user('web');
 
         $normalizedFields = $this->contentTypeService->normalizeBuilderFields((array) $request->validated('fields', []));

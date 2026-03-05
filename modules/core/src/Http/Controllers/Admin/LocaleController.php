@@ -1,10 +1,10 @@
 <?php
 
-namespace Modules\Core\Http\Controllers\Admin;
+namespace Pagify\Core\Http\Controllers\Admin;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controller;
-use Modules\Core\Http\Requests\Admin\UpdateLocaleRequest;
+use Pagify\Core\Http\Requests\Admin\UpdateLocaleRequest;
 
 class LocaleController extends Controller
 {

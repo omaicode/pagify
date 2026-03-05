@@ -4,7 +4,7 @@
 
 Core exposes an Event Bus + Hook registry. Other modules can subscribe through the `CoreHookSubscriber` contract:
 
-1. Implement `Modules\Core\Contracts\CoreHookSubscriber`.
+1. Implement `Pagify\Core\Contracts\CoreHookSubscriber`.
 2. Register hooks inside `register(EventBus $eventBus)`.
 3. Add subscriber class to `modules/core/config/core.php` under `hook_subscribers`.
 
@@ -13,10 +13,10 @@ Example pattern:
 ```php
 <?php
 
-namespace Modules\Blog\Hooks;
+namespace Pagify\Blog\Hooks;
 
-use Modules\Core\Contracts\CoreHookSubscriber;
-use Modules\Core\Services\EventBus;
+use Pagify\Core\Contracts\CoreHookSubscriber;
+use Pagify\Core\Services\EventBus;
 
 class BlogHookSubscriber implements CoreHookSubscriber
 {

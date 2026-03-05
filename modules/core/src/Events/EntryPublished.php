@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Core\Events;
+namespace Pagify\Core\Events;
 
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;

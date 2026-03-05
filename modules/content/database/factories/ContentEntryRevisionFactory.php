@@ -1,11 +1,11 @@
 <?php
 
-namespace Modules\Content\Database\Factories;
+namespace Pagify\Content\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Modules\Content\Models\ContentEntry;
-use Modules\Content\Models\ContentEntryRevision;
-use Modules\Core\Models\Admin;
+use Pagify\Content\Models\ContentEntry;
+use Pagify\Content\Models\ContentEntryRevision;
+use Pagify\Core\Models\Admin;
 
 class ContentEntryRevisionFactory extends Factory
 {

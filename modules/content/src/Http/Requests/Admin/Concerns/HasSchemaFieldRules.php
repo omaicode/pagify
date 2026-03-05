@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Content\Http\Requests\Admin\Concerns;
+namespace Pagify\Content\Http\Requests\Admin\Concerns;
 
 use Illuminate\Validation\Rule;
 

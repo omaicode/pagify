@@ -1,9 +1,9 @@
 <?php
 
-namespace Modules\Core\Observers;
+namespace Pagify\Core\Observers;
 
 use Illuminate\Database\Eloquent\Model;
-use Modules\Core\Services\AuditLogger;
+use Pagify\Core\Services\AuditLogger;
 
 class AuditableModelObserver
 {

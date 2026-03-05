@@ -1,10 +1,10 @@
 <?php
 
-namespace Modules\Content\Database\Factories;
+namespace Pagify\Content\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Modules\Content\Models\ContentField;
-use Modules\Content\Models\ContentType;
+use Pagify\Content\Models\ContentField;
+use Pagify\Content\Models\ContentType;
 
 class ContentFieldFactory extends Factory
 {

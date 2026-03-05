@@ -1,14 +1,14 @@
 <?php
 
-namespace Modules\Content\Services;
+namespace Pagify\Content\Services;
 
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
-use Modules\Content\Models\ContentEntry;
-use Modules\Content\Models\ContentField;
-use Modules\Content\Models\ContentRelation;
-use Modules\Content\Models\ContentType;
+use Pagify\Content\Models\ContentEntry;
+use Pagify\Content\Models\ContentField;
+use Pagify\Content\Models\ContentRelation;
+use Pagify\Content\Models\ContentType;
 
 class RelationResolver
 {

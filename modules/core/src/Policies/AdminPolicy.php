@@ -1,8 +1,8 @@
 <?php
 
-namespace Modules\Core\Policies;
+namespace Pagify\Core\Policies;
 
-use Modules\Core\Models\Admin;
+use Pagify\Core\Models\Admin;
 
 class AdminPolicy
 {

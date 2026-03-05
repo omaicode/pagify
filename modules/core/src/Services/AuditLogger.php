@@ -1,11 +1,11 @@
 <?php
 
-namespace Modules\Core\Services;
+namespace Pagify\Core\Services;
 
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Support\Facades\Request;
-use Modules\Core\Models\AuditLog;
-use Modules\Core\Support\SiteContext;
+use Pagify\Core\Models\AuditLog;
+use Pagify\Core\Support\SiteContext;
 use Throwable;
 
 class AuditLogger

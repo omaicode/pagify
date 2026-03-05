@@ -1,13 +1,13 @@
 <?php
 
-namespace Modules\Media\Http\Controllers\Api;
+namespace Pagify\Media\Http\Controllers\Api;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Modules\Core\Http\Controllers\Api\ApiController;
-use Modules\Media\Models\MediaAsset;
-use Modules\Media\Models\MediaFolder;
+use Pagify\Core\Http\Controllers\Api\ApiController;
+use Pagify\Media\Models\MediaAsset;
+use Pagify\Media\Models\MediaFolder;
 
 class AdminMediaFolderController extends ApiController
 {

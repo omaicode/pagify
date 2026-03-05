@@ -1,9 +1,9 @@
 <?php
 
-namespace Modules\Core\Services;
+namespace Pagify\Core\Services;
 
 use Illuminate\Contracts\Events\Dispatcher;
-use Modules\Core\Contracts\CoreHookSubscriber;
+use Pagify\Core\Contracts\CoreHookSubscriber;
 
 class EventBus
 {

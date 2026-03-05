@@ -1,10 +1,10 @@
 <?php
 
-namespace Modules\Core\Console\Commands;
+namespace Pagify\Core\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
-use Modules\Core\Models\AuditLog;
+use Pagify\Core\Models\AuditLog;
 
 class CleanupAuditLogsCommand extends Command
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Core\Services;
+namespace Pagify\Core\Services;
 
 class ModuleRegistry
 {

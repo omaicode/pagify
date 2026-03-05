@@ -1,13 +1,13 @@
 <?php
 
-namespace Modules\Content\Http\Controllers\Admin;
+namespace Pagify\Content\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
-use Modules\Content\Models\ContentEntry;
-use Modules\Content\Models\ContentType;
+use Pagify\Content\Models\ContentEntry;
+use Pagify\Content\Models\ContentType;
 
 class ContentDashboardController extends Controller
 {

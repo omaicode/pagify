@@ -1,11 +1,11 @@
 <?php
 
-namespace Modules\Content\Http\Requests\Admin;
+namespace Pagify\Content\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Modules\Content\Http\Requests\Admin\Concerns\HasSchemaFieldRules;
-use Modules\Core\Support\SiteContext;
+use Pagify\Content\Http\Requests\Admin\Concerns\HasSchemaFieldRules;
+use Pagify\Core\Support\SiteContext;
 
 class StoreContentTypeRequest extends FormRequest
 {

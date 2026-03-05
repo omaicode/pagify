@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Core\Http\Resources;
+namespace Pagify\Core\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;

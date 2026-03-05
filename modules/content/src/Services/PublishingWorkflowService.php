@@ -1,13 +1,13 @@
 <?php
 
-namespace Modules\Content\Services;
+namespace Pagify\Content\Services;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Modules\Content\Models\ContentEntry;
-use Modules\Core\Events\EntryPublished;
-use Modules\Core\Services\AuditLogger;
-use Modules\Core\Services\EventBus;
+use Pagify\Content\Models\ContentEntry;
+use Pagify\Core\Events\EntryPublished;
+use Pagify\Core\Services\AuditLogger;
+use Pagify\Core\Services\EventBus;
 use RuntimeException;
 
 class PublishingWorkflowService

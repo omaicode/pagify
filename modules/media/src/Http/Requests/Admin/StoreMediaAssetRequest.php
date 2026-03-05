@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Media\Http\Requests\Admin;
+namespace Pagify\Media\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Content\Http\Controllers\Admin;
+namespace Pagify\Content\Http\Controllers\Admin;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -10,15 +10,15 @@ use Illuminate\Routing\Controller;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use Modules\Content\Http\Requests\Admin\StoreContentEntryRequest;
-use Modules\Content\Http\Requests\Admin\UpdateContentEntryRequest;
-use Modules\Content\Models\ContentEntry;
-use Modules\Content\Models\ContentType;
-use Modules\Content\Services\ContentEntryService;
-use Modules\Content\Services\EntrySchemaResolver;
-use Modules\Content\Services\PublishingWorkflowService;
-use Modules\Content\Services\RelationResolver;
-use Modules\Core\Services\AuditLogger;
+use Pagify\Content\Http\Requests\Admin\StoreContentEntryRequest;
+use Pagify\Content\Http\Requests\Admin\UpdateContentEntryRequest;
+use Pagify\Content\Models\ContentEntry;
+use Pagify\Content\Models\ContentType;
+use Pagify\Content\Services\ContentEntryService;
+use Pagify\Content\Services\EntrySchemaResolver;
+use Pagify\Content\Services\PublishingWorkflowService;
+use Pagify\Content\Services\RelationResolver;
+use Pagify\Core\Services\AuditLogger;
 
 class ContentEntryController extends Controller
 {
@@ -105,7 +105,7 @@ class ContentEntryController extends Controller
         $contentType = $this->resolveType($contentTypeSlug);
         $this->authorize('create', [ContentEntry::class, $contentType]);
 
-        /** @var \Modules\Core\Models\Admin|null $admin */
+        /** @var \Pagify\Core\Models\Admin|null $admin */
         $admin = $request->user('web');
 
         try {
@@ -176,7 +176,7 @@ class ContentEntryController extends Controller
         $entry = $this->resolveEntry($contentType, $entryId);
         $this->authorize('update', [ContentEntry::class, $contentType, $entry]);
 
-        /** @var \Modules\Core\Models\Admin|null $admin */
+        /** @var \Pagify\Core\Models\Admin|null $admin */
         $admin = $request->user('web');
 
         try {
@@ -234,7 +234,7 @@ class ContentEntryController extends Controller
         $entry = $this->resolveEntry($contentType, $entryId);
         $this->authorize('publish', [ContentEntry::class, $contentType, $entry]);
 
-        /** @var \Modules\Core\Models\Admin|null $admin */
+        /** @var \Pagify\Core\Models\Admin|null $admin */
         $admin = $request->user('web');
 
         $this->publishingWorkflowService->publishNow($entry, $admin?->id);
@@ -250,7 +250,7 @@ class ContentEntryController extends Controller
         $entry = $this->resolveEntry($contentType, $entryId);
         $this->authorize('unpublish', [ContentEntry::class, $contentType, $entry]);
 
-        /** @var \Modules\Core\Models\Admin|null $admin */
+        /** @var \Pagify\Core\Models\Admin|null $admin */
         $admin = $request->user('web');
 
         $this->publishingWorkflowService->unpublishNow($entry, $admin?->id);
@@ -271,7 +271,7 @@ class ContentEntryController extends Controller
             'scheduled_unpublish_at' => ['nullable', 'date', 'after:scheduled_publish_at', 'required_without:scheduled_publish_at'],
         ]);
 
-        /** @var \Modules\Core\Models\Admin|null $admin */
+        /** @var \Pagify\Core\Models\Admin|null $admin */
         $admin = $request->user('web');
 
         $publishAt = isset($validated['scheduled_publish_at']) && $validated['scheduled_publish_at'] !== null

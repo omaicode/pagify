@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Content\Models;
+namespace Pagify\Content\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -41,6 +41,6 @@ class ContentField extends Model
 
     protected static function newFactory()
     {
-        return \Modules\Content\Database\Factories\ContentFieldFactory::new();
+        return \Pagify\Content\Database\Factories\ContentFieldFactory::new();
     }
 }

@@ -1,11 +1,11 @@
 <?php
 
-namespace Modules\Core\Http\Middleware;
+namespace Pagify\Core\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Modules\Core\Services\ModuleRegistry;
+use Pagify\Core\Services\ModuleRegistry;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureModuleEnabled

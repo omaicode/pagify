@@ -1,5 +1,5 @@
 {
-	"name": "modules/core",
+	"name": "omaicode/pagify-core",
 	"description": "",
 	"type": "library",
 	"version": "1.0",
@@ -11,17 +11,17 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"Modules\\Core\\": "src/",
-			"Modules\\Core\\Tests\\": "tests/",
-			"Modules\\Core\\Database\\Factories\\": "database/factories/",
-			"Modules\\Core\\Database\\Seeders\\": "database/seeders/"
+			"Pagify\\Core\\": "src/",
+			"Pagify\\Core\\Tests\\": "tests/",
+			"Pagify\\Core\\Database\\Factories\\": "database/factories/",
+			"Pagify\\Core\\Database\\Seeders\\": "database/seeders/"
 		}
 	},
 	"minimum-stability": "stable",
 	"extra": {
 		"laravel": {
 			"providers": [
-				"Modules\\Core\\Providers\\CoreServiceProvider"
+				"Pagify\\Core\\Providers\\CoreServiceProvider"
 			]
 		}
 	}

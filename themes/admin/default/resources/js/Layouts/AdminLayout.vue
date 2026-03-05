@@ -9,7 +9,6 @@ import AvatarMenu from '../Components/AvatarMenu.vue';
 import logo from '@img/pagify_icon.png';
 
 const page = usePage();
-
 const menu = computed(() => page.props.menu ?? []);
 const currentSite = computed(() => page.props.currentSite ?? null);
 const locale = computed(() => page.props.locale ?? 'en');

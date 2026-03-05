@@ -4,9 +4,9 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
-use Modules\Content\Models\ContentEntry;
-use Modules\Content\Models\ContentType;
-use Modules\Core\Models\Admin;
+use Pagify\Content\Models\ContentEntry;
+use Pagify\Content\Models\ContentType;
+use Pagify\Core\Models\Admin;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
@@ -100,7 +100,7 @@ class ContentApiControllerTest extends TestCase
             'data_json' => ['title' => 'Article', 'category' => 'news', 'author_ref' => $authorEntry->id],
         ]);
 
-        \Modules\Content\Models\ContentRelation::query()->create([
+        \Pagify\Content\Models\ContentRelation::query()->create([
             'source_entry_id' => $articleEntry->id,
             'target_entry_id' => $authorEntry->id,
             'field_key' => 'author_ref',

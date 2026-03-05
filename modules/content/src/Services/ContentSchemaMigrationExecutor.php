@@ -1,12 +1,12 @@
 <?php
 
-namespace Modules\Content\Services;
+namespace Pagify\Content\Services;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
-use Modules\Content\Models\ContentSchemaMigrationPlan;
+use Pagify\Content\Models\ContentSchemaMigrationPlan;
 
 class ContentSchemaMigrationExecutor
 {

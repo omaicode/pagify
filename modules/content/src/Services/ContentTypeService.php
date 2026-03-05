@@ -1,11 +1,11 @@
 <?php
 
-namespace Modules\Content\Services;
+namespace Pagify\Content\Services;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use Modules\Content\Models\ContentType;
+use Pagify\Content\Models\ContentType;
 
 class ContentTypeService
 {

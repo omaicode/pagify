@@ -1,9 +1,9 @@
 <?php
 
-namespace Modules\Core\Policies;
+namespace Pagify\Core\Policies;
 
-use Modules\Core\Models\Admin;
-use Modules\Core\Models\Site;
+use Pagify\Core\Models\Admin;
+use Pagify\Core\Models\Site;
 
 class SitePolicy
 {

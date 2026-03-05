@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Core\Facades;
+namespace Pagify\Core\Facades;
 
 use Illuminate\Support\Facades\Facade;
 

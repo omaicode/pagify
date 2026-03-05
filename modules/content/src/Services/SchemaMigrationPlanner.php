@@ -1,13 +1,13 @@
 <?php
 
-namespace Modules\Content\Services;
+namespace Pagify\Content\Services;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Modules\Content\Jobs\QueueSchemaMigrationPlanJob;
-use Modules\Content\Models\ContentSchemaMigrationPlan;
-use Modules\Content\Models\ContentType;
+use Pagify\Content\Jobs\QueueSchemaMigrationPlanJob;
+use Pagify\Content\Models\ContentSchemaMigrationPlan;
+use Pagify\Content\Models\ContentType;
 use Throwable;
 
 class SchemaMigrationPlanner

@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use Modules\Core\Services\ModuleRegistry;
+use Pagify\Core\Services\ModuleRegistry;
 use PHPUnit\Framework\TestCase;
 
 class ModuleRegistryTest extends TestCase

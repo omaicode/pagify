@@ -1,11 +1,11 @@
 <?php
 
-namespace Modules\Content\Database\Factories;
+namespace Pagify\Content\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Modules\Content\Models\ContentSchemaMigrationPlan;
-use Modules\Content\Models\ContentType;
-use Modules\Core\Models\Admin;
+use Pagify\Content\Models\ContentSchemaMigrationPlan;
+use Pagify\Content\Models\ContentType;
+use Pagify\Core\Models\Admin;
 
 class ContentSchemaMigrationPlanFactory extends Factory
 {

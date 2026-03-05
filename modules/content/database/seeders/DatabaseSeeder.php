@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Content\Database\Seeders;
+namespace Pagify\Content\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 

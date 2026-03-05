@@ -108,7 +108,7 @@ composer dev
 - If login always shows invalid credentials, reseed core admin account:
 
 ```bash
-php artisan db:seed --class="Modules\\Core\\Database\\Seeders\\CoreDatabaseSeeder"
+php artisan db:seed --class="Pagify\\Core\\Database\\Seeders\\CoreDatabaseSeeder"
 ```
 
 - Default dev admin credentials can be overridden via env:
@@ -118,7 +118,7 @@ php artisan db:seed --class="Modules\\Core\\Database\\Seeders\\CoreDatabaseSeede
 - Seed content demo data for QA drag-drop builder testing:
 
 ```bash
-php artisan db:seed --class="Modules\\Content\\Database\\Seeders\\ContentDatabaseSeeder"
+php artisan db:seed --class="Pagify\\Content\\Database\\Seeders\\ContentDatabaseSeeder"
 ```
 
 - This seed creates/updates demo content types including:

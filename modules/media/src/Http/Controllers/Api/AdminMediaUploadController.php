@@ -1,19 +1,19 @@
 <?php
 
-namespace Modules\Media\Http\Controllers\Api;
+namespace Pagify\Media\Http\Controllers\Api;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Modules\Core\Http\Controllers\Api\ApiController;
-use Modules\Media\Jobs\GenerateMediaImageTransformsJob;
-use Modules\Media\Http\Requests\Admin\CreateUploadSessionRequest;
-use Modules\Media\Http\Requests\Admin\UploadChunkRequest;
-use Modules\Media\Http\Resources\MediaAssetResource;
-use Modules\Media\Models\MediaAsset;
-use Modules\Media\Models\MediaFolder;
-use Modules\Media\Models\MediaUploadSession;
-use Modules\Media\Services\MediaStorageManager;
+use Pagify\Core\Http\Controllers\Api\ApiController;
+use Pagify\Media\Jobs\GenerateMediaImageTransformsJob;
+use Pagify\Media\Http\Requests\Admin\CreateUploadSessionRequest;
+use Pagify\Media\Http\Requests\Admin\UploadChunkRequest;
+use Pagify\Media\Http\Resources\MediaAssetResource;
+use Pagify\Media\Models\MediaAsset;
+use Pagify\Media\Models\MediaFolder;
+use Pagify\Media\Models\MediaUploadSession;
+use Pagify\Media\Services\MediaStorageManager;
 
 class AdminMediaUploadController extends ApiController
 {
@@ -27,7 +27,7 @@ class AdminMediaUploadController extends ApiController
             return $this->error(__('media::messages.api.folder_not_found'), 422, 'FOLDER_NOT_FOUND');
         }
 
-        /** @var \Modules\Core\Models\Admin|null $admin */
+        /** @var \Pagify\Core\Models\Admin|null $admin */
         $admin = $request->user('web');
         $uuid = (string) Str::uuid();
 
@@ -167,7 +167,7 @@ class AdminMediaUploadController extends ApiController
         fclose($source);
         @unlink($tmpFilePath);
 
-        /** @var \Modules\Core\Models\Admin|null $admin */
+        /** @var \Pagify\Core\Models\Admin|null $admin */
         $admin = request()->user('web');
 
         $asset = MediaAsset::query()->create([

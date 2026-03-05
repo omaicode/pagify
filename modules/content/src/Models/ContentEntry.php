@@ -1,12 +1,12 @@
 <?php
 
-namespace Modules\Content\Models;
+namespace Pagify\Content\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Modules\Core\Traits\BelongsToSite;
+use Pagify\Core\Traits\BelongsToSite;
 
 class ContentEntry extends Model
 {
@@ -60,6 +60,6 @@ class ContentEntry extends Model
 
     protected static function newFactory()
     {
-        return \Modules\Content\Database\Factories\ContentEntryFactory::new();
+        return \Pagify\Content\Database\Factories\ContentEntryFactory::new();
     }
 }

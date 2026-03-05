@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Core\Http\Middleware;
+namespace Pagify\Core\Http\Middleware;
 
 use Closure;
 use Illuminate\Auth\Access\AuthorizationException;

@@ -4,11 +4,11 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
-use Modules\Content\Models\ContentEntry;
-use Modules\Content\Models\ContentRelation;
-use Modules\Content\Models\ContentType;
-use Modules\Core\Models\Admin;
-use Modules\Core\Models\Site;
+use Pagify\Content\Models\ContentEntry;
+use Pagify\Content\Models\ContentRelation;
+use Pagify\Content\Models\ContentType;
+use Pagify\Core\Models\Admin;
+use Pagify\Core\Models\Site;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 

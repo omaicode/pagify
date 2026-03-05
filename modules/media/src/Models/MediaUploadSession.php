@@ -1,12 +1,12 @@
 <?php
 
-namespace Modules\Media\Models;
+namespace Pagify\Media\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Modules\Core\Models\Site;
-use Modules\Core\Traits\BelongsToSite;
+use Pagify\Core\Models\Site;
+use Pagify\Core\Traits\BelongsToSite;
 
 class MediaUploadSession extends Model
 {

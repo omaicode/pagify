@@ -1,10 +1,10 @@
 <?php
 
-namespace Modules\Content\Http\Controllers\Api;
+namespace Pagify\Content\Http\Controllers\Api;
 
 use Illuminate\Http\JsonResponse;
-use Modules\Core\Http\Controllers\Api\ApiController;
-use Modules\Core\Support\SiteContext;
+use Pagify\Core\Http\Controllers\Api\ApiController;
+use Pagify\Core\Support\SiteContext;
 
 class ContentHealthController extends ApiController
 {

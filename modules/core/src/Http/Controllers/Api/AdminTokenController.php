@@ -1,15 +1,15 @@
 <?php
 
-namespace Modules\Core\Http\Controllers\Api;
+namespace Pagify\Core\Http\Controllers\Api;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Laravel\Sanctum\PersonalAccessToken;
-use Modules\Core\Http\Requests\Admin\StoreAdminTokenRequest;
-use Modules\Core\Http\Resources\AdminTokenCreatedResource;
-use Modules\Core\Http\Resources\AdminTokenResource;
-use Modules\Core\Models\Admin;
+use Pagify\Core\Http\Requests\Admin\StoreAdminTokenRequest;
+use Pagify\Core\Http\Resources\AdminTokenCreatedResource;
+use Pagify\Core\Http\Resources\AdminTokenResource;
+use Pagify\Core\Models\Admin;
 
 class AdminTokenController extends ApiController
 {

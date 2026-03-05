@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Content\Jobs;
+namespace Pagify\Content\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -9,9 +9,9 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Modules\Content\Models\ContentSchemaMigrationPlan;
-use Modules\Content\Services\ContentSchemaMigrationExecutor;
-use Modules\Content\Services\SchemaMigrationPlanner;
+use Pagify\Content\Models\ContentSchemaMigrationPlan;
+use Pagify\Content\Services\ContentSchemaMigrationExecutor;
+use Pagify\Content\Services\SchemaMigrationPlanner;
 use Throwable;
 
 class QueueSchemaMigrationPlanJob implements ShouldQueue

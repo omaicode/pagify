@@ -1,9 +1,9 @@
 <?php
 
-namespace Modules\Content\Http\Requests\Admin;
+namespace Pagify\Content\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Modules\Content\Http\Requests\Admin\Concerns\HasSchemaFieldRules;
+use Pagify\Content\Http\Requests\Admin\Concerns\HasSchemaFieldRules;
 
 class SaveSchemaBuilderRequest extends FormRequest
 {

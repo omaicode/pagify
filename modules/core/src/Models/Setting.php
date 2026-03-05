@@ -1,11 +1,11 @@
 <?php
 
-namespace Modules\Core\Models;
+namespace Pagify\Core\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Modules\Core\Traits\BelongsToSite;
+use Pagify\Core\Traits\BelongsToSite;
 
 class Setting extends Model
 {

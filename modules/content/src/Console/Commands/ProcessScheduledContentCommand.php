@@ -1,12 +1,12 @@
 <?php
 
-namespace Modules\Content\Console\Commands;
+namespace Pagify\Content\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
-use Modules\Content\Jobs\ProcessScheduledPublicationJob;
-use Modules\Content\Models\ContentEntry;
+use Pagify\Content\Jobs\ProcessScheduledPublicationJob;
+use Pagify\Content\Models\ContentEntry;
 
 class ProcessScheduledContentCommand extends Command
 {

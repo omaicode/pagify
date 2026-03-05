@@ -1,10 +1,10 @@
 <?php
 
-namespace Modules\Content\Database\Factories;
+namespace Pagify\Content\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Modules\Content\Models\ContentEntry;
-use Modules\Content\Models\ContentRelation;
+use Pagify\Content\Models\ContentEntry;
+use Pagify\Content\Models\ContentRelation;
 
 class ContentRelationFactory extends Factory
 {

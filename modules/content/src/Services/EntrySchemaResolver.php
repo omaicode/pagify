@@ -1,9 +1,9 @@
 <?php
 
-namespace Modules\Content\Services;
+namespace Pagify\Content\Services;
 
 use Illuminate\Validation\Rule;
-use Modules\Content\Models\ContentType;
+use Pagify\Content\Models\ContentType;
 
 class EntrySchemaResolver
 {

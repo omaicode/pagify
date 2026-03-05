@@ -1,9 +1,9 @@
 <?php
 
-namespace Modules\Media\Policies;
+namespace Pagify\Media\Policies;
 
-use Modules\Core\Models\Admin;
-use Modules\Media\Models\MediaAsset;
+use Pagify\Core\Models\Admin;
+use Pagify\Media\Models\MediaAsset;
 
 class MediaAssetPolicy
 {

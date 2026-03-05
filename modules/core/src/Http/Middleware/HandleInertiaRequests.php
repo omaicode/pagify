@@ -1,13 +1,13 @@
 <?php
 
-namespace Modules\Core\Http\Middleware;
+namespace Pagify\Core\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Middleware;
-use Modules\Core\Models\Admin;
-use Modules\Core\Services\ModuleRegistry;
-use Modules\Core\Support\SiteContext;
+use Pagify\Core\Models\Admin;
+use Pagify\Core\Services\ModuleRegistry;
+use Pagify\Core\Support\SiteContext;
 
 class HandleInertiaRequests extends Middleware
 {
