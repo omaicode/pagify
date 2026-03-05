@@ -3,6 +3,7 @@ import axios from 'axios';
 import { computed, reactive, ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
+import { toast } from 'vue3-toastify';
 
 const props = defineProps({
     profile: {
@@ -62,7 +63,7 @@ const submitProfile = async () => {
             avatarUrl.value = admin.avatar_url ?? null;
         }
 
-        profileSuccess.value = t.value.profile_saved ?? 'Profile updated.';
+        toast.success(t.value.profile_saved ?? 'Profile updated.');
     } catch (error) {
         profileError.value = error?.response?.data?.message ?? (t.value.profile_save_failed ?? 'Failed to update profile.');
     } finally {
@@ -86,7 +87,7 @@ const submitPassword = async () => {
         passwordForm.new_password = '';
         passwordForm.new_password_confirmation = '';
 
-        passwordSuccess.value = t.value.profile_password_saved ?? 'Password updated.';
+        toast.success(t.value.profile_password_saved ?? 'Password updated.');
     } catch (error) {
         passwordError.value = error?.response?.data?.message ?? (t.value.profile_password_failed ?? 'Failed to update password.');
     } finally {
@@ -116,7 +117,7 @@ const uploadAvatar = async (event) => {
         });
 
         avatarUrl.value = response?.data?.data?.admin?.avatar_url ?? null;
-        avatarSuccess.value = t.value.profile_avatar_saved ?? 'Avatar updated.';
+        toast.success(t.value.profile_avatar_saved ?? 'Avatar updated.');
     } catch (error) {
         avatarError.value = error?.response?.data?.message ?? (t.value.profile_avatar_failed ?? 'Failed to update avatar.');
     } finally {
@@ -135,7 +136,7 @@ const removeAvatar = async () => {
     try {
         await axios.delete(props.apiRoutes.removeAvatar);
         avatarUrl.value = null;
-        avatarSuccess.value = t.value.profile_avatar_removed ?? 'Avatar removed.';
+        toast.success(t.value.profile_avatar_removed ?? 'Avatar removed.');
     } catch (error) {
         avatarError.value = error?.response?.data?.message ?? (t.value.profile_avatar_remove_failed ?? 'Failed to remove avatar.');
     } finally {
