@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0020284f9c37fc0b70c5cdb34858d6ac",
+    "content-hash": "ade1e484f34fca4147e74af0981b96de",
     "packages": [
         {
             "name": "brick/math",
@@ -3613,12 +3613,12 @@
             }
         },
         {
-            "name": "omaicode/updater",
+            "name": "omaicode/pagify-updater",
             "version": "1.0",
             "dist": {
                 "type": "path",
                 "url": "modules/updater",
-                "reference": "2b652bb62946cc788c56d06e5adb6cb2700e4d0b"
+                "reference": "5905b86c8cdc694a6a3f13b604a56e3347e27e0a"
             },
             "require": {
                 "omaicode/pagify-core": "*"
