@@ -123,4 +123,15 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin URL Prefix
+    |--------------------------------------------------------------------------
+    | This value is the URL prefix for all admin routes. You can change this
+    | to customize the URL of your admin panel. For example, if you set this to "admin-panel",
+    | then all admin routes will be prefixed with "/admin-panel" instead of "/admin
+    |--------------------------------------------------------------------------
+    */
+
+    'admin_url_prefix' => env('APP_ADMIN_URL_PREFIX', 'admin'),
 ];

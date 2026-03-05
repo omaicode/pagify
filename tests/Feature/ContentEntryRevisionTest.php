@@ -61,6 +61,9 @@ class ContentEntryRevisionTest extends TestCase
         $revisionsPage->assertInertia(fn (Assert $page) => $page
             ->component('Content/Entries/Revisions/Index')
             ->where('entry.slug', 'revision-entry')
+            ->where('breadcrumbs.0.label_key', 'dashboard')
+            ->where('breadcrumbs.3.label', 'revision-entry')
+            ->where('breadcrumbs.4.label_key', 'view_revisions')
             ->has('diff.changes')
         );
     }

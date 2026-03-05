@@ -86,6 +86,27 @@ class ContentEntryRevisionController extends Controller
                 'rollbackBase' => route('content.admin.entries.revisions.rollback', [$contentType->slug, $entry->id, 0]),
                 'entryEdit' => route('content.admin.entries.edit', [$contentType->slug, $entry->id]),
             ],
+            'breadcrumbs' => [
+                [
+                    'href' => route('core.admin.dashboard'),
+                    'label_key' => 'dashboard',
+                ],
+                [
+                    'href' => route('content.admin.types.index'),
+                    'label_key' => 'content_types',
+                ],
+                [
+                    'href' => route('content.admin.entries.index', $contentType->slug),
+                    'label' => $contentType->name,
+                ],
+                [
+                    'href' => route('content.admin.entries.edit', [$contentType->slug, $entry->id]),
+                    'label' => $entry->slug,
+                ],
+                [
+                    'label_key' => 'view_revisions',
+                ],
+            ],
         ]);
     }
 

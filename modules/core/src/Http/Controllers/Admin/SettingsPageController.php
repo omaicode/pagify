@@ -86,6 +86,15 @@ class SettingsPageController extends Controller
                     ])),
                 ],
             ], static fn (array $group): bool => ($group['items'] ?? []) !== [])),
+            'breadcrumbs' => [
+                [
+                    'href' => route('core.admin.dashboard'),
+                    'label_key' => 'dashboard',
+                ],
+                [
+                    'label_key' => 'settings',
+                ],
+            ],
         ]);
     }
 

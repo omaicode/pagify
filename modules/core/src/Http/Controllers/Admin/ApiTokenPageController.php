@@ -22,6 +22,19 @@ class ApiTokenPageController extends Controller
                 'index' => route('core.api.v1.admin.tokens.index'),
                 'store' => route('core.api.v1.admin.tokens.store'),
             ],
+            'breadcrumbs' => [
+                [
+                    'href' => route('core.admin.dashboard'),
+                    'label_key' => 'dashboard',
+                ],
+                [
+                    'href' => route('core.admin.settings.index'),
+                    'label_key' => 'settings',
+                ],
+                [
+                    'label_key' => 'settings_item_api_tokens',
+                ],
+            ],
         ]);
     }
 }

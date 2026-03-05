@@ -221,6 +221,7 @@ return [
     'updater_failed_queue_module' => 'Không thể đưa cập nhật module vào hàng đợi.',
     'updater_failed_rollback' => 'Rollback thất bại.',
     'updater_rate_limited' => 'Đang gửi quá nhiều request updater. Hệ thống đã tự giảm tần suất polling.',
+    'breadcrumb' => 'Điều hướng breadcrumb',
     'media_nav_library' => 'Media',
     'media_library_title' => 'Thư viện media',
     'media_library_subtitle' => 'Quản lý hình ảnh, video và tài liệu dùng chung.',

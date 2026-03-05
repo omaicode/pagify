@@ -114,7 +114,60 @@ class CoreRoutesTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Admin/Settings/Index')
-                ->has('groups'));
+                ->has('groups')
+                ->where('breadcrumbs.0.label_key', 'dashboard')
+                ->where('breadcrumbs.1.label_key', 'settings'));
+    }
+
+    public function test_admin_modules_page_shows_settings_breadcrumb_for_authorized_admin(): void
+    {
+        /** @var Admin $admin */
+        $admin = Admin::factory()->create();
+        Permission::findOrCreate('core.module.manage', 'web');
+        $admin->givePermissionTo('core.module.manage');
+
+        $this->actingAs($admin, 'web')
+            ->get('/admin/modules')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Modules/Index')
+                ->where('breadcrumbs.0.label_key', 'dashboard')
+                ->where('breadcrumbs.1.label_key', 'settings')
+                ->where('breadcrumbs.2.label_key', 'settings_item_modules'));
+    }
+
+    public function test_admin_api_tokens_page_shows_settings_breadcrumb_for_authorized_admin(): void
+    {
+        /** @var Admin $admin */
+        $admin = Admin::factory()->create();
+        Permission::findOrCreate('core.token.manage', 'web');
+        $admin->givePermissionTo('core.token.manage');
+
+        $this->actingAs($admin, 'web')
+            ->get('/admin/api-tokens')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Tokens/Index')
+                ->where('breadcrumbs.0.label_key', 'dashboard')
+                ->where('breadcrumbs.1.label_key', 'settings')
+                ->where('breadcrumbs.2.label_key', 'settings_item_api_tokens'));
+    }
+
+    public function test_admin_audit_logs_page_shows_settings_breadcrumb_for_authorized_admin(): void
+    {
+        /** @var Admin $admin */
+        $admin = Admin::factory()->create();
+        Permission::findOrCreate('core.audit.view', 'web');
+        $admin->givePermissionTo('core.audit.view');
+
+        $this->actingAs($admin, 'web')
+            ->get('/admin/audit-logs')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Audit/Index')
+                ->where('breadcrumbs.0.label_key', 'dashboard')
+                ->where('breadcrumbs.1.label_key', 'settings')
+                ->where('breadcrumbs.2.label_key', 'settings_item_audit_logs'));
     }
 
     public function test_admin_modules_api_returns_403_for_authenticated_user_without_permission(): void

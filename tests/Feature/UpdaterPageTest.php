@@ -41,7 +41,10 @@ class UpdaterPageTest extends TestCase
                 ->has('apiRoutes.dryRun')
                 ->has('apiRoutes.updateModuleBase')
                 ->has('apiRoutes.updateAll')
-                ->has('apiRoutes.rollbackBase'));
+                ->has('apiRoutes.rollbackBase')
+                ->where('breadcrumbs.0.label_key', 'dashboard')
+                ->where('breadcrumbs.1.label_key', 'settings')
+                ->where('breadcrumbs.2.label_key', 'settings_item_updater'));
     }
 
     public function test_settings_page_shows_updater_item_in_system_group_for_authorized_admin(): void

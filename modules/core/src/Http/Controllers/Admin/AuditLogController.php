@@ -120,6 +120,19 @@ class AuditLogController extends Controller
             'filters' => $filters,
             'filterOptions' => $filterOptions,
             'auditLogs' => $auditLogs,
+            'breadcrumbs' => [
+                [
+                    'href' => route('core.admin.dashboard'),
+                    'label_key' => 'dashboard',
+                ],
+                [
+                    'href' => route('core.admin.settings.index'),
+                    'label_key' => 'settings',
+                ],
+                [
+                    'label_key' => 'settings_item_audit_logs',
+                ],
+            ],
         ]);
     }
 }

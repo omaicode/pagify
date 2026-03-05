@@ -24,6 +24,15 @@ class MediaLibraryController extends Controller
                 'foldersStore' => route('media.api.v1.admin.folders.store'),
             ],
             'defaultViewMode' => 'grid',
+            'breadcrumbs' => [
+                [
+                    'href' => route('core.admin.dashboard'),
+                    'label_key' => 'dashboard',
+                ],
+                [
+                    'label_key' => 'media_nav_library',
+                ],
+            ],
         ]);
     }
 }

@@ -104,6 +104,9 @@ class ContentRelationEngineTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Content/Entries/Edit')
                 ->where('entry.slug', 'article-one')
+                ->where('breadcrumbs.0.label_key', 'dashboard')
+                ->where('breadcrumbs.2.label', 'Article')
+                ->where('breadcrumbs.3.label', 'article-one')
                 ->has('resolvedRelations.author_ref', 1)
                 ->where('resolvedRelations.author_ref.0.target_slug', 'author-jane')
             );

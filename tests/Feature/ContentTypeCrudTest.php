@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Pagify\Content\Models\ContentType;
 use Pagify\Core\Models\Admin;
 use Spatie\Permission\Models\Permission;
@@ -120,6 +121,16 @@ class ContentTypeCrudTest extends TestCase
         $this->assertDatabaseHas('content_schema_migration_plans', [
             'content_type_id' => $contentType->id,
         ]);
+
+        $this->actingAs($admin, 'web')
+            ->get('/admin/content/types/' . $contentType->id . '/edit')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Content/Types/Edit')
+                ->where('breadcrumbs.0.label_key', 'dashboard')
+                ->where('breadcrumbs.1.label_key', 'content_types')
+                ->where('breadcrumbs.2.label', 'Article Updated')
+            );
 
         $deleteResponse = $this->actingAs($admin, 'web')->delete('/admin/content/types/' . $contentType->id);
 

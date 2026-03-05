@@ -167,6 +167,23 @@ class ContentEntryController extends Controller
                 'revisions' => route('content.admin.entries.revisions.index', [$contentType->slug, $entry->id]),
                 'index' => route('content.admin.entries.index', $contentType->slug),
             ],
+            'breadcrumbs' => [
+                [
+                    'href' => route('core.admin.dashboard'),
+                    'label_key' => 'dashboard',
+                ],
+                [
+                    'href' => route('content.admin.types.index'),
+                    'label_key' => 'content_types',
+                ],
+                [
+                    'href' => route('content.admin.entries.index', $contentType->slug),
+                    'label' => $contentType->name,
+                ],
+                [
+                    'label' => $entry->slug,
+                ],
+            ],
         ]);
     }
 

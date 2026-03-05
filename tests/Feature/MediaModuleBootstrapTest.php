@@ -31,6 +31,8 @@ class MediaModuleBootstrapTest extends TestCase
         $response->assertInertia(fn (Assert $page) => $page
             ->component('Media/Library/Index')
             ->has('apiRoutes')
+            ->where('breadcrumbs.0.label_key', 'dashboard')
+            ->where('breadcrumbs.1.label_key', 'media_nav_library')
             ->where('defaultViewMode', 'grid')
         );
     }

@@ -123,6 +123,19 @@ class ContentTypeController extends Controller
                 'builderStatus' => route('content.admin.types.builder.status', $contentType),
                 'index' => route('content.admin.types.index'),
             ],
+            'breadcrumbs' => [
+                [
+                    'href' => route('core.admin.dashboard'),
+                    'label_key' => 'dashboard',
+                ],
+                [
+                    'href' => route('content.admin.types.index'),
+                    'label_key' => 'content_types',
+                ],
+                [
+                    'label' => $contentType->name,
+                ],
+            ],
         ]);
     }
 

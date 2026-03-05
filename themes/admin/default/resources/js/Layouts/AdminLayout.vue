@@ -6,6 +6,7 @@ import GlobalSearch from '../Components/GlobalSearch.vue';
 import TopNav from '../Components/TopNav.vue';
 import LocaleDropdown from '../Components/LocaleDropdown.vue';
 import AvatarMenu from '../Components/AvatarMenu.vue';
+import Breadcrumbs from '../Components/Breadcrumbs.vue';
 import logo from '@img/pagify_icon.png';
 
 const page = usePage();
@@ -18,6 +19,7 @@ const localeUpdateUrl = computed(() => page.props.localeUpdateUrl ?? null);
 const settingsUrl = computed(() => page.props.settingsUrl ?? '#');
 const translation = computed(() => page.props.translations?.ui ?? {});
 const currentUrl = computed(() => page.url ?? '/');
+const breadcrumbItems = computed(() => (Array.isArray(page.props.breadcrumbs) ? page.props.breadcrumbs : []));
 
 const activeHref = computed(() => currentUrl.value.split('?')[0]);
 
@@ -92,6 +94,12 @@ const switchLocale = async (nextLocale) => {
 
         <div class="mx-auto max-w-[1400px] p-5">
             <main>
+                <Breadcrumbs
+                    :items="navItems"
+                    :current-url="currentUrl"
+                    :translations="translation"
+                    :override-items="breadcrumbItems"
+                />
                 <slot />
             </main>
         </div>

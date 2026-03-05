@@ -221,6 +221,7 @@ return [
     'updater_failed_queue_module' => 'Failed to queue module update.',
     'updater_failed_rollback' => 'Rollback failed.',
     'updater_rate_limited' => 'Too many updater requests. Polling has been slowed down automatically.',
+    'breadcrumb' => 'Breadcrumb',
     'media_nav_library' => 'Media',
     'media_library_title' => 'Media library',
     'media_library_subtitle' => 'Manage shared images, videos, and documents.',
