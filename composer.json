@@ -23,10 +23,11 @@
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
-        "spatie/laravel-permission": "^6.10",
-        "omaicode/pagify-core": "*",
         "omaicode/pagify-content": "*",
-        "omaicode/pagify-media": "*"
+        "omaicode/pagify-core": "*",
+        "omaicode/pagify-media": "*",
+        "omaicode/updater": "*",
+        "spatie/laravel-permission": "^6.10"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
