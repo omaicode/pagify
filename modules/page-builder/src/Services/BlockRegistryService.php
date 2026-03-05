@@ -48,10 +48,19 @@ class BlockRegistryService
 				return null;
 			}
 
+			$htmlTemplate = (string) ($item['html_template'] ?? '');
+			if ($htmlTemplate === '') {
+				$legacyText = (string) (($item['props_schema']['text'] ?? $item['label'] ?? $key));
+				$htmlTemplate = '<section class="pbx-section"><h3 class="pbx-subheading">' . e($legacyText) . '</h3></section>';
+			}
+
 			return [
 				'key' => $key,
 				'label' => (string) ($item['label'] ?? $key),
-				'component' => (string) ($item['component'] ?? ''),
+				'icon' => (string) ($item['icon'] ?? '🧩'),
+				'category' => (string) ($item['category'] ?? 'General'),
+				'description' => (string) ($item['description'] ?? ''),
+				'html_template' => $htmlTemplate,
 				'props_schema' => (array) ($item['props_schema'] ?? []),
 				'source' => 'internal',
 			];
@@ -77,10 +86,19 @@ class BlockRegistryService
 				continue;
 			}
 
+			$htmlTemplate = (string) ($value['html_template'] ?? '');
+			if ($htmlTemplate === '') {
+				$legacyText = (string) (($value['props_schema']['text'] ?? $value['label'] ?? $key));
+				$htmlTemplate = '<section class="pbx-section"><h3 class="pbx-subheading">' . e($legacyText) . '</h3></section>';
+			}
+
 			$resolved[] = [
 				'key' => $key,
 				'label' => (string) ($value['label'] ?? $key),
-				'component' => (string) ($value['component'] ?? ''),
+				'icon' => (string) ($value['icon'] ?? '🧩'),
+				'category' => (string) ($value['category'] ?? 'Plugin Blocks'),
+				'description' => (string) ($value['description'] ?? ''),
+				'html_template' => $htmlTemplate,
 				'props_schema' => (array) ($value['props_schema'] ?? []),
 				'source' => 'plugin',
 				'plugin' => (string) ($item['plugin'] ?? ''),
