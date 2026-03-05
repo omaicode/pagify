@@ -15,6 +15,7 @@ Pagify is a open-source content management system (CMS) built with Laravel. It p
 Before installing Pagify, make sure you have the following prerequisites:
 - PHP 8.2 or higher
 - Composer
+- Node v22 or higher
 - A web server (e.g., Apache, Nginx)
 - A database server (e.g., MySQL, PostgreSQL)
 
