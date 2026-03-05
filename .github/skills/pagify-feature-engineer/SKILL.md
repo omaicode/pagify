@@ -53,6 +53,8 @@ rõ ràng theo từng bước.
    - Middleware stack phù hợp module
 3. Nếu thêm UI admin:
    - Có loading/empty/error/success/403 states
+   - Mutation action cần feedback nhất quán: SweetAlert2 cho confirm destructive/irreversible, toast cho success/error
+   - Bắt buộc bổ sung bản dịch cho cả `en` và `vi` (ưu tiên `themes/admin/default/lang/en/ui.php` và `themes/admin/default/lang/vi/ui.php`); không để text hardcoded trong component/page
    - Tôn trọng i18n và site context
 4. Nếu thêm persistence:
    - Migration có index/constraint hợp lý
@@ -130,6 +132,7 @@ rõ ràng theo từng bước.
 - Không bỏ qua authorization, audit, multi-site isolation trong bất kỳ feature mutation nào.
 - Không hardcode secrets, tokens, credentials.
 - Không thêm UI/flow ngoài yêu cầu khi user muốn scope tối thiểu.
+- Với admin mutation UX, ưu tiên SweetAlert2 + toast để nhất quán toàn hệ thống.
 - Ưu tiên thay đổi nhỏ, có test chứng minh, dễ review.
 - Với bugfix, bắt buộc có bước reproduce và regression test trừ khi bất khả thi.
 

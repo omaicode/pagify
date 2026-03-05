@@ -1,5 +1,7 @@
 <script setup>
 import { router } from '@inertiajs/vue3';
+import Swal from 'sweetalert2';
+import { toast } from 'vue3-toastify';
 import AdminLayout from '@admin-theme/Layouts/AdminLayout.vue';
 
 const props = defineProps({
@@ -12,12 +14,38 @@ const props = defineProps({
     routes: { type: Object, default: () => ({}) },
 });
 
-const rollback = (revisionId) => {
-    if (!window.confirm('Rollback to this revision?')) {
+const rollback = async (revisionId) => {
+    const result = await Swal.fire({
+        title: 'Rollback this revision?',
+        text: 'Current entry data will be replaced by selected revision snapshot.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Rollback',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true,
+        buttonsStyling: false,
+        customClass: {
+            popup: 'pf-swal-popup',
+            title: 'pf-swal-title',
+            htmlContainer: 'pf-swal-content',
+            confirmButton: 'pf-swal-confirm',
+            cancelButton: 'pf-swal-cancel',
+        },
+    });
+
+    if (!result.isConfirmed) {
         return;
     }
 
-    router.post(props.routes.rollbackBase.replace('/0/rollback', `/${revisionId}/rollback`));
+    router.post(props.routes.rollbackBase.replace('/0/rollback', `/${revisionId}/rollback`), {}, {
+        preserveScroll: true,
+        onSuccess: () => {
+            toast.success('Rollback completed.');
+        },
+        onError: () => {
+            toast.error('Rollback failed. Please try again.');
+        },
+    });
 };
 
 const compare = (event) => {

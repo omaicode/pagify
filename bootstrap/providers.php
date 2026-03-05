@@ -15,4 +15,5 @@ return [
     Pagify\Updater\Providers\UpdaterServiceProvider::class,
     Pagify\Content\Providers\ContentServiceProvider::class,
     Pagify\Media\Providers\MediaServiceProvider::class,
+    Pagify\PageBuilder\Providers\PageBuilderServiceProvider::class,
 ];

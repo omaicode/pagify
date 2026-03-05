@@ -2,6 +2,8 @@
 import axios from 'axios'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { usePage } from '@inertiajs/vue3'
+import Swal from 'sweetalert2'
+import { toast } from 'vue3-toastify'
 import AdminLayout from '../../../Layouts/AdminLayout.vue'
 import UiCard from '../../../Components/UI/UiCard.vue'
 import UiButton from '../../../Components/UI/UiButton.vue'
@@ -66,23 +68,49 @@ const submit = async () => {
         name: form.name,
       })
       successMessage.value = t.value.permissions_created ?? 'Permission created.'
+      toast.success(successMessage.value)
     } else {
       await axios.patch(`${props.apiRoutes.index}/${editingId.value}`, {
         name: form.name,
       })
       successMessage.value = t.value.permissions_updated ?? 'Permission updated.'
+      toast.success(successMessage.value)
     }
 
     resetForm()
     await loadPermissions()
   } catch (error) {
-    errorMessage.value = error?.response?.data?.message ?? (t.value.failed_save_permission ?? 'Failed to save permission.')
+    const message = error?.response?.data?.message ?? (t.value.failed_save_permission ?? 'Failed to save permission.')
+    errorMessage.value = message
+    toast.error(message)
   } finally {
     loading.value = false
   }
 }
 
 const destroyPermission = async (permissionId) => {
+  const result = await Swal.fire({
+    title: t.value.delete ?? 'Delete',
+    text: t.value.confirm_delete_permission ?? 'Delete this permission?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: t.value.delete ?? 'Delete',
+    cancelButtonText: t.value.cancel ?? 'Cancel',
+    reverseButtons: true,
+    buttonsStyling: false,
+    customClass: {
+      popup: 'pf-swal-popup',
+      title: 'pf-swal-title',
+      htmlContainer: 'pf-swal-content',
+      confirmButton: 'pf-swal-confirm',
+      cancelButton: 'pf-swal-cancel',
+    },
+  })
+
+  if (!result.isConfirmed) {
+    return
+  }
+
   loading.value = true
   errorMessage.value = ''
   successMessage.value = ''
@@ -90,12 +118,15 @@ const destroyPermission = async (permissionId) => {
   try {
     await axios.delete(`${props.apiRoutes.index}/${permissionId}`)
     successMessage.value = t.value.permissions_deleted ?? 'Permission deleted.'
+    toast.success(successMessage.value)
     if (editingId.value === permissionId) {
       resetForm()
     }
     await loadPermissions()
   } catch (error) {
-    errorMessage.value = error?.response?.data?.message ?? (t.value.failed_delete_permission ?? 'Failed to delete permission.')
+    const message = error?.response?.data?.message ?? (t.value.failed_delete_permission ?? 'Failed to delete permission.')
+    errorMessage.value = message
+    toast.error(message)
   } finally {
     loading.value = false
   }

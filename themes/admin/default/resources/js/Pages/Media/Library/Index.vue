@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
+import Swal from 'sweetalert2';
 import { usePage } from '@inertiajs/vue3';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
 
@@ -128,17 +129,42 @@ const onUpload = async (event) => {
 };
 
 const removeAsset = async (asset) => {
+    const result = await Swal.fire({
+        title: label('delete', 'Delete'),
+        text: label('media_confirm_delete_asset', 'Delete this media asset?'),
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: label('delete', 'Delete'),
+        cancelButtonText: label('cancel', 'Cancel'),
+        reverseButtons: true,
+        buttonsStyling: false,
+        customClass: {
+            popup: 'pf-swal-popup',
+            title: 'pf-swal-title',
+            htmlContainer: 'pf-swal-content',
+            confirmButton: 'pf-swal-confirm',
+            cancelButton: 'pf-swal-cancel',
+        },
+    });
+
+    if (!result.isConfirmed) {
+        return;
+    }
+
     try {
         await axios.delete(props.apiRoutes.assetsDestroyBase.replace('__ASSET__', String(asset.id)));
+        toast.success(label('media_deleted', 'Media asset deleted.'));
         await loadAssets(pagination.value.current_page);
     } catch (error) {
         const code = error?.response?.data?.code;
         if (code === 'ASSET_IN_USE') {
             errorMessage.value = `${error?.response?.data?.message ?? label('media_asset_in_use', 'Asset is in use.')} ${label('media_asset_in_use_force_delete_hint', 'Use force delete from API in this phase.')}`;
+            toast.error(errorMessage.value);
             return;
         }
 
         errorMessage.value = error?.response?.data?.message ?? label('media_failed_delete_file', 'Failed to delete file.');
+        toast.error(errorMessage.value);
     }
 };
 

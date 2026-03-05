@@ -30,6 +30,33 @@ export default defineConfig({
         },
     },
     build: {
-        emptyOutDir: true
+        emptyOutDir: true,
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (!id.includes('node_modules')) {
+                        return;
+                    }
+
+                    if (id.includes('/grapesjs/') || id.includes('/backbone/') || id.includes('/underscore/')) {
+                        return 'vendor-grapes';
+                    }
+
+                    if (id.includes('/@inertiajs/')) {
+                        return 'vendor-inertia';
+                    }
+
+                    if (id.includes('/vue/') || id.includes('/@vue/')) {
+                        return 'vendor-vue';
+                    }
+
+                    if (id.includes('/vue3-toastify/')) {
+                        return 'vendor-toastify';
+                    }
+
+                    return 'vendor-misc';
+                },
+            },
+        },
     }
 });

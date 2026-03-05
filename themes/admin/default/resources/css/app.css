@@ -98,4 +98,81 @@
 		@apply text-sm;
 		color: var(--text-secondary);
 	}
+
+	.swal2-popup.pf-swal-popup {
+		@apply rounded-xl border;
+		background: var(--bg-card);
+		border-color: #e5deff;
+		box-shadow: 0 10px 28px rgba(75, 63, 216, 0.16);
+	}
+
+	.pf-swal-title {
+		color: var(--text-primary);
+		font-weight: 600;
+	}
+
+	.pf-swal-content {
+		color: var(--text-secondary);
+	}
+
+	.swal2-confirm.pf-swal-confirm {
+		@apply rounded-full px-4 py-2 text-sm font-medium text-white;
+		background-image: var(--pagify-gradient) !important;
+		box-shadow: 0 6px 16px rgba(75, 63, 216, 0.22);
+	}
+
+	.swal2-cancel.pf-swal-cancel {
+		@apply rounded-full border bg-white px-4 py-2 text-sm font-medium;
+		border-color: #d9ccff !important;
+		color: #4338ca !important;
+	}
+
+    .swal2-actions {
+        gap: .75rem !important;
+    }
+
+	.gjs-editor {
+		font-family: var(--font-sans);
+	}
+
+	.gjs-one-bg,
+	.gjs-two-color {
+		background-color: #f8f6ff !important;
+	}
+
+	.gjs-two-color {
+		color: #4338ca !important;
+	}
+
+	.gjs-three-bg {
+		background: var(--pagify-gradient) !important;
+		color: #fff !important;
+	}
+
+	.gjs-four-color,
+	.gjs-four-color-h:hover {
+		color: #7c3aed !important;
+	}
+
+	.gjs-pn-btn,
+	.gjs-sm-sector-title,
+	.gjs-block-label {
+		color: #4338ca !important;
+	}
+
+	.gjs-pn-btn.gjs-pn-active,
+	.gjs-block:hover,
+	.gjs-block.gjs-block-active {
+		background-color: #ede9fe !important;
+	}
+
+	.gjs-block {
+		border: 1px solid #ddd6fe !important;
+		border-radius: 10px !important;
+		box-shadow: none !important;
+	}
+
+	.gjs-cv-canvas {
+		background-color: #f3f0ff !important;
+	}
 }

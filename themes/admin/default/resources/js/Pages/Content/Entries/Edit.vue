@@ -2,6 +2,8 @@
 import { useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import Swal from 'sweetalert2';
+import { toast } from 'vue3-toastify';
 import AdminLayout from '@admin-theme/Layouts/AdminLayout.vue';
 import AssetPicker from '@admin-theme/Components/AssetPicker.vue';
 
@@ -28,12 +30,74 @@ const scheduleForm = useForm({
 const page = usePage();
 const t = computed(() => page.props.translations?.ui ?? {});
 
-const submit = () => form.put(props.routes.update);
-const destroyEntry = () => {
-    if (window.confirm(t.value.confirm_delete_entry ?? 'Delete this entry?')) {
-        form.delete(props.routes.destroy);
+const submit = () => form.put(props.routes.update, {
+    onSuccess: () => {
+        toast.success(t.value.entry_updated ?? 'Entry updated.');
+    },
+    onError: () => {
+        toast.error(t.value.entry_update_failed ?? 'Failed to update entry.');
+    },
+});
+
+const destroyEntry = async () => {
+    const result = await Swal.fire({
+        title: t.value.delete ?? 'Delete',
+        text: t.value.confirm_delete_entry ?? 'Delete this entry?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: t.value.delete ?? 'Delete',
+        cancelButtonText: t.value.cancel ?? 'Cancel',
+        reverseButtons: true,
+        buttonsStyling: false,
+        customClass: {
+            popup: 'pf-swal-popup',
+            title: 'pf-swal-title',
+            htmlContainer: 'pf-swal-content',
+            confirmButton: 'pf-swal-confirm',
+            cancelButton: 'pf-swal-cancel',
+        },
+    });
+
+    if (!result.isConfirmed) {
+        return;
     }
+
+    form.delete(props.routes.destroy, {
+        onSuccess: () => {
+            toast.success(t.value.entry_deleted ?? 'Entry deleted.');
+        },
+        onError: () => {
+            toast.error(t.value.entry_delete_failed ?? 'Failed to delete entry.');
+        },
+    });
 };
+
+const publishNow = () => form.post(props.routes.publish, {
+    onSuccess: () => {
+        toast.success(t.value.entry_published ?? 'Entry published.');
+    },
+    onError: () => {
+        toast.error(t.value.entry_publish_failed ?? 'Failed to publish entry.');
+    },
+});
+
+const unpublishNow = () => form.post(props.routes.unpublish, {
+    onSuccess: () => {
+        toast.success(t.value.entry_unpublished ?? 'Entry moved to draft.');
+    },
+    onError: () => {
+        toast.error(t.value.entry_unpublish_failed ?? 'Failed to move entry to draft.');
+    },
+});
+
+const saveSchedule = () => scheduleForm.post(props.routes.schedule, {
+    onSuccess: () => {
+        toast.success(t.value.schedule_saved ?? 'Schedule saved.');
+    },
+    onError: () => {
+        toast.error(t.value.schedule_save_failed ?? 'Failed to save schedule.');
+    },
+});
 </script>
 
 <template>
@@ -112,11 +176,11 @@ const destroyEntry = () => {
             <div class="space-y-2 rounded border border-slate-200 bg-white p-4">
                 <p class="text-sm font-semibold text-slate-900">{{ t.publishing_workflow ?? 'Publishing workflow' }}</p>
                 <div class="flex flex-wrap gap-2">
-                    <button v-if="publishActionsAllowed.publish" type="button" class="rounded border border-slate-300 px-3 py-2 text-sm" @click="form.post(routes.publish)">{{ t.publish_now ?? 'Publish now' }}</button>
-                    <button v-if="publishActionsAllowed.unpublish" type="button" class="rounded border border-slate-300 px-3 py-2 text-sm" @click="form.post(routes.unpublish)">{{ t.move_to_draft_now ?? 'Move to draft now' }}</button>
+                    <button v-if="publishActionsAllowed.publish" type="button" class="rounded border border-slate-300 px-3 py-2 text-sm" @click="publishNow">{{ t.publish_now ?? 'Publish now' }}</button>
+                    <button v-if="publishActionsAllowed.unpublish" type="button" class="rounded border border-slate-300 px-3 py-2 text-sm" @click="unpublishNow">{{ t.move_to_draft_now ?? 'Move to draft now' }}</button>
                 </div>
 
-                <form v-if="publishActionsAllowed.schedule" class="grid gap-2 md:grid-cols-2" @submit.prevent="scheduleForm.post(routes.schedule)">
+                <form v-if="publishActionsAllowed.schedule" class="grid gap-2 md:grid-cols-2" @submit.prevent="saveSchedule">
                     <label class="text-sm">
                         {{ t.schedule_publish_at ?? 'Schedule publish at' }}
                         <input v-model="scheduleForm.scheduled_publish_at" type="datetime-local" class="mt-1 w-full rounded border border-slate-300 px-2 py-1">

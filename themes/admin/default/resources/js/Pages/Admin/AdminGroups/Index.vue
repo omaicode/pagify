@@ -2,6 +2,8 @@
 import axios from 'axios'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { usePage } from '@inertiajs/vue3'
+import Swal from 'sweetalert2'
+import { toast } from 'vue3-toastify'
 import AdminLayout from '../../../Layouts/AdminLayout.vue'
 import UiCard from '../../../Components/UI/UiCard.vue'
 import UiButton from '../../../Components/UI/UiButton.vue'
@@ -78,21 +80,47 @@ const submit = async () => {
     if (editingId.value === null) {
       await axios.post(props.apiRoutes.index, payload)
       successMessage.value = t.value.admin_groups_created ?? 'Administrator group created.'
+      toast.success(successMessage.value)
     } else {
       await axios.patch(`${props.apiRoutes.index}/${editingId.value}`, payload)
       successMessage.value = t.value.admin_groups_updated ?? 'Administrator group updated.'
+      toast.success(successMessage.value)
     }
 
     resetForm()
     await loadGroups()
   } catch (error) {
-    errorMessage.value = error?.response?.data?.message ?? (t.value.failed_save_admin_group ?? 'Failed to save administrator group.')
+    const message = error?.response?.data?.message ?? (t.value.failed_save_admin_group ?? 'Failed to save administrator group.')
+    errorMessage.value = message
+    toast.error(message)
   } finally {
     loading.value = false
   }
 }
 
 const destroyGroup = async (groupId) => {
+  const result = await Swal.fire({
+    title: t.value.delete ?? 'Delete',
+    text: t.value.confirm_delete_admin_group ?? 'Delete this administrator group?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: t.value.delete ?? 'Delete',
+    cancelButtonText: t.value.cancel ?? 'Cancel',
+    reverseButtons: true,
+    buttonsStyling: false,
+    customClass: {
+      popup: 'pf-swal-popup',
+      title: 'pf-swal-title',
+      htmlContainer: 'pf-swal-content',
+      confirmButton: 'pf-swal-confirm',
+      cancelButton: 'pf-swal-cancel',
+    },
+  })
+
+  if (!result.isConfirmed) {
+    return
+  }
+
   loading.value = true
   errorMessage.value = ''
   successMessage.value = ''
@@ -100,12 +128,15 @@ const destroyGroup = async (groupId) => {
   try {
     await axios.delete(`${props.apiRoutes.index}/${groupId}`)
     successMessage.value = t.value.admin_groups_deleted ?? 'Administrator group deleted.'
+    toast.success(successMessage.value)
     if (editingId.value === groupId) {
       resetForm()
     }
     await loadGroups()
   } catch (error) {
-    errorMessage.value = error?.response?.data?.message ?? (t.value.failed_delete_admin_group ?? 'Failed to delete administrator group.')
+    const message = error?.response?.data?.message ?? (t.value.failed_delete_admin_group ?? 'Failed to delete administrator group.')
+    errorMessage.value = message
+    toast.error(message)
   } finally {
     loading.value = false
   }

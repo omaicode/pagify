@@ -2,6 +2,8 @@
 import axios from 'axios';
 import { computed, onMounted, reactive, ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import Swal from 'sweetalert2';
+import { toast } from 'vue3-toastify';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
 import UiCard from '../../../Components/UI/UiCard.vue';
 import UiButton from '../../../Components/UI/UiButton.vue';
@@ -75,23 +77,51 @@ const createToken = async () => {
         form.name = '';
         form.abilities = '*';
         form.expires_at = '';
+        toast.success(t.value.token_created ?? 'Token created.');
         await loadTokens();
     } catch (error) {
-        errorMessage.value = error?.response?.data?.message ?? (t.value.failed_create_token ?? 'Failed to create token.');
+        const message = error?.response?.data?.message ?? (t.value.failed_create_token ?? 'Failed to create token.');
+        errorMessage.value = message;
+        toast.error(message);
     } finally {
         loading.value = false;
     }
 };
 
 const revokeToken = async (tokenId) => {
+    const result = await Swal.fire({
+        title: t.value.revoke ?? 'Revoke',
+        text: t.value.confirm_revoke_token ?? 'Revoke this token?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: t.value.revoke ?? 'Revoke',
+        cancelButtonText: t.value.cancel ?? 'Cancel',
+        reverseButtons: true,
+        buttonsStyling: false,
+        customClass: {
+            popup: 'pf-swal-popup',
+            title: 'pf-swal-title',
+            htmlContainer: 'pf-swal-content',
+            confirmButton: 'pf-swal-confirm',
+            cancelButton: 'pf-swal-cancel',
+        },
+    });
+
+    if (!result.isConfirmed) {
+        return;
+    }
+
     loading.value = true;
     errorMessage.value = '';
 
     try {
         await axios.delete(`${props.apiRoutes.index}/${tokenId}`);
+        toast.success(t.value.token_revoked ?? 'Token revoked.');
         await loadTokens();
     } catch (error) {
-        errorMessage.value = error?.response?.data?.message ?? (t.value.failed_revoke_token ?? 'Failed to revoke token.');
+        const message = error?.response?.data?.message ?? (t.value.failed_revoke_token ?? 'Failed to revoke token.');
+        errorMessage.value = message;
+        toast.error(message);
     } finally {
         loading.value = false;
     }
@@ -103,6 +133,7 @@ const copyToken = async () => {
     }
 
     await navigator.clipboard.writeText(createdToken.value);
+    toast.success(t.value.copied ?? 'Copied.');
 };
 
 onMounted(loadTokens);

@@ -55,6 +55,7 @@ Map impact theo layers:
 - Ưu tiên incremental PR nhỏ, mỗi PR có mục tiêu duy nhất.
 - Giữ backward compatibility cho schema/data cũ khi có thể.
 - Với destructive operations, luôn có confirm hoặc dry-run.
+- Với admin UI, chuẩn hóa confirm bằng SweetAlert2 và feedback mutation bằng toast success/error.
 - Viết handoff ngắn gọn: changed/why/how-to-verify/risks.
 
 ## Pitfalls

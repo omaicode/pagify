@@ -2,6 +2,7 @@
 import axios from 'axios';
 import { computed, reactive, ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import Swal from 'sweetalert2';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
 import { toast } from 'vue3-toastify';
 import UiCard from '../../../Components/UI/UiCard.vue';
@@ -134,6 +135,28 @@ const uploadAvatar = async (event) => {
 };
 
 const removeAvatar = async () => {
+    const result = await Swal.fire({
+        title: t.value.profile_remove_avatar ?? 'Remove avatar',
+        text: t.value.profile_confirm_remove_avatar ?? 'Remove current avatar?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: t.value.profile_remove_avatar ?? 'Remove avatar',
+        cancelButtonText: t.value.cancel ?? 'Cancel',
+        reverseButtons: true,
+        buttonsStyling: false,
+        customClass: {
+            popup: 'pf-swal-popup',
+            title: 'pf-swal-title',
+            htmlContainer: 'pf-swal-content',
+            confirmButton: 'pf-swal-confirm',
+            cancelButton: 'pf-swal-cancel',
+        },
+    });
+
+    if (!result.isConfirmed) {
+        return;
+    }
+
     uploadingAvatar.value = true;
     avatarError.value = '';
     avatarSuccess.value = '';

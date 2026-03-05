@@ -2,6 +2,8 @@
 import { computed, onMounted, ref } from 'vue'
 import axios from 'axios'
 import { usePage } from '@inertiajs/vue3'
+import Swal from 'sweetalert2'
+import { toast } from 'vue3-toastify'
 import AdminLayout from '../../../Layouts/AdminLayout.vue'
 import UiCard from '../../../Components/UI/UiCard.vue'
 import UiButton from '../../../Components/UI/UiButton.vue'
@@ -74,11 +76,15 @@ const togglePlugin = async (item) => {
       enabled: nextValue,
     })
 
-    setPluginNotice('success', label('plugins_state_updated', 'Plugin state updated.'))
+    const successMessage = label('plugins_state_updated', 'Plugin state updated.')
+    setPluginNotice('success', successMessage)
+    toast.success(successMessage)
     await Promise.all([loadPlugins(), loadExtensions()])
   } catch (error) {
     const fallback = label('plugins_failed_toggle', 'Failed to update plugin state.')
-    setPluginNotice('danger', error?.response?.data?.message ?? fallback)
+    const message = error?.response?.data?.message ?? fallback
+    setPluginNotice('danger', message)
+    toast.error(message)
   } finally {
     pluginUpdating.value = {
       ...pluginUpdating.value,
@@ -98,11 +104,15 @@ const installComposerPlugin = async () => {
     })
 
     composerPackageName.value = ''
-    setPluginNotice('success', label('plugins_installed', 'Plugin installed.'))
+    const successMessage = label('plugins_installed', 'Plugin installed.')
+    setPluginNotice('success', successMessage)
+    toast.success(successMessage)
     await Promise.all([loadPlugins(), loadExtensions()])
   } catch (error) {
     const fallback = label('plugins_failed_install', 'Failed to install plugin.')
-    setPluginNotice('danger', error?.response?.data?.message ?? fallback)
+    const message = error?.response?.data?.message ?? fallback
+    setPluginNotice('danger', message)
+    toast.error(message)
   }
 }
 
@@ -128,16 +138,38 @@ const installZipPlugin = async () => {
       zipInput.value = ''
     }
 
-    setPluginNotice('success', label('plugins_installed', 'Plugin installed.'))
+    const successMessage = label('plugins_installed', 'Plugin installed.')
+    setPluginNotice('success', successMessage)
+    toast.success(successMessage)
     await Promise.all([loadPlugins(), loadExtensions()])
   } catch (error) {
     const fallback = label('plugins_failed_install', 'Failed to install plugin.')
-    setPluginNotice('danger', error?.response?.data?.message ?? fallback)
+    const message = error?.response?.data?.message ?? fallback
+    setPluginNotice('danger', message)
+    toast.error(message)
   }
 }
 
 const uninstallPlugin = async (item) => {
-  if (!window.confirm(label('plugins_confirm_uninstall', 'Uninstall this plugin?'))) {
+  const result = await Swal.fire({
+    title: label('plugins_uninstall', 'Uninstall'),
+    text: label('plugins_confirm_uninstall', 'Uninstall this plugin?'),
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: label('plugins_uninstall', 'Uninstall'),
+    cancelButtonText: label('cancel', 'Cancel'),
+    reverseButtons: true,
+    buttonsStyling: false,
+    customClass: {
+      popup: 'pf-swal-popup',
+      title: 'pf-swal-title',
+      htmlContainer: 'pf-swal-content',
+      confirmButton: 'pf-swal-confirm',
+      cancelButton: 'pf-swal-cancel',
+    },
+  })
+
+  if (!result.isConfirmed) {
     return
   }
 
@@ -148,11 +180,15 @@ const uninstallPlugin = async (item) => {
 
   try {
     await axios.delete(pluginUninstallRoute(item.slug))
-    setPluginNotice('success', label('plugins_uninstalled', 'Plugin uninstalled.'))
+    const successMessage = label('plugins_uninstalled', 'Plugin uninstalled.')
+    setPluginNotice('success', successMessage)
+    toast.success(successMessage)
     await Promise.all([loadPlugins(), loadExtensions()])
   } catch (error) {
     const fallback = label('plugins_failed_uninstall', 'Failed to uninstall plugin.')
-    setPluginNotice('danger', error?.response?.data?.message ?? fallback)
+    const message = error?.response?.data?.message ?? fallback
+    setPluginNotice('danger', message)
+    toast.error(message)
   } finally {
     pluginUpdating.value = {
       ...pluginUpdating.value,

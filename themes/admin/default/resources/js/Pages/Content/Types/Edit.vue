@@ -2,6 +2,8 @@
 import { useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import Swal from 'sweetalert2';
+import { toast } from 'vue3-toastify';
 import AdminLayout from '@admin-theme/Layouts/AdminLayout.vue';
 import ContentSchemaBuilder from '@admin-theme/Components/ContentSchemaBuilder.vue';
 
@@ -60,15 +62,47 @@ const page = usePage();
 const t = computed(() => page.props.translations?.ui ?? {});
 
 const submit = () => {
-    form.put(props.routes.update);
+    form.put(props.routes.update, {
+        onSuccess: () => {
+            toast.success(t.value.content_type_updated ?? 'Content type updated and migration queued.');
+        },
+        onError: () => {
+            toast.error(t.value.content_type_update_failed ?? 'Failed to update content type.');
+        },
+    });
 };
 
-const destroyType = () => {
-    if (!window.confirm(t.value.confirm_delete_content_type ?? 'Delete this content type?')) {
+const destroyType = async () => {
+    const result = await Swal.fire({
+        title: t.value.delete ?? 'Delete',
+        text: t.value.confirm_delete_content_type ?? 'Delete this content type?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: t.value.delete ?? 'Delete',
+        cancelButtonText: t.value.cancel ?? 'Cancel',
+        reverseButtons: true,
+        buttonsStyling: false,
+        customClass: {
+            popup: 'pf-swal-popup',
+            title: 'pf-swal-title',
+            htmlContainer: 'pf-swal-content',
+            confirmButton: 'pf-swal-confirm',
+            cancelButton: 'pf-swal-cancel',
+        },
+    });
+
+    if (!result.isConfirmed) {
         return;
     }
 
-    form.delete(props.routes.destroy);
+    form.delete(props.routes.destroy, {
+        onSuccess: () => {
+            toast.success(t.value.content_type_deleted ?? 'Content type deleted.');
+        },
+        onError: () => {
+            toast.error(t.value.content_type_delete_failed ?? 'Failed to delete content type.');
+        },
+    });
 };
 </script>
 
