@@ -28,6 +28,14 @@ const navItems = computed(() => (Array.isArray(props.items) ? props.items : []))
 const visibleItems = computed(() => navItems.value.slice(0, visibleCount.value));
 const overflowItems = computed(() => navItems.value.slice(visibleCount.value));
 
+const itemLabel = (item) => {
+    if (item && typeof item === 'object' && typeof item.label_key === 'string' && item.label_key !== '') {
+        return t.value?.[item.label_key] ?? item.label;
+    }
+
+    return item?.label;
+};
+
 const normalizePath = (value) => {
     if (!value) {
         return '/';
@@ -257,7 +265,7 @@ watch(
                 :class="isItemActive(item) ? 'pf-nav-pill-active' : 'pf-nav-pill hover:bg-[#f3f0ff]'"
                 class="shrink-0"
             >
-                {{ item.label }}
+                {{ itemLabel(item) }}
             </a>
 
             <div v-if="overflowItems.length" class="relative shrink-0">
@@ -282,7 +290,7 @@ watch(
                         class="mb-1 block w-full last:mb-0"
                         @click="closeOverflow"
                     >
-                        {{ item.label }}
+                        {{ itemLabel(item) }}
                     </a>
                 </div>
             </div>
@@ -296,7 +304,7 @@ watch(
                 :class="isItemActive(item) ? 'pf-nav-pill-active' : 'pf-nav-pill'"
                 class="inline-flex"
             >
-                {{ item.label }}
+                {{ itemLabel(item) }}
             </a>
 
             <button

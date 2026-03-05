@@ -3,6 +3,7 @@
 return [
     [
         'label' => 'Dashboard',
+        'label_key' => 'dashboard',
         'route' => 'core.admin.dashboard',
         'permission' => 'core.site.view',
         'group' => 'Core',
@@ -10,6 +11,7 @@ return [
     ],
     [
         'label' => 'Settings',
+        'label_key' => 'settings',
         'route' => 'core.admin.settings.index',
         'permission' => null,
         'group' => 'Core',

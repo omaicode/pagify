@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import axios from 'axios';
 import { toast } from 'vue3-toastify';
+import { usePage } from '@inertiajs/vue3';
 import AdminLayout from '../../../Layouts/AdminLayout.vue';
 
 const props = defineProps({
@@ -29,6 +30,11 @@ const filters = reactive({
     view: props.defaultViewMode,
 });
 
+const page = usePage();
+const t = computed(() => page.props.translations?.ui ?? {});
+
+const label = (key, fallback) => t.value?.[key] ?? fallback;
+
 const activeView = computed(() => (filters.view === 'list' ? 'list' : 'grid'));
 
 const isImageAsset = (asset) => String(asset?.kind ?? '').toLowerCase() === 'image';
@@ -43,14 +49,14 @@ const copyAssetUrl = async (asset) => {
     try {
         await navigator.clipboard.writeText(url);
         copiedAssetId.value = asset.id;
-        toast.success('Copied download URL');
+        toast.success(label('media_copied_download_url', 'Copied download URL'));
         setTimeout(() => {
             if (copiedAssetId.value === asset.id) {
                 copiedAssetId.value = null;
             }
         }, 1500);
     } catch (_error) {
-        errorMessage.value = 'Failed to copy URL.';
+        errorMessage.value = label('media_failed_copy_url', 'Failed to copy URL.');
     }
 };
 
@@ -87,7 +93,7 @@ const loadAssets = async (page = 1) => {
             ...(response.data?.meta?.pagination ?? {}),
         };
     } catch (error) {
-        errorMessage.value = error?.response?.data?.message ?? 'Failed to load media assets.';
+        errorMessage.value = error?.response?.data?.message ?? label('media_failed_load_assets', 'Failed to load media assets.');
     } finally {
         loading.value = false;
     }
@@ -114,7 +120,7 @@ const onUpload = async (event) => {
 
         await loadAssets(1);
     } catch (error) {
-        errorMessage.value = error?.response?.data?.message ?? 'Failed to upload file.';
+        errorMessage.value = error?.response?.data?.message ?? label('media_failed_upload_file', 'Failed to upload file.');
     } finally {
         uploading.value = false;
         event.target.value = '';
@@ -128,11 +134,11 @@ const removeAsset = async (asset) => {
     } catch (error) {
         const code = error?.response?.data?.code;
         if (code === 'ASSET_IN_USE') {
-            errorMessage.value = `${error?.response?.data?.message ?? 'Asset is in use.'} Use force delete from API in this phase.`;
+            errorMessage.value = `${error?.response?.data?.message ?? label('media_asset_in_use', 'Asset is in use.')} ${label('media_asset_in_use_force_delete_hint', 'Use force delete from API in this phase.')}`;
             return;
         }
 
-        errorMessage.value = error?.response?.data?.message ?? 'Failed to delete file.';
+        errorMessage.value = error?.response?.data?.message ?? label('media_failed_delete_file', 'Failed to delete file.');
     }
 };
 
@@ -146,12 +152,12 @@ onMounted(() => {
         <div class="space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <h1 class="pf-section-title">Media library</h1>
-                    <p class="pf-section-subtitle">Manage shared images, videos, and documents.</p>
+                    <h1 class="pf-section-title">{{ label('media_library_title', 'Media library') }}</h1>
+                    <p class="pf-section-subtitle">{{ label('media_library_subtitle', 'Manage shared images, videos, and documents.') }}</p>
                 </div>
 
                 <label class="pf-btn-primary cursor-pointer">
-                    <span>{{ uploading ? 'Uploading...' : 'Upload file' }}</span>
+                    <span>{{ uploading ? label('media_uploading', 'Uploading...') : label('media_upload_file', 'Upload file') }}</span>
                     <input type="file" class="hidden" :disabled="uploading" @change="onUpload">
                 </label>
             </div>
@@ -161,31 +167,31 @@ onMounted(() => {
                     v-model="filters.q"
                     type="text"
                     class="pf-input max-w-sm"
-                    placeholder="Search name, filename, mime..."
+                    :placeholder="label('media_search_placeholder', 'Search name, filename, mime...')"
                     @keydown.enter.prevent="loadAssets(1)"
                 >
 
                 <select v-model="filters.kind" class="pf-input max-w-[180px]" @change="loadAssets(1)">
-                    <option value="">All types</option>
-                    <option value="image">Image</option>
-                    <option value="video">Video</option>
-                    <option value="document">Document</option>
-                    <option value="other">Other</option>
+                    <option value="">{{ label('media_filter_all_types', 'All types') }}</option>
+                    <option value="image">{{ label('media_kind_image', 'Image') }}</option>
+                    <option value="video">{{ label('media_kind_video', 'Video') }}</option>
+                    <option value="document">{{ label('media_kind_document', 'Document') }}</option>
+                    <option value="other">{{ label('media_kind_other', 'Other') }}</option>
                 </select>
 
                 <select v-model="filters.view" class="pf-input max-w-[140px]" @change="loadAssets(1)">
-                    <option value="grid">Grid</option>
-                    <option value="list">List</option>
+                    <option value="grid">{{ label('media_view_grid', 'Grid') }}</option>
+                    <option value="list">{{ label('media_view_list', 'List') }}</option>
                 </select>
 
-                <button type="button" class="pf-btn-outline" :disabled="loading" @click="loadAssets(1)">Apply</button>
+                <button type="button" class="pf-btn-outline" :disabled="loading" @click="loadAssets(1)">{{ label('filter', 'Filter') }}</button>
             </div>
 
             <div v-if="errorMessage" class="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
                 {{ errorMessage }}
             </div>
 
-            <div v-if="loading" class="pf-card text-sm text-slate-500">Loading...</div>
+            <div v-if="loading" class="pf-card text-sm text-slate-500">{{ label('loading', 'Loading...') }}</div>
 
             <div v-else-if="activeView === 'grid'" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <article v-for="asset in assets" :key="asset.id" class="pf-card">
@@ -196,7 +202,7 @@ onMounted(() => {
                             :class="copiedAssetId === asset.id
                                 ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
                                 : 'border-[#ece8ff] bg-white/90 text-slate-700 hover:bg-white'"
-                            :title="copiedAssetId === asset.id ? 'Copied' : 'Copy download URL'"
+                            :title="copiedAssetId === asset.id ? label('media_copied', 'Copied') : label('media_copy_download_url', 'Copy download URL')"
                             @click="copyAssetUrl(asset)"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -219,8 +225,8 @@ onMounted(() => {
                     <p class="mt-1 text-xs text-slate-500">{{ asset.mime_type || '-' }}</p>
                     <p class="text-xs text-slate-500">{{ asset.size_bytes }} bytes</p>
                     <p class="text-xs text-slate-500">
-                        Transforms:
-                        {{ (asset.transforms ?? []).map((item) => `${item.profile}:${item.status}`).join(', ') || 'none' }}
+                        {{ label('media_transforms', 'Transforms') }}:
+                        {{ (asset.transforms ?? []).map((item) => `${item.profile}:${item.status}`).join(', ') || label('media_none', 'none') }}
                     </p>
                     <div class="mt-3 flex flex-wrap gap-2">
                         <button
@@ -229,20 +235,20 @@ onMounted(() => {
                             class="pf-btn-outline !px-2 !py-1 !text-xs"
                             @click="openPreview(asset)"
                         >
-                            View
+                            {{ label('media_view', 'View') }}
                         </button>
                         <a
                             :href="resolveAssetDownloadUrl(asset)"
                             class="pf-btn-outline !px-2 !py-1 !text-xs"
                         >
-                            Download
+                            {{ label('media_download', 'Download') }}
                         </a>
-                        <button type="button" class="pf-btn-outline !px-2 !py-1 !text-xs" @click="removeAsset(asset)">Delete</button>
+                        <button type="button" class="pf-btn-outline !px-2 !py-1 !text-xs" @click="removeAsset(asset)">{{ label('delete', 'Delete') }}</button>
                     </div>
                 </article>
 
                 <article v-if="assets.length === 0" class="pf-card text-sm text-slate-500 sm:col-span-2 lg:col-span-4">
-                    No media assets yet.
+                    {{ label('media_no_assets', 'No media assets yet.') }}
                 </article>
             </div>
 
@@ -250,12 +256,12 @@ onMounted(() => {
                 <table class="min-w-full divide-y divide-[#ece8ff] text-sm">
                     <thead class="bg-[#f8f6ff]">
                         <tr>
-                            <th class="px-3 py-2 text-left">Name</th>
-                            <th class="px-3 py-2 text-left">Type</th>
-                            <th class="px-3 py-2 text-left">Size</th>
-                            <th class="px-3 py-2 text-left">Created at</th>
-                            <th class="px-3 py-2 text-left">Transforms</th>
-                            <th class="px-3 py-2 text-left">Actions</th>
+                            <th class="px-3 py-2 text-left">{{ label('name', 'Name') }}</th>
+                            <th class="px-3 py-2 text-left">{{ label('type', 'Type') }}</th>
+                            <th class="px-3 py-2 text-left">{{ label('media_size', 'Size') }}</th>
+                            <th class="px-3 py-2 text-left">{{ label('media_created_at', 'Created at') }}</th>
+                            <th class="px-3 py-2 text-left">{{ label('media_transforms', 'Transforms') }}</th>
+                            <th class="px-3 py-2 text-left">{{ label('actions', 'Actions') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200">
@@ -272,40 +278,40 @@ onMounted(() => {
                                     class="pf-btn-outline !mr-2 !px-2 !py-1 !text-xs"
                                     @click="openPreview(asset)"
                                 >
-                                    View
+                                    {{ label('media_view', 'View') }}
                                 </button>
                                 <a
                                     :href="resolveAssetDownloadUrl(asset)"
                                     class="pf-btn-outline !mr-2 !px-2 !py-1 !text-xs"
                                 >
-                                    Download
+                                    {{ label('media_download', 'Download') }}
                                 </a>
                                 <button
                                     type="button"
                                     class="pf-btn-outline !mr-2 !px-2 !py-1 !text-xs"
                                     @click="copyAssetUrl(asset)"
                                 >
-                                    {{ copiedAssetId === asset.id ? 'Copied' : 'Copy URL' }}
+                                    {{ copiedAssetId === asset.id ? label('media_copied', 'Copied') : label('media_copy_url', 'Copy URL') }}
                                 </button>
-                                <button type="button" class="pf-btn-outline !px-2 !py-1 !text-xs" @click="removeAsset(asset)">Delete</button>
+                                <button type="button" class="pf-btn-outline !px-2 !py-1 !text-xs" @click="removeAsset(asset)">{{ label('delete', 'Delete') }}</button>
                             </td>
                         </tr>
                         <tr v-if="assets.length === 0">
-                            <td colspan="6" class="px-3 py-6 text-center text-slate-500">No media assets yet.</td>
+                            <td colspan="6" class="px-3 py-6 text-center text-slate-500">{{ label('media_no_assets', 'No media assets yet.') }}</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
             <div class="flex items-center gap-2 text-sm text-slate-600">
-                <span>Page {{ pagination.current_page }} / {{ pagination.last_page }}</span>
+                <span>{{ label('media_page', 'Page') }} {{ pagination.current_page }} / {{ pagination.last_page }}</span>
                 <button
                     type="button"
                     class="pf-btn-outline !px-2 !py-1 !text-xs"
                     :disabled="pagination.current_page <= 1 || loading"
                     @click="loadAssets(pagination.current_page - 1)"
                 >
-                    Prev
+                    {{ label('media_prev', 'Prev') }}
                 </button>
                 <button
                     type="button"
@@ -313,7 +319,7 @@ onMounted(() => {
                     :disabled="pagination.current_page >= pagination.last_page || loading"
                     @click="loadAssets(pagination.current_page + 1)"
                 >
-                    Next
+                    {{ label('media_next', 'Next') }}
                 </button>
             </div>
 
@@ -333,10 +339,10 @@ onMounted(() => {
                                 class="pf-btn-outline !px-2 !py-1 !text-xs"
                                 @click="copyAssetUrl(previewAsset)"
                             >
-                                    {{ copiedAssetId === previewAsset.id ? 'Copied' : 'Copy URL' }}
+                                    {{ copiedAssetId === previewAsset.id ? label('media_copied', 'Copied') : label('media_copy_url', 'Copy URL') }}
                             </button>
-                            <a :href="resolveAssetDownloadUrl(previewAsset)" class="pf-btn-outline !px-2 !py-1 !text-xs">Download</a>
-                            <button type="button" class="pf-btn-outline !px-2 !py-1 !text-xs" @click="closePreview">Close</button>
+                            <a :href="resolveAssetDownloadUrl(previewAsset)" class="pf-btn-outline !px-2 !py-1 !text-xs">{{ label('media_download', 'Download') }}</a>
+                            <button type="button" class="pf-btn-outline !px-2 !py-1 !text-xs" @click="closePreview">{{ label('media_close', 'Close') }}</button>
                         </div>
                     </div>
 
