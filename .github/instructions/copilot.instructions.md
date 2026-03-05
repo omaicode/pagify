@@ -1,9 +1,14 @@
 ---
-description: When user requests "create skill" or "automate this", provide a step-by-step guide on how to create a skill or automate the task, including best practices and potential pitfalls to avoid.
+description: When user requests "phát triển tính năng", "thêm feature", "mở rộng module", "triển khai API/UI/migration cho Pagify", "bảo trì", "bảo dưỡng", "sửa lỗi", "fix bug", "debug production", hoặc "phân tích dự án để implement", load these instructions to guide the response.
+applyTo: '**'
 # applyTo: 'Describe when these instructions should be loaded' # when provided, instructions will automatically be added to the request context when the pattern matches an attached file
 ---
-## Skill Creator Ultra
+## Pagify Feature Engineer
 
-When user requests "create skill" or "automate this":
-- Read `.github/skill-creator-ultra/SKILL.md`
-- Follow 8 Phase pipeline
+When user requests "phát triển tính năng", "thêm feature", "mở rộng module",
+"triển khai API/UI/migration cho Pagify", "bảo trì", "bảo dưỡng",
+"sửa lỗi", "fix bug", "debug production", hoặc
+"phân tích dự án để implement":
+- Read `.github/skills/pagify-feature-engineer/SKILL.md`
+- Use `resources/project-profile.md` before proposing implementation
+- Follow `resources/feature-delivery-playbook.md` for step-by-step execution
