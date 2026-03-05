@@ -7,7 +7,9 @@ use Pagify\Core\Http\Controllers\Admin\AuthController;
 use Pagify\Core\Http\Controllers\Admin\DashboardController;
 use Pagify\Core\Http\Controllers\Admin\LocaleController;
 use Pagify\Core\Http\Controllers\Admin\ModulePageController;
+use Pagify\Core\Http\Controllers\Admin\ProfilePageController;
 use Pagify\Core\Http\Controllers\Admin\SettingsPageController;
+use Pagify\Core\Http\Controllers\Api\AdminProfileController;
 use Pagify\Core\Http\Controllers\Api\AdminModuleController;
 use Pagify\Core\Http\Controllers\Api\AdminTokenController;
 use Pagify\Core\Http\Middleware\EnsureApiErrorEnvelope;
@@ -41,6 +43,7 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.index');
         Route::get('/api-tokens', ApiTokenPageController::class)->name('tokens.index');
         Route::get('/modules', ModulePageController::class)->name('modules.index');
+        Route::get('/profile', ProfilePageController::class)->name('profile.index');
         Route::get('/settings', SettingsPageController::class)->name('settings.index');
         });
     });
@@ -67,6 +70,11 @@ Route::prefix('api/v1/'.config('app.admin_url_prefix'))
         Route::get('/tokens', [AdminTokenController::class, 'index'])->name('tokens.index');
         Route::post('/tokens', [AdminTokenController::class, 'store'])->name('tokens.store');
         Route::delete('/tokens/{tokenId}', [AdminTokenController::class, 'destroy'])->name('tokens.destroy');
+
+        Route::patch('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
+        Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('profile.password.update');
+        Route::post('/profile/avatar', [AdminProfileController::class, 'storeAvatar'])->name('profile.avatar.store');
+        Route::delete('/profile/avatar', [AdminProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
 
         Route::get('/modules', [AdminModuleController::class, 'index'])->name('modules.index');
         Route::patch('/modules/{module}', [AdminModuleController::class, 'update'])->name('modules.update');

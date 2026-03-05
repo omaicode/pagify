@@ -7,6 +7,10 @@ const props = defineProps({
         type: String,
         default: 'A',
     },
+    avatarUrl: {
+        type: String,
+        default: null,
+    },
     profileHref: {
         type: String,
         default: '#',
@@ -64,11 +68,17 @@ onBeforeUnmount(() => {
     <div class="relative" data-avatar-dropdown>
         <button
             type="button"
-            class="flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold text-white cursor-pointer"
-            style="background-image: var(--pagify-gradient)"
+            class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full text-xs font-semibold text-white cursor-pointer"
+            :style="avatarUrl ? undefined : 'background-image: var(--pagify-gradient)'"
             @click="opened = !opened"
         >
-            {{ initials }}
+            <img
+                v-if="avatarUrl"
+                :src="avatarUrl"
+                :alt="t.profile_avatar_alt ?? 'Admin avatar'"
+                class="h-full w-full object-cover"
+            >
+            <span v-else>{{ initials }}</span>
         </button>
 
         <div

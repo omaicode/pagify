@@ -44,7 +44,15 @@ class RecordAuditLog
             'path' => $request->path(),
             'route_name' => $routeName,
             'status_code' => $response->getStatusCode(),
-            'request' => $request->except(['password', 'password_confirmation', 'token']),
+            'request' => $request->except([
+                'password',
+                'password_confirmation',
+                'current_password',
+                'new_password',
+                'new_password_confirmation',
+                'token',
+                'avatar',
+            ]),
         ];
 
         try {

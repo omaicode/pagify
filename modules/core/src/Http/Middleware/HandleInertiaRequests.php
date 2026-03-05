@@ -4,8 +4,10 @@ namespace Pagify\Core\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
 use Pagify\Core\Models\Admin;
+use Pagify\Media\Models\MediaAsset;
 use Pagify\Core\Services\ModuleRegistry;
 use Pagify\Core\Support\SiteContext;
 
@@ -28,6 +30,17 @@ class HandleInertiaRequests extends Middleware
         /** @var SiteContext $siteContext */
         $siteContext = app(SiteContext::class);
         $admin = $request->user('web');
+        $avatarUrl = null;
+
+        if ($admin?->avatar_path !== null && $admin->avatar_path !== '') {
+            $asset = MediaAsset::query()
+                ->where('path', $admin->avatar_path)
+                ->first();
+
+            if ($asset !== null) {
+                $avatarUrl = Storage::disk($asset->disk)->url($asset->path);
+            }
+        }
 
         $menu = array_map(static function (array $item): array {
             $routeName = (string) ($item['route'] ?? '');
@@ -53,6 +66,7 @@ class HandleInertiaRequests extends Middleware
             'locale' => app()->getLocale(),
             'supportedLocales' => config('core.locales.supported', ['en']),
             'localeUpdateUrl' => Route::has('core.admin.locale.update') ? route('core.admin.locale.update') : null,
+            'profileUrl' => Route::has('core.admin.profile.index') ? route('core.admin.profile.index') : null,
             'settingsUrl' => Route::has('core.admin.settings.index') ? route('core.admin.settings.index') : null,
             'translations' => [
                 'ui' => $this->adminUiTranslations(),
@@ -60,7 +74,10 @@ class HandleInertiaRequests extends Middleware
             'menu' => $menu,
             'currentSite' => $siteContext->site()?->only(['id', 'name', 'domain', 'locale']),
             'auth' => [
-                'admin' => $admin?->only(['id', 'name', 'username', 'email', 'locale']),
+                'admin' => $admin === null ? null : [
+                    ...$admin->only(['id', 'name', 'nickname', 'bio', 'username', 'email', 'locale']),
+                    'avatar_url' => $avatarUrl,
+                ],
             ],
         ];
     }
