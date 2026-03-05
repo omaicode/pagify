@@ -41,6 +41,7 @@ class CoreDatabaseSeeder extends Seeder
             'core.audit.view',
             'core.token.manage',
             'core.module.manage',
+            'core.updater.manage',
             'content.type.viewAny',
             'content.type.create',
             'content.type.update',

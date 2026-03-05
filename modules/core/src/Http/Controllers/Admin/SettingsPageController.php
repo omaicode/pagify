@@ -43,6 +43,16 @@ class SettingsPageController extends Controller
                             href: route('core.admin.modules.index'),
                             allowed: $admin?->can('manageModules', Admin::class) === true,
                         ),
+                        $this->makeItem(
+                            label: 'Updater',
+                            labelKey: 'settings_item_updater',
+                            description: 'Queue updates, monitor progress, and rollback failed executions.',
+                            descriptionKey: 'settings_item_updater_description',
+                            href: Route::has('updater.admin.index') ? route('updater.admin.index') : '#',
+                            allowed: $modules->enabled('updater')
+                                && Route::has('updater.admin.index')
+                                && ($admin?->can('manageUpdater', Admin::class) === true),
+                        ),
                     ])),
                 ],
                 [

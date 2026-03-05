@@ -15,4 +15,9 @@ class AdminPolicy
     {
         return $admin->can('core.module.manage');
     }
+
+    public function manageUpdater(Admin $admin): bool
+    {
+        return $admin->can('core.updater.manage');
+    }
 }

@@ -6,5 +6,5 @@ return [
     'slug' => 'content',
     'config_key' => 'content',
     'description' => 'Content modeling and entry management module',
-    'order' => 1
+    'order' => 2
 ];

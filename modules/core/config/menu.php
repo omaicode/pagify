@@ -19,6 +19,7 @@ return [
             '/admin/api-tokens',
             '/admin/audit-logs',
             '/admin/content',
+            '/admin/updater'
         ],
     ],
 ];

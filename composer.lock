@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e6b1091f9c934d49997e032b52a1bb13",
+    "content-hash": "0020284f9c37fc0b70c5cdb34858d6ac",
     "packages": [
         {
             "name": "brick/math",
@@ -3602,6 +3602,41 @@
                     "Pagify\\Media\\Tests\\": "tests/",
                     "Pagify\\Media\\Database\\Factories\\": "database/factories/",
                     "Pagify\\Media\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "omaicode/updater",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "modules/updater",
+                "reference": "2b652bb62946cc788c56d06e5adb6cb2700e4d0b"
+            },
+            "require": {
+                "omaicode/pagify-core": "*"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Pagify\\Updater\\Providers\\UpdaterServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Pagify\\Updater\\": "src/",
+                    "Pagify\\Updater\\Tests\\": "tests/",
+                    "Pagify\\Updater\\Database\\Factories\\": "database/factories/",
+                    "Pagify\\Updater\\Database\\Seeders\\": "database/seeders/"
                 }
             },
             "license": [

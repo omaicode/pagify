@@ -90,7 +90,8 @@
             "dont-discover": [
                 "omaicode/pagify-core",
                 "omaicode/pagify-content",
-                "omaicode/pagify-media"
+                "omaicode/pagify-media",
+                "omaicode/updater"
             ]
         }
     },
