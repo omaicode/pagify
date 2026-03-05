@@ -22,7 +22,7 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
         return view('core::index');
     })->name('core.index');
 
-    Route::prefix('admin')->name('core.admin.')->group(function (): void {
+    Route::prefix(config('app.admin_url_prefix'))->name('core.admin.')->group(function (): void {
         Route::middleware('guest:web')->group(function (): void {
             Route::get('/login', [AuthController::class, 'create'])
                 ->middleware(HandleInertiaRequests::class)
@@ -60,7 +60,7 @@ Route::prefix('api/v1')
         })->name('health');
     });
 
-Route::prefix('api/v1/admin')
+Route::prefix('api/v1/'.config('app.admin_url_prefix'))
     ->middleware(['web', EnsureApiErrorEnvelope::class, ResolveSite::class, SetLocaleFromSite::class, 'auth:web', 'throttle:60,1', RecordAuditLog::class])
     ->name('core.api.v1.admin.')
     ->group(function (): void {

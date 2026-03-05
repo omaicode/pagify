@@ -11,7 +11,7 @@ use Pagify\Updater\Http\Controllers\Api\AdminUpdaterExecutionController;
 
 Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])
 	->group(function (): void {
-		Route::prefix('admin')
+		Route::prefix(config('app.admin_url_prefix'))
 			->name('updater.admin.')
 			->middleware(['auth:web', HandleInertiaRequests::class, RecordAuditLog::class])
 			->group(function (): void {
@@ -19,7 +19,7 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])
 			});
 	});
 
-Route::prefix('api/v1/admin/updater')
+Route::prefix('api/v1/'.config('app.admin_url_prefix').'/updater')
 	->middleware(['web', EnsureApiErrorEnvelope::class, ResolveSite::class, SetLocaleFromSite::class, 'auth:web', 'throttle:120,1', RecordAuditLog::class])
 	->name('updater.api.v1.admin.')
 	->group(function (): void {

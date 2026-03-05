@@ -13,7 +13,7 @@ use Pagify\Media\Http\Controllers\Api\AdminMediaFolderController;
 use Pagify\Media\Http\Controllers\Api\AdminMediaUploadController;
 
 Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(function (): void {
-	Route::prefix('admin/media')
+	Route::prefix(config('app.admin_url_prefix').'/media')
 		->name('media.admin.')
 		->middleware([EnsureModuleEnabled::class . ':media', 'auth:web', HandleInertiaRequests::class, RecordAuditLog::class])
 		->group(function (): void {
@@ -21,7 +21,7 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
 		});
 });
 
-Route::prefix('api/v1/admin/media')
+Route::prefix('api/v1/'.config('app.admin_url_prefix').'/media')
 	->middleware(['web', EnsureApiErrorEnvelope::class, ResolveSite::class, SetLocaleFromSite::class, EnsureModuleEnabled::class . ':media', 'auth:web', 'throttle:60,1', RecordAuditLog::class])
 	->name('media.api.v1.admin.')
 	->group(function (): void {

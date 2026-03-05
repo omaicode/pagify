@@ -17,7 +17,7 @@ use Pagify\Core\Http\Middleware\ResolveSite;
 use Pagify\Core\Http\Middleware\SetLocaleFromSite;
 
 Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(function (): void {
-	Route::prefix('admin/content')
+	Route::prefix(config('app.admin_url_prefix').'/content')
 		->name('content.admin.')
 		->middleware([EnsureModuleEnabled::class . ':content', 'auth:web', HandleInertiaRequests::class, RecordAuditLog::class])
 		->group(function (): void {
@@ -56,7 +56,7 @@ Route::prefix('api/v1/content')
 		Route::get('/{contentTypeSlug}/{entrySlug}', [ContentApiController::class, 'show'])->name('entries.show');
 	});
 
-Route::prefix('api/v1/admin/content')
+Route::prefix('api/v1/'.config('app.admin_url_prefix').'/content')
 	->middleware(['web', EnsureApiErrorEnvelope::class, ResolveSite::class, SetLocaleFromSite::class, EnsureModuleEnabled::class . ':content', 'auth:web', 'throttle:60,1', RecordAuditLog::class])
 	->name('content.api.v1.admin.')
 	->group(function (): void {
