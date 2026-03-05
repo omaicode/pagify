@@ -27,6 +27,7 @@
         "omaicode/pagify-core": "*",
         "omaicode/pagify-media": "*",
         "omaicode/pagify-updater": "*",
+        "omaicode/pagify-page-builder": "*",
         "spatie/laravel-permission": "^6.10"
     },
     "require-dev": {
@@ -91,7 +92,8 @@
                 "omaicode/pagify-core",
                 "omaicode/pagify-content",
                 "omaicode/pagify-media",
-                "omaicode/pagify-updater"
+                "omaicode/pagify-updater",
+                "omaicode/pagify-page-builder"
             ]
         }
     },

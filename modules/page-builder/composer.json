@@ -1,0 +1,24 @@
+{
+	"name": "omaicode/pagify-page-builder",
+	"description": "",
+	"type": "library",
+	"version": "1.0",
+	"license": "proprietary",
+	"require": {},
+	"autoload": {
+		"psr-4": {
+			"Pagify\\PageBuilder\\": "src/",
+			"Pagify\\PageBuilder\\Tests\\": "tests/",
+			"Pagify\\PageBuilder\\Database\\Factories\\": "database/factories/",
+			"Pagify\\PageBuilder\\Database\\Seeders\\": "database/seeders/"
+		}
+	},
+	"minimum-stability": "stable",
+	"extra": {
+		"laravel": {
+			"providers": [
+				"Pagify\\PageBuilder\\Providers\\PageBuilderServiceProvider"
+			]
+		}
+	}
+}

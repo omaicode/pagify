@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ade1e484f34fca4147e74af0981b96de",
+    "content-hash": "417e09c601e1ed0a2802e9890873ee8f",
     "packages": [
         {
             "name": "brick/math",
@@ -3602,6 +3602,38 @@
                     "Pagify\\Media\\Tests\\": "tests/",
                     "Pagify\\Media\\Database\\Factories\\": "database/factories/",
                     "Pagify\\Media\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "omaicode/pagify-page-builder",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "modules/page-builder",
+                "reference": "98dfa0aeeff4f48205248ba0f17bdacde7868171"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Pagify\\PageBuilder\\Providers\\PageBuilderServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Pagify\\PageBuilder\\": "src/",
+                    "Pagify\\PageBuilder\\Tests\\": "tests/",
+                    "Pagify\\PageBuilder\\Database\\Factories\\": "database/factories/",
+                    "Pagify\\PageBuilder\\Database\\Seeders\\": "database/seeders/"
                 }
             },
             "license": [
