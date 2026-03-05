@@ -101,7 +101,7 @@ class AdminProfileTest extends TestCase
 
         $uploadResponse = $this->actingAs($admin, 'web')
             ->post('/api/v1/admin/profile/avatar', [
-                'avatar' => UploadedFile::fake()->image('avatar.png', 128, 128),
+                'avatar' => UploadedFile::fake()->image('avatar.png', 800, 400),
             ]);
 
         $uploadResponse
@@ -112,10 +112,19 @@ class AdminProfileTest extends TestCase
 
         $this->assertNotNull($admin->avatar_path);
         Storage::disk('public')->assertExists((string) $admin->avatar_path);
+        $avatarPayload = Storage::disk('public')->get((string) $admin->avatar_path);
+        $avatarImage = imagecreatefromstring($avatarPayload);
+        $this->assertNotFalse($avatarImage);
+        $this->assertSame(256, imagesx($avatarImage));
+        $this->assertSame(128, imagesy($avatarImage));
+        imagedestroy($avatarImage);
+
         $this->assertDatabaseHas('media_assets', [
             'path' => $admin->avatar_path,
             'uploaded_by_admin_id' => $admin->id,
             'kind' => 'image',
+            'width' => 256,
+            'height' => 128,
         ]);
 
         $removeResponse = $this->actingAs($admin, 'web')

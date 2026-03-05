@@ -4,11 +4,10 @@ namespace Pagify\Core\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Pagify\Core\Models\Admin;
-use Pagify\Media\Models\MediaAsset;
+use Pagify\Media\Services\MediaAssetManager;
 
 class ProfilePageController extends Controller
 {
@@ -16,18 +15,7 @@ class ProfilePageController extends Controller
     {
         /** @var Admin|null $admin */
         $admin = $request->user('web');
-
-        $avatarUrl = null;
-
-        if ($admin?->avatar_path !== null && $admin->avatar_path !== '') {
-            $asset = MediaAsset::query()
-                ->where('path', $admin->avatar_path)
-                ->first();
-
-            if ($asset !== null) {
-                $avatarUrl = Storage::disk($asset->disk)->url($asset->path);
-            }
-        }
+        $assetManager = app(MediaAssetManager::class);
 
         return Inertia::render('Admin/Profile/Index', [
             'profile' => [
@@ -36,7 +24,7 @@ class ProfilePageController extends Controller
                 'email' => $admin?->email,
                 'nickname' => $admin?->nickname,
                 'bio' => $admin?->bio,
-                'avatar_url' => $avatarUrl,
+                'avatar_url' => $assetManager->resolveUrlByPath($admin?->avatar_path),
             ],
             'apiRoutes' => [
                 'updateProfile' => route('core.api.v1.admin.profile.update'),

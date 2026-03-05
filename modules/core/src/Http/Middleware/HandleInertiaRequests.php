@@ -4,10 +4,9 @@ namespace Pagify\Core\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
 use Pagify\Core\Models\Admin;
-use Pagify\Media\Models\MediaAsset;
+use Pagify\Media\Services\MediaAssetManager;
 use Pagify\Core\Services\ModuleRegistry;
 use Pagify\Core\Support\SiteContext;
 
@@ -30,17 +29,7 @@ class HandleInertiaRequests extends Middleware
         /** @var SiteContext $siteContext */
         $siteContext = app(SiteContext::class);
         $admin = $request->user('web');
-        $avatarUrl = null;
-
-        if ($admin?->avatar_path !== null && $admin->avatar_path !== '') {
-            $asset = MediaAsset::query()
-                ->where('path', $admin->avatar_path)
-                ->first();
-
-            if ($asset !== null) {
-                $avatarUrl = Storage::disk($asset->disk)->url($asset->path);
-            }
-        }
+        $assetManager = app(MediaAssetManager::class);
 
         $menu = array_map(static function (array $item): array {
             $routeName = (string) ($item['route'] ?? '');
@@ -76,7 +65,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'admin' => $admin === null ? null : [
                     ...$admin->only(['id', 'name', 'nickname', 'bio', 'username', 'email', 'locale']),
-                    'avatar_url' => $avatarUrl,
+                    'avatar_url' => $assetManager->resolveUrlByPath($admin->avatar_path),
                 ],
             ],
         ];

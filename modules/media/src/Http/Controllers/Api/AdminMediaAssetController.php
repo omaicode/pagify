@@ -6,7 +6,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Pagify\Media\Jobs\GenerateMediaImageTransformsJob;
 use Pagify\Core\Http\Controllers\Api\ApiController;
 use Pagify\Media\Http\Requests\Admin\ListMediaAssetsRequest;
 use Pagify\Media\Http\Requests\Admin\StoreMediaAssetRequest;
@@ -14,7 +13,7 @@ use Pagify\Media\Http\Requests\Admin\UpdateMediaAssetRequest;
 use Pagify\Media\Http\Resources\MediaAssetResource;
 use Pagify\Media\Models\MediaAsset;
 use Pagify\Media\Models\MediaFolder;
-use Pagify\Media\Services\MediaStorageManager;
+use Pagify\Media\Services\MediaAssetManager;
 
 class AdminMediaAssetController extends ApiController
 {
@@ -72,7 +71,7 @@ class AdminMediaAssetController extends ApiController
         ]);
     }
 
-    public function store(StoreMediaAssetRequest $request, MediaStorageManager $storage): JsonResponse
+    public function store(StoreMediaAssetRequest $request, MediaAssetManager $assetManager): JsonResponse
     {
         $this->authorize('create', MediaAsset::class);
 
@@ -88,35 +87,20 @@ class AdminMediaAssetController extends ApiController
         }
 
         $uploaded = $request->file('file');
-        $stored = $storage->storeUploadedFile($uploaded, $folder?->slug);
 
         /** @var \Pagify\Core\Models\Admin|null $admin */
         $admin = $request->user('web');
 
-        $asset = MediaAsset::query()->create([
-            'uuid' => (string) \Illuminate\Support\Str::uuid(),
-            'folder_id' => $folder?->id,
-            'disk' => $stored['disk'],
-            'path' => $stored['path'],
-            'path_hash' => hash('sha256', $stored['path']),
-            'filename' => $stored['filename'],
-            'original_name' => (string) $uploaded->getClientOriginalName(),
-            'mime_type' => (string) $uploaded->getClientMimeType(),
-            'extension' => strtolower((string) $uploaded->getClientOriginalExtension()),
-            'size_bytes' => (int) $uploaded->getSize(),
-            'kind' => $this->resolveKind((string) $uploaded->getClientMimeType()),
-            'alt_text' => $validated['alt_text'] ?? null,
-            'caption' => $validated['caption'] ?? null,
-            'uploaded_by_admin_id' => $admin?->id,
-            'uploaded_at' => now(),
-        ]);
+        $asset = $assetManager->upload(
+            file: $uploaded,
+            folder: $folder,
+            siteId: $admin?->site_id,
+            uploadedByAdminId: $admin?->id,
+            altText: $validated['alt_text'] ?? null,
+            caption: $validated['caption'] ?? null,
+        );
 
         $asset->load(['folder', 'tags', 'transforms'])->loadCount('usages');
-
-        if (str_starts_with((string) $asset->mime_type, 'image/')) {
-            GenerateMediaImageTransformsJob::dispatch($asset->id)
-                ->onQueue((string) config('media.image_transforms.queue', 'default'));
-        }
 
         return $this->success((new MediaAssetResource($asset))->resolve(), 201);
     }
@@ -198,7 +182,7 @@ class AdminMediaAssetController extends ApiController
         return $this->success((new MediaAssetResource($asset))->resolve());
     }
 
-    public function destroy(\Illuminate\Http\Request $request, MediaAsset $asset): JsonResponse
+    public function destroy(\Illuminate\Http\Request $request, MediaAsset $asset, MediaAssetManager $assetManager): JsonResponse
     {
         $this->authorize('delete', $asset);
 
@@ -218,26 +202,8 @@ class AdminMediaAssetController extends ApiController
             $asset->usages()->delete();
         }
 
-        Storage::disk($asset->disk)->delete($asset->path);
-        $asset->delete();
+        $assetManager->delete($asset);
 
         return $this->success(['deleted' => true]);
-    }
-
-    private function resolveKind(string $mimeType): string
-    {
-        if (str_starts_with($mimeType, 'image/')) {
-            return 'image';
-        }
-
-        if (str_starts_with($mimeType, 'video/')) {
-            return 'video';
-        }
-
-        if (str_contains($mimeType, 'pdf') || str_starts_with($mimeType, 'text/') || str_contains($mimeType, 'officedocument')) {
-            return 'document';
-        }
-
-        return 'other';
     }
 }
