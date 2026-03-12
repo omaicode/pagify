@@ -32,9 +32,7 @@ use Pagify\Core\Http\Middleware\SetLocaleFromSite;
 use Pagify\Core\Support\SiteContext;
 
 Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(function (): void {
-    Route::get('/', function () {
-        return view('core::index');
-    })->name('core.index');
+    Route::get('/', FrontendFallbackPageController::class)->name('core.index');
 
     Route::get('/theme-assets/{theme}/{path}', FrontendThemeAssetController::class)
         ->where('theme', '[a-z0-9]+(?:-[a-z0-9]+)*')

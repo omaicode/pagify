@@ -36,7 +36,7 @@ class FrontendFallbackRoutingTest extends TestCase
         ], JSON_PRETTY_PRINT));
 
         File::put(base_path('storage/testing/themes/main/unified/layouts/app.twig'), "<!doctype html><html><head>{{ head|raw }}</head><body>{{ content|raw }}{% block body %}{% endblock %}</body></html>");
-        File::put(base_path('storage/testing/themes/main/unified/pages/page.twig'), "{% extends 'layouts/app.twig' %}\n");
+        File::put(base_path('storage/testing/themes/main/unified/pages/home.twig'), "{% extends 'layouts/app.twig' %}\n");
 
         Site::factory()->create([
             'slug' => 'default',

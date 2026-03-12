@@ -35,4 +35,4 @@ Build output file: `assets/css/main.css`
 ## Page Entry
 
 - Layout: layouts/app.twig
-- Page view: pages/page.twig
+- Page view: pages/home.twig

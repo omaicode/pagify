@@ -270,9 +270,9 @@ class FrontendThemeManagerService
 
     private function defaultThemeSlug(): string
     {
-        $default = trim((string) config('core.frontend_ui.theme', 'default'));
+        $default = trim((string) config('core.frontend_ui.theme', 'unified'));
 
-        return $default === '' ? 'default' : $default;
+        return $default === '' ? 'unified' : $default;
     }
 
     /**
@@ -372,7 +372,7 @@ class FrontendThemeManagerService
             return false;
         }
 
-        if (! $this->files->exists($themePath.'/pages/page.twig')) {
+        if (! $this->files->exists($themePath.'/pages/home.twig')) {
             return false;
         }
 

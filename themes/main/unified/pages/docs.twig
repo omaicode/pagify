@@ -1,0 +1,27 @@
+{% extends 'layouts/app.twig' %}
+
+{% block body %}
+<section class="pf-panel p-6 sm:p-10">
+    <span class="pf-badge">Documentation</span>
+    <h1 class="pf-heading mt-4 text-3xl font-extrabold sm:text-4xl">Start building with Pagify docs</h1>
+    <p class="mt-4 max-w-3xl text-base leading-8 text-[var(--text-soft)]">Use this default page as a direct Twig entry. You can still publish advanced docs with content module and expose them through API endpoints.</p>
+    <div class="mt-6 rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-muted)] p-5">
+        <p class="text-sm text-[var(--text-soft)]">Docs API endpoint</p>
+        <p class="mt-2 break-all font-mono text-sm font-semibold text-[var(--text-main)]">/api/v1/content/docs-page?status=published</p>
+    </div>
+    <div class="mt-6 grid gap-4 md:grid-cols-3">
+        <article class="rounded-2xl border border-[var(--line-soft)] bg-white p-5">
+            <h2 class="pf-heading text-lg font-bold">Quickstart</h2>
+            <p class="mt-2 text-sm leading-7 text-[var(--text-soft)]">Install, configure site context, and publish your first page.</p>
+        </article>
+        <article class="rounded-2xl border border-[var(--line-soft)] bg-white p-5">
+            <h2 class="pf-heading text-lg font-bold">Architecture</h2>
+            <p class="mt-2 text-sm leading-7 text-[var(--text-soft)]">Understand modules, contracts, and runtime boundaries.</p>
+        </article>
+        <article class="rounded-2xl border border-[var(--line-soft)] bg-white p-5">
+            <h2 class="pf-heading text-lg font-bold">Operations</h2>
+            <p class="mt-2 text-sm leading-7 text-[var(--text-soft)]">Queue, publishing workflow, and production troubleshooting.</p>
+        </article>
+    </div>
+</section>
+{% endblock %}

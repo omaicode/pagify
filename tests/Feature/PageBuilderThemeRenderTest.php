@@ -37,7 +37,7 @@ class PageBuilderThemeRenderTest extends TestCase
         ], JSON_PRETTY_PRINT));
 
         File::put(base_path('storage/testing/themes/main/default/layouts/app.twig'), "<!doctype html><html><head>{{ head|raw }}</head><body><div data-theme=\"default\">{{ content|raw }}</div><a data-asset=\"{{ asset_url('robots.txt') }}\"></a><span data-locale=\"{{ locale }}\"></span></body></html>");
-        File::put(base_path('storage/testing/themes/main/default/pages/page.twig'), "{% extends 'layouts/app.twig' %}\n");
+        File::put(base_path('storage/testing/themes/main/default/pages/home.twig'), "{% extends 'layouts/app.twig' %}\n");
 
         File::ensureDirectoryExists(base_path('storage/testing/themes/main/ocean/layouts'));
         File::ensureDirectoryExists(base_path('storage/testing/themes/main/ocean/pages'));
@@ -52,7 +52,7 @@ class PageBuilderThemeRenderTest extends TestCase
         ], JSON_PRETTY_PRINT));
 
         File::put(base_path('storage/testing/themes/main/ocean/layouts/app.twig'), "<!doctype html><html><head>{{ head|raw }}</head><body><div data-theme=\"ocean\">{{ content|raw }}</div><span data-site-url=\"{{ helpers.url.site('hello') }}\"></span></body></html>");
-        File::put(base_path('storage/testing/themes/main/ocean/pages/page.twig'), "{% extends 'layouts/app.twig' %}\n");
+        File::put(base_path('storage/testing/themes/main/ocean/pages/home.twig'), "{% extends 'layouts/app.twig' %}\n");
 
         File::ensureDirectoryExists(base_path('storage/testing/themes/main/broken/layouts'));
         File::ensureDirectoryExists(base_path('storage/testing/themes/main/broken/pages'));
@@ -65,7 +65,7 @@ class PageBuilderThemeRenderTest extends TestCase
             ],
         ], JSON_PRETTY_PRINT));
         File::put(base_path('storage/testing/themes/main/broken/layouts/app.twig'), "<!doctype html><html><head>{{ head|raw }}</head><body><div data-theme=\"broken\">{{ content|raw }}</div></body></html>");
-        File::put(base_path('storage/testing/themes/main/broken/pages/page.twig'), "{% extends 'layouts/app.twig' %}\n");
+        File::put(base_path('storage/testing/themes/main/broken/pages/home.twig'), "{% extends 'layouts/app.twig' %}\n");
     }
 
     protected function tearDown(): void

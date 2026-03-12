@@ -16,13 +16,13 @@
     <header class="mx-auto w-full max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
         <div class="rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-card)]/95 px-4 py-3 shadow-[0_14px_50px_-24px_var(--shadow-color)] backdrop-blur sm:px-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
-                <a href="{{ page_url('home') }}" class="font-display text-lg font-extrabold tracking-tight text-[var(--brand-700)]">Pagify CMS</a>
+                <a href="{{ site_url('home') }}" class="font-display text-lg font-extrabold tracking-tight text-[var(--brand-700)]">Pagify CMS</a>
                 <nav class="flex flex-wrap items-center gap-3 text-sm font-semibold text-[var(--text-soft)]">
-                    <a class="rounded-full px-3 py-1.5 transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-main)]" href="{{ page_url('home') }}">Home</a>
-                    <a class="rounded-full px-3 py-1.5 transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-main)]" href="{{ page_url('about') }}">About</a>
-                    <a class="rounded-full px-3 py-1.5 transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-main)]" href="{{ page_url('features') }}">Features</a>
-                    <a class="rounded-full px-3 py-1.5 transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-main)]" href="{{ page_url('docs') }}">Docs</a>
-                    <a class="rounded-full px-3 py-1.5 transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-main)]" href="{{ page_url('contact') }}">Contact</a>
+                    <a class="rounded-full px-3 py-1.5 transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-main)]" href="{{ site_url('home') }}">Home</a>
+                    <a class="rounded-full px-3 py-1.5 transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-main)]" href="{{ site_url('about') }}">About</a>
+                    <a class="rounded-full px-3 py-1.5 transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-main)]" href="{{ site_url('features') }}">Features</a>
+                    <a class="rounded-full px-3 py-1.5 transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-main)]" href="{{ site_url('docs') }}">Docs</a>
+                    <a class="rounded-full px-3 py-1.5 transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-main)]" href="{{ site_url('contact') }}">Contact</a>
                 </nav>
                 <div class="flex items-center gap-2 rounded-full bg-[var(--surface-muted)] p-1">
                     <button type="button" data-theme-preset="ocean" class="theme-toggle-btn rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-[0.08em]" aria-label="Switch to Ocean theme">Ocean</button>
@@ -34,7 +34,9 @@
     </header>
 
     <main class="mx-auto mt-6 w-full max-w-6xl px-4 pb-14 sm:px-6 lg:px-8">
-        {{ content|raw }}
+        {% block body %}
+            {{ content|raw }}
+        {% endblock %}
     </main>
 
     <footer class="mx-auto mb-10 w-full max-w-6xl px-4 sm:px-6 lg:px-8">

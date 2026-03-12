@@ -116,7 +116,7 @@ composer dev
 - Active frontend theme root (runtime default): `${FRONTEND_THEMES_BASE_PATH}/${FRONTEND_THEME}`
 - Frontend fallback theme root: `${FRONTEND_THEMES_BASE_PATH}/${FRONTEND_THEME_FALLBACK}`
 - Frontend manifest: `${FRONTEND_THEMES_BASE_PATH}/{THEME_NAME}/theme.json`
-- Frontend page view entry: `${FRONTEND_THEMES_BASE_PATH}/{THEME_NAME}/pages/page.twig`
+- Frontend page view entry: `${FRONTEND_THEMES_BASE_PATH}/{THEME_NAME}/pages/home.twig`
 - Frontend layout view: `${FRONTEND_THEMES_BASE_PATH}/{THEME_NAME}/layouts/app.twig`
 
 ## Troubleshooting
@@ -142,11 +142,7 @@ php artisan db:seed --class="Pagify\\Core\\Database\\Seeders\\CoreDatabaseSeeder
 php artisan db:seed --class="Pagify\\Content\\Database\\Seeders\\ContentDatabaseSeeder"
 ```
 
-- Seed default Unified pages for public frontend demo:
-
-```bash
-php artisan db:seed --class="Pagify\\PageBuilder\\Database\\Seeders\\PageBuilderDatabaseSeeder"
-```
+- Unified default frontend pages are now delivered directly from Twig files in `themes/main/unified/pages/*.twig`.
 
 - This seed creates/updates demo content types including:
 	- `article`

@@ -2,8 +2,7 @@ module.exports = {
   content: [
     './layouts/**/*.twig',
     './pages/**/*.twig',
-    './src/js/**/*.js',
-    '../../../modules/page-builder/database/seeders/PageBuilderDatabaseSeeder.php'
+    './src/js/**/*.js'
   ],
   theme: {
     extend: {

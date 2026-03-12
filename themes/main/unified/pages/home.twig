@@ -1,0 +1,48 @@
+{% extends 'layouts/app.twig' %}
+
+{% block body %}
+<section class="pf-panel overflow-hidden p-6 sm:p-10">
+    <div class="grid gap-8 lg:grid-cols-[1.15fr,0.85fr] lg:items-center">
+        <div>
+            <span class="pf-badge">Pagify Unified</span>
+            <h1 class="pf-heading mt-4 text-4xl font-extrabold leading-tight sm:text-5xl">Build complete CMS websites in minutes</h1>
+            <p class="mt-4 text-base leading-8 text-[var(--text-soft)] sm:text-lg">Pagify combines modular architecture, visual page editing, content modeling, and multi-site control into one clean Laravel-powered CMS.</p>
+            <div class="mt-6 flex flex-wrap items-center gap-3">
+                <a class="pf-cta-btn" href="{{ site_url('features') }}">Explore features</a>
+                <a class="pf-cta-btn pf-cta-btn--ghost" href="{{ site_url('docs') }}">Read docs</a>
+            </div>
+        </div>
+        <div class="pf-panel bg-[var(--surface-muted)] p-5">
+            <h2 class="pf-heading text-xl font-bold">Why teams choose Pagify</h2>
+            <ul class="mt-4 grid gap-3 text-sm text-[var(--text-soft)] sm:text-base">
+                <li class="rounded-xl border border-[var(--line-soft)] bg-white px-4 py-3">Modular domains: core, content, media, page-builder, updater.</li>
+                <li class="rounded-xl border border-[var(--line-soft)] bg-white px-4 py-3">Ready for production with permissions, audit logs, and queue-friendly workflows.</li>
+                <li class="rounded-xl border border-[var(--line-soft)] bg-white px-4 py-3">Theme system with Twig sandbox and safe fallback rendering.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <article class="pf-panel p-5">
+        <p class="text-sm font-semibold uppercase tracking-[0.08em] text-[var(--text-soft)]">Pages</p>
+        <p class="pf-heading mt-2 text-3xl font-extrabold">5</p>
+        <p class="mt-2 text-sm text-[var(--text-soft)]">Ready-to-use Twig pages in the Unified theme.</p>
+    </article>
+    <article class="pf-panel p-5">
+        <p class="text-sm font-semibold uppercase tracking-[0.08em] text-[var(--text-soft)]">Color presets</p>
+        <p class="pf-heading mt-2 text-3xl font-extrabold">3</p>
+        <p class="mt-2 text-sm text-[var(--text-soft)]">Ocean, Forest, Sunset with instant switch.</p>
+    </article>
+    <article class="pf-panel p-5">
+        <p class="text-sm font-semibold uppercase tracking-[0.08em] text-[var(--text-soft)]">Responsive</p>
+        <p class="pf-heading mt-2 text-3xl font-extrabold">100%</p>
+        <p class="mt-2 text-sm text-[var(--text-soft)]">Mobile-first sections and adaptive cards.</p>
+    </article>
+    <article class="pf-panel p-5">
+        <p class="text-sm font-semibold uppercase tracking-[0.08em] text-[var(--text-soft)]">Powered by</p>
+        <p class="pf-heading mt-2 text-3xl font-extrabold">Laravel 12</p>
+        <p class="mt-2 text-sm text-[var(--text-soft)]">Modern PHP stack with strong DX.</p>
+    </article>
+</section>
+{% endblock %}

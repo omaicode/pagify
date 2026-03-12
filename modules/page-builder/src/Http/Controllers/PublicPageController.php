@@ -53,7 +53,7 @@ class PublicPageController extends Controller
 		$combinedHead = trim(implode("\n", array_filter([$snapshotHead, $head])));
 		$content = $snapshotBody !== '' ? $snapshotBody : $html;
 
-		$rendered = $twigEngine->render($themes->viewPathsForCurrentSite(), 'pages/page.twig', [
+		$rendered = $twigEngine->render($themes->viewPathsForCurrentSite(), 'pages/home.twig', [
 			'page' => $page,
 			'head' => $combinedHead,
 			'content' => $content,

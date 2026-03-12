@@ -88,7 +88,7 @@ TWIG;
 TWIG;
 
         File::put($directory.'/layouts/app.twig', $layout.PHP_EOL);
-        File::put($directory.'/pages/page.twig', $page.PHP_EOL);
+        File::put($directory.'/pages/home.twig', $page.PHP_EOL);
         File::put($directory.'/lang/en/theme.php', "<?php\n\nreturn [];\n");
         File::put($directory.'/lang/vi/theme.php', "<?php\n\nreturn [];\n");
 
@@ -101,7 +101,7 @@ Generated frontend theme skeleton for Pagify.
 
 1. Update theme metadata in `theme.json`.
 2. Customize `layouts/app.twig`.
-3. Customize `pages/page.twig`.
+3. Customize `pages/home.twig`.
 4. Add localized strings in `lang/en/theme.php` and `lang/vi/theme.php`.
 5. Use helpers in Twig: `asset_url()`, `page_url()`, `site_url()`, `t()`, `format_date()`, `setting()`.
 6. Put theme static assets in `assets/js`, `assets/css`, and `assets/img`.

@@ -31,7 +31,7 @@ themes/main/{slug}/
   layouts/
     app.twig
   pages/
-    page.twig
+    home.twig
   lang/
     en/
       theme.php
@@ -100,7 +100,7 @@ A theme is considered runtime-usable only when:
 - `theme.json` exists and passes validation
 - `theme.json.slug` matches directory name
 
-If no usable `pages/page.twig` is found after fallback chain, Pagify returns the raw page snapshot HTML.
+If no usable `pages/home.twig` is found after fallback chain, Pagify returns the raw page snapshot HTML.
 
 ## Business Rules
 
@@ -122,7 +122,7 @@ Theme Manager should clearly show:
 Theme authors should:
 
 - Keep `theme.json.version` semantic and updated
-- Avoid removing `pages/page.twig`
+- Avoid removing `pages/home.twig`
 - Test fallback behavior after changes
 - Document breaking changes in `README.md`
 
@@ -137,7 +137,7 @@ Theme authors should:
 - Verify target site exists and active
 
 3. Theme selected but not rendered:
-- Confirm `pages/page.twig` exists
+- Confirm `pages/home.twig` exists
 - Verify fallback theme/default theme manifests are valid
 - Clear cache: `php artisan optimize:clear`
 

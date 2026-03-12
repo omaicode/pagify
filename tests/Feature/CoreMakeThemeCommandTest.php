@@ -35,7 +35,7 @@ class CoreMakeThemeCommandTest extends TestCase
         $this->assertSame(0, $exitCode);
         $this->assertFileExists($this->themeRoot.'/theme.json');
         $this->assertFileExists($this->themeRoot.'/layouts/app.twig');
-        $this->assertFileExists($this->themeRoot.'/pages/page.twig');
+        $this->assertFileExists($this->themeRoot.'/pages/home.twig');
         $this->assertFileExists($this->themeRoot.'/README.md');
     }
 }

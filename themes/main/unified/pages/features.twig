@@ -1,0 +1,27 @@
+{% extends 'layouts/app.twig' %}
+
+{% block body %}
+<section class="pf-panel p-6 sm:p-10">
+    <span class="pf-badge">Features</span>
+    <h1 class="pf-heading mt-4 text-3xl font-extrabold sm:text-4xl">Everything needed for modern CMS operations</h1>
+    <p class="mt-4 max-w-3xl text-base leading-8 text-[var(--text-soft)]">Unified ships with common building blocks so teams can launch fast while keeping architecture boundaries clean.</p>
+    <div class="mt-6 grid gap-4 md:grid-cols-2">
+        <article class="rounded-2xl border border-[var(--line-soft)] bg-white p-5">
+            <h2 class="pf-heading text-xl font-bold">Visual Page Builder</h2>
+            <p class="mt-2 text-sm leading-7 text-[var(--text-soft)]">Create and publish landing pages with revision history and snapshot rendering.</p>
+        </article>
+        <article class="rounded-2xl border border-[var(--line-soft)] bg-white p-5">
+            <h2 class="pf-heading text-xl font-bold">Schema-driven Content</h2>
+            <p class="mt-2 text-sm leading-7 text-[var(--text-soft)]">Model content types with field-level controls and publish workflow.</p>
+        </article>
+        <article class="rounded-2xl border border-[var(--line-soft)] bg-white p-5">
+            <h2 class="pf-heading text-xl font-bold">Secure by default</h2>
+            <p class="mt-2 text-sm leading-7 text-[var(--text-soft)]">Role-based permissions, policy enforcement, and audit logs across admin actions.</p>
+        </article>
+        <article class="rounded-2xl border border-[var(--line-soft)] bg-white p-5">
+            <h2 class="pf-heading text-xl font-bold">Multi-site aware</h2>
+            <p class="mt-2 text-sm leading-7 text-[var(--text-soft)]">Site isolation and locale-aware middleware for tenant-safe operations.</p>
+        </article>
+    </div>
+</section>
+{% endblock %}
