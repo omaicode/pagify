@@ -9,8 +9,8 @@ return [
 
     'frontend_ui' => [
         'themes_base_path' => env('FRONTEND_THEMES_BASE_PATH', 'themes/main'),
-        'theme' => env('FRONTEND_THEME', 'default'),
-        'fallback_theme' => env('FRONTEND_THEME_FALLBACK', 'default'),
+        'theme' => env('FRONTEND_THEME', 'unified'),
+        'fallback_theme' => env('FRONTEND_THEME_FALLBACK', 'unified'),
     ],
 
     'locales' => [

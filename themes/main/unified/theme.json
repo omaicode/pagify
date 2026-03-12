@@ -1,8 +1,8 @@
 {
-  "slug": "default",
-  "name": "Default Main Theme",
+  "slug": "unified",
+  "name": "Unified",
   "version": "1.0.0",
-  "description": "Default frontend theme for Pagify public pages.",
+  "description": "Default theme for Pagify.",
   "author": "Pagify",
   "requires": {
     "php": ">=8.2",
