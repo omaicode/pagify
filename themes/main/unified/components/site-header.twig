@@ -1,0 +1,18 @@
+{% set current_path = request_path|default('')|trim('/') %}
+<header class="mx-auto w-full max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
+    <div class="rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-card)]/95 px-4 py-3 shadow-[0_14px_50px_-24px_var(--shadow-color)] backdrop-blur sm:px-6">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <a href="{{ site_url('home') }}" class="font-display text-lg font-extrabold tracking-tight text-[var(--brand-700)]">Pagify CMS</a>
+            <nav class="hidden flex-wrap items-center gap-3 text-sm font-semibold text-[var(--text-soft)] md:flex">
+                {% include 'components/nav-links.twig' with { current_path: current_path } only %}
+            </nav>
+            {% include 'components/theme-preset-switcher.twig' %}
+            <button type="button" class="pf-mobile-trigger inline-flex items-center justify-center rounded-full border border-[var(--line-soft)] bg-[var(--surface-card)] px-3 py-1.5 text-sm font-semibold text-[var(--text-main)] md:hidden" data-mobile-menu-toggle aria-expanded="false" aria-controls="mobile-main-nav">Menu</button>
+        </div>
+        <nav id="mobile-main-nav" class="pf-mobile-menu mt-4 border-t border-[var(--line-soft)] pt-3 md:hidden" data-mobile-menu>
+            <div class="grid gap-2 text-sm font-semibold text-[var(--text-soft)]">
+                {% include 'components/nav-links.twig' with { current_path: current_path } only %}
+            </div>
+        </nav>
+    </div>
+</header>

@@ -1,23 +1,38 @@
 {% extends 'layouts/app.twig' %}
 
 {% block body %}
-<section class="pf-panel p-6 sm:p-10">
+<section class="pf-panel pf-reveal p-6 sm:p-10" style="--delay: 0.02s;">
     <span class="pf-badge">About</span>
     <h1 class="pf-heading mt-4 text-3xl font-extrabold sm:text-4xl">A modular CMS focused on practical delivery</h1>
     <p class="mt-4 max-w-3xl text-base leading-8 text-[var(--text-soft)]">Pagify is designed for teams that need a clear separation between content operations and product delivery. The platform enforces architecture contracts around permissions, auditability, and multi-site safety while staying easy to customize.</p>
     <div class="mt-6 grid gap-4 md:grid-cols-3">
-        <article class="rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-muted)] p-5">
-            <h2 class="pf-heading text-xl font-bold">Mission</h2>
-            <p class="mt-2 text-sm leading-7 text-[var(--text-soft)]">Give teams a robust CMS backbone with minimal setup overhead.</p>
-        </article>
-        <article class="rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-muted)] p-5">
-            <h2 class="pf-heading text-xl font-bold">Approach</h2>
-            <p class="mt-2 text-sm leading-7 text-[var(--text-soft)]">Small, verifiable increments with testing and risk-aware rollout.</p>
-        </article>
-        <article class="rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-muted)] p-5">
-            <h2 class="pf-heading text-xl font-bold">Outcome</h2>
-            <p class="mt-2 text-sm leading-7 text-[var(--text-soft)]">Faster feature delivery with predictable operations in production.</p>
-        </article>
+        {% include 'components/info-card.twig' with {
+            title: 'Mission',
+            description: 'Give teams a robust CMS backbone with minimal setup overhead.',
+            card_class: 'rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-muted)] p-5',
+            delay: '0.1s'
+        } only %}
+        {% include 'components/info-card.twig' with {
+            title: 'Approach',
+            description: 'Small, verifiable increments with testing and risk-aware rollout.',
+            card_class: 'rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-muted)] p-5',
+            delay: '0.14s'
+        } only %}
+        {% include 'components/info-card.twig' with {
+            title: 'Outcome',
+            description: 'Faster feature delivery with predictable operations in production.',
+            card_class: 'rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-muted)] p-5',
+            delay: '0.18s'
+        } only %}
     </div>
+</section>
+
+<section class="mt-6 pf-panel pf-reveal p-6 sm:p-8" style="--delay: 0.22s;">
+    <h2 class="pf-heading text-2xl font-extrabold">Architecture principles in practice</h2>
+    <ul class="mt-4 grid gap-3 text-sm text-[var(--text-soft)] sm:text-base">
+        <li class="rounded-xl border border-[var(--line-soft)] bg-white px-4 py-3">Module boundaries stay clear: core services are reusable and public features remain decoupled.</li>
+        <li class="rounded-xl border border-[var(--line-soft)] bg-white px-4 py-3">Each change is test-first in spirit: small fixes, measurable outcomes, safer deployments.</li>
+        <li class="rounded-xl border border-[var(--line-soft)] bg-white px-4 py-3">Theme-first rendering gives fast content delivery while preserving page-builder compatibility.</li>
+    </ul>
 </section>
 {% endblock %}

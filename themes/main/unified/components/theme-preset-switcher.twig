@@ -1,0 +1,10 @@
+{% set presets = [
+    {'key': 'ocean', 'label': 'Ocean'},
+    {'key': 'forest', 'label': 'Forest'},
+    {'key': 'sunset', 'label': 'Sunset'},
+] %}
+<div class="flex items-center gap-2 rounded-full bg-[var(--surface-muted)] p-1">
+    {% for preset in presets %}
+        <button type="button" data-theme-preset="{{ preset.key }}" class="theme-toggle-btn rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-[0.08em]" aria-label="Switch to {{ preset.label }} theme">{{ preset.label }}</button>
+    {% endfor %}
+</div>

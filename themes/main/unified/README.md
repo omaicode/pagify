@@ -14,6 +14,18 @@ Unified is the default multipurpose frontend theme for Pagify CMS.
 - CSS: assets/css/main.css
 - JS: assets/js/theme-switcher.js
 
+## Reusable Components
+
+- Theme components live in `components/`
+- Current shared blocks:
+	- `site-header.twig`
+	- `site-footer.twig`
+	- `nav-links.twig`
+	- `theme-preset-switcher.twig`
+	- `info-card.twig`
+	- `stat-card.twig`
+	- `cta-panel.twig`
+
 ## Build Tailwind (No CDN)
 
 Run from `themes/main/unified`:

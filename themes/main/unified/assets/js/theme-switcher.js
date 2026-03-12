@@ -42,6 +42,24 @@
         });
     }
 
+    function bindMobileMenu() {
+        var trigger = document.querySelector('[data-mobile-menu-toggle]');
+        var menu = document.querySelector('[data-mobile-menu]');
+
+        if (!trigger || !menu) {
+            return;
+        }
+
+        trigger.addEventListener('click', function () {
+            var expanded = trigger.getAttribute('aria-expanded') === 'true';
+            var next = !expanded;
+
+            trigger.setAttribute('aria-expanded', next ? 'true' : 'false');
+            menu.classList.toggle('is-open', next);
+            trigger.textContent = next ? 'Close' : 'Menu';
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         var initial = DEFAULT_PRESET;
 
@@ -52,6 +70,7 @@
         }
 
         bindPresetSwitch();
+        bindMobileMenu();
         applyPreset(initial);
     });
 })();

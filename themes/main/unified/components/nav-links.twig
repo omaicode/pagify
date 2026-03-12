@@ -1,0 +1,13 @@
+{% set nav_items = [
+    {'slug': 'home', 'label': 'Home', 'href': site_url('home')},
+    {'slug': 'about', 'label': 'About', 'href': site_url('about')},
+    {'slug': 'features', 'label': 'Features', 'href': site_url('features')},
+    {'slug': 'docs', 'label': 'Docs', 'href': site_url('docs')},
+    {'slug': 'contact', 'label': 'Contact', 'href': site_url('contact')},
+] %}
+
+{% for item in nav_items %}
+    {% set is_home = item.slug == 'home' %}
+    {% set active = is_home ? (current_path in ['', 'home']) : (current_path == item.slug) %}
+    <a class="pf-nav-link {{ active ? 'is-active' : '' }}" href="{{ item.href }}" {{ active ? 'aria-current="page"' : '' }}>{{ item.label }}</a>
+{% endfor %}
