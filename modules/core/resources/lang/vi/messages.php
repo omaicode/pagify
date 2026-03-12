@@ -21,7 +21,6 @@ return [
         'admin_not_found' => 'Không tìm thấy quản trị viên.',
         'admin_delete_self_forbidden' => 'Bạn không thể tự xóa tài khoản quản trị của mình.',
         'theme_not_found' => 'Không tìm thấy giao diện.',
-        'theme_already_exists' => 'Giao diện đã tồn tại.',
         'theme_locked' => 'Giao diện mặc định đang bị khóa và không thể xóa.',
         'theme_in_use' => 'Giao diện đang được sử dụng ở :count site.',
         'theme_invalid' => 'Theme manifest không hợp lệ.',

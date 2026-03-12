@@ -44,15 +44,26 @@ class CoreThemeManagementTest extends TestCase
     {
         $admin = Admin::factory()->create();
 
+        $this->createThemeFixture('marketing', [
+            'name' => 'Marketing Theme',
+        ]);
+
         $this->actingAs($admin, 'web')
             ->getJson('/api/v1/admin/themes')
             ->assertForbidden();
 
         $this->actingAs($admin, 'web')
-            ->postJson('/api/v1/admin/themes', [
-                'slug' => 'marketing',
-                'name' => 'Marketing',
+            ->patchJson('/api/v1/admin/themes/marketing', [
+                'name' => 'Marketing Updated',
             ])
+            ->assertForbidden();
+
+        $this->actingAs($admin, 'web')
+            ->putJson('/api/v1/admin/themes/marketing/activate')
+            ->assertForbidden();
+
+        $this->actingAs($admin, 'web')
+            ->deleteJson('/api/v1/admin/themes/marketing')
             ->assertForbidden();
     }
 
@@ -61,18 +72,12 @@ class CoreThemeManagementTest extends TestCase
         $admin = $this->makeAdminWithPermissions(['core.theme.manage']);
         $site = Site::factory()->create();
 
-        $create = $this->actingAs($admin, 'web')
-            ->postJson('/api/v1/admin/themes', [
-                'slug' => 'marketing',
-                'name' => 'Marketing Theme',
-                'version' => '1.2.0',
-                'description' => 'Landing pages',
-                'author' => 'Team',
-            ]);
-
-        $create->assertStatus(201)
-            ->assertJsonPath('success', true)
-            ->assertJsonPath('data.slug', 'marketing');
+        $this->createThemeFixture('marketing', [
+            'name' => 'Marketing Theme',
+            'version' => '1.2.0',
+            'description' => 'Landing pages',
+            'author' => 'Team',
+        ]);
 
         $this->assertTrue(File::exists(base_path('storage/testing/themes/main/marketing/theme.json')));
 
@@ -140,5 +145,24 @@ class CoreThemeManagementTest extends TestCase
         }
 
         return $admin;
+    }
+
+    /**
+     * @param array<string, mixed> $overrides
+     */
+    private function createThemeFixture(string $slug, array $overrides = []): void
+    {
+        $themePath = base_path("storage/testing/themes/main/{$slug}");
+        File::ensureDirectoryExists($themePath);
+
+        $manifest = array_merge([
+            'slug' => $slug,
+            'name' => ucfirst($slug),
+            'version' => '1.0.0',
+            'description' => '',
+            'author' => '',
+        ], $overrides);
+
+        File::put("{$themePath}/theme.json", json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     }
 }

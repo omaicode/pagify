@@ -10,6 +10,7 @@ use Pagify\Core\Events\EntryPublished;
 use Pagify\Core\Contracts\CoreHookSubscriber;
 use Pagify\Core\Console\Commands\CleanupAuditLogsCommand;
 use Pagify\Core\Console\Commands\MakePluginCommand;
+use Pagify\Core\Console\Commands\MakeThemeCommand;
 use Pagify\Core\Models\Admin;
 use Pagify\Core\Models\AuditLog;
 use Pagify\Core\Models\Setting;
@@ -217,6 +218,7 @@ class CoreServiceProvider extends ServiceProvider
 			$this->commands([
 				CleanupAuditLogsCommand::class,
 				MakePluginCommand::class,
+				MakeThemeCommand::class,
 			]);
 		}
 	}

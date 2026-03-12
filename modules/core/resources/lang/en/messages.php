@@ -21,7 +21,6 @@ return [
         'admin_not_found' => 'Administrator not found.',
         'admin_delete_self_forbidden' => 'You cannot delete your own administrator account.',
         'theme_not_found' => 'Theme not found.',
-        'theme_already_exists' => 'Theme already exists.',
         'theme_locked' => 'Default theme is locked and cannot be deleted.',
         'theme_in_use' => 'Theme is currently used in :count site(s).',
         'theme_invalid' => 'Theme manifest is invalid.',

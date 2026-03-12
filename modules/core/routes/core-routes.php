@@ -118,7 +118,6 @@ Route::prefix('api/v1/'.config('app.admin_url_prefix'))
         Route::get('/plugins/extensions', [AdminPluginController::class, 'extensions'])->name('plugins.extensions');
 
         Route::get('/themes', [AdminThemeController::class, 'index'])->name('themes.index');
-        Route::post('/themes', [AdminThemeController::class, 'store'])->name('themes.store');
         Route::patch('/themes/{theme}', [AdminThemeController::class, 'update'])->name('themes.update');
         Route::put('/themes/{theme}/activate', [AdminThemeController::class, 'activate'])->name('themes.activate');
         Route::delete('/themes/{theme}', [AdminThemeController::class, 'destroy'])->name('themes.destroy');

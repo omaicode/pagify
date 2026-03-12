@@ -34,20 +34,17 @@ const busyBySlug = ref({})
 const errorMessage = ref('')
 const noticeMessage = ref('')
 const themes = ref([])
-const creating = ref(false)
 const searchTerm = ref('')
 const statusFilter = ref('all')
 const selectedSiteId = ref(currentSiteId.value ? String(currentSiteId.value) : '')
-
-const createForm = ref({
-  slug: '',
+const managingThemeSlug = ref('')
+const editingThemeSlug = ref('')
+const editForm = ref({
   name: '',
-  version: '1.0.0',
   description: '',
   author: '',
+  version: '',
 })
-
-const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 const filteredThemes = computed(() => {
   const keyword = searchTerm.value.trim().toLowerCase()
@@ -85,12 +82,6 @@ const filteredThemes = computed(() => {
   })
 })
 
-const canCreate = computed(() => {
-  return slugPattern.test(createForm.value.slug)
-    && String(createForm.value.name ?? '').trim() !== ''
-    && !creating.value
-})
-
 const updateRoute = (slug) => props.apiRoutes.updateBase.replace('__THEME__', slug)
 const activateRoute = (slug) => props.apiRoutes.activateBase.replace('__THEME__', slug)
 const deleteRoute = (slug) => props.apiRoutes.deleteBase.replace('__THEME__', slug)
@@ -99,6 +90,35 @@ const setBusy = (slug, value) => {
   busyBySlug.value = {
     ...busyBySlug.value,
     [slug]: value,
+  }
+}
+
+const openManageMenu = (slug) => {
+  managingThemeSlug.value = managingThemeSlug.value === slug ? '' : slug
+}
+
+const closeManageMenu = () => {
+  managingThemeSlug.value = ''
+}
+
+const startEditProperties = (theme) => {
+  editingThemeSlug.value = theme.slug
+  editForm.value = {
+    name: theme.name ?? '',
+    description: theme.description ?? '',
+    author: theme.author ?? '',
+    version: theme.version ?? '',
+  }
+  closeManageMenu()
+}
+
+const cancelEditProperties = () => {
+  editingThemeSlug.value = ''
+  editForm.value = {
+    name: '',
+    description: '',
+    author: '',
+    version: '',
   }
 }
 
@@ -144,37 +164,6 @@ const loadThemes = async () => {
   }
 }
 
-const createTheme = async () => {
-  if (!canCreate.value) {
-    return
-  }
-
-  creating.value = true
-  errorMessage.value = ''
-  noticeMessage.value = ''
-
-  try {
-    await axios.post(props.apiRoutes.store, createForm.value)
-    noticeMessage.value = label('themes_created', 'Theme created.')
-    toast.success(noticeMessage.value)
-
-    createForm.value = {
-      slug: '',
-      name: '',
-      version: '1.0.0',
-      description: '',
-      author: '',
-    }
-
-    await loadThemes()
-  } catch (error) {
-    errorMessage.value = resolveActionError(error, label('themes_failed_create', 'Failed to create theme.'))
-    toast.error(errorMessage.value)
-  } finally {
-    creating.value = false
-  }
-}
-
 const activateTheme = async (theme) => {
   setBusy(theme.slug, true)
   errorMessage.value = ''
@@ -196,21 +185,22 @@ const activateTheme = async (theme) => {
   }
 }
 
-const saveTheme = async (theme) => {
+const saveThemeProperties = async (theme) => {
   setBusy(theme.slug, true)
   errorMessage.value = ''
   noticeMessage.value = ''
 
   try {
     await axios.patch(updateRoute(theme.slug), {
-      name: theme.name,
-      version: theme.version,
-      description: theme.description,
-      author: theme.author,
+      name: editForm.value.name,
+      version: editForm.value.version,
+      description: editForm.value.description,
+      author: editForm.value.author,
     })
 
     noticeMessage.value = label('themes_updated', 'Theme updated.')
     toast.success(noticeMessage.value)
+    cancelEditProperties()
     await loadThemes()
   } catch (error) {
     errorMessage.value = resolveActionError(error, label('themes_failed_update', 'Failed to update theme.'))
@@ -224,6 +214,8 @@ const removeTheme = async (theme) => {
   if (theme.can_delete !== true) {
     return
   }
+
+  closeManageMenu()
 
   const result = await Swal.fire({
     title: label('delete', 'Delete'),
@@ -285,30 +277,6 @@ onMounted(async () => {
       <UiAlert v-if="noticeMessage" tone="success">{{ noticeMessage }}</UiAlert>
 
       <UiCard tag="section" class="p-4 shadow-sm">
-        <h2 class="text-base font-semibold text-slate-900">{{ label('themes_create_title', 'Create theme') }}</h2>
-        <p class="mt-1 text-sm text-slate-600">{{ label('themes_create_subtitle', 'Create a new theme skeleton under themes/main/{THEME_NAME}.') }}</p>
-
-        <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-          <UiInput v-model="createForm.slug" :placeholder="label('slug', 'Slug')" />
-          <UiInput v-model="createForm.name" :placeholder="label('name', 'Name')" />
-          <UiInput v-model="createForm.version" :placeholder="label('themes_version', 'Version')" />
-          <UiInput v-model="createForm.author" :placeholder="label('themes_author', 'Author')" />
-          <UiInput v-model="createForm.description" :placeholder="label('description', 'Description')" class="md:col-span-2" />
-        </div>
-
-        <p v-if="createForm.slug && !slugPattern.test(createForm.slug)" class="mt-2 text-xs text-amber-700">
-          {{ label('themes_slug_rule', 'Slug must use lowercase letters, numbers, and single hyphens.') }}
-        </p>
-
-        <div class="mt-4 flex flex-wrap items-center gap-2">
-          <UiButton type="button" tone="primary" :disabled="!canCreate" @click="createTheme">
-            {{ creating ? label('loading', 'Loading...') : label('themes_create', 'Create theme') }}
-          </UiButton>
-          <p class="text-xs text-slate-500">{{ label('themes_manifest_required', 'Each theme must include a valid theme.json manifest.') }}</p>
-        </div>
-      </UiCard>
-
-      <UiCard tag="section" class="p-4 shadow-sm">
         <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
           <UiInput v-model="searchTerm" :placeholder="label('themes_search_placeholder', 'Search themes...')" class="md:col-span-2" />
 
@@ -338,64 +306,111 @@ onMounted(async () => {
         <div v-else-if="filteredThemes.length === 0" class="p-4 text-sm text-slate-500">{{ label('themes_empty', 'No themes found.') }}</div>
 
         <ul v-else class="divide-y divide-slate-100">
-          <li v-for="theme in filteredThemes" :key="theme.slug" class="space-y-3 px-4 py-4">
-            <div class="flex flex-wrap items-center gap-2">
-              <p class="font-medium text-slate-900">{{ theme.slug }}</p>
-              <UiStatusBadge v-if="theme.is_default" tone="neutral">{{ label('themes_default', 'Default') }}</UiStatusBadge>
-              <UiStatusBadge v-if="theme.is_active_for_current_site" tone="success">{{ label('themes_active', 'Active for current site') }}</UiStatusBadge>
-              <UiStatusBadge v-if="Number(theme.usage_count ?? 0) > 0" tone="neutral">
-                {{ label('themes_in_use', 'In use') }}: {{ theme.usage_count }}
-              </UiStatusBadge>
-              <UiStatusBadge :tone="theme.is_valid ? 'success' : 'warning'">
-                {{ theme.is_valid ? label('themes_valid', 'Valid') : label('themes_invalid', 'Invalid') }}
-              </UiStatusBadge>
-            </div>
+          <li
+            v-for="theme in filteredThemes"
+            :key="theme.slug"
+            class="px-4 py-4"
+          >
+            <div class="flex items-start gap-4">
+              <div class="h-16 w-24 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                <img
+                  v-if="theme.thumbnail_url"
+                  :src="theme.thumbnail_url"
+                  :alt="theme.name"
+                  class="h-full w-full object-cover"
+                >
+                <div v-else class="flex h-full w-full items-center justify-center text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  {{ (theme.slug || 'na').slice(0, 3) }}
+                </div>
+              </div>
 
-            <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <UiInput v-model="theme.name" :placeholder="label('name', 'Name')" />
-              <UiInput v-model="theme.version" :placeholder="label('themes_version', 'Version')" />
-              <UiInput v-model="theme.author" :placeholder="label('themes_author', 'Author')" />
-              <UiInput v-model="theme.description" :placeholder="label('description', 'Description')" />
-            </div>
+              <div class="min-w-0 flex-1 space-y-2">
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class="truncate text-base font-semibold text-slate-900">{{ theme.name || theme.slug }}</h3>
+                  <UiStatusBadge v-if="theme.is_default" tone="neutral">{{ label('themes_default', 'Default') }}</UiStatusBadge>
+                  <UiStatusBadge v-if="theme.is_active_for_current_site" tone="success">{{ label('themes_active', 'Active for current site') }}</UiStatusBadge>
+                  <UiStatusBadge v-if="Number(theme.usage_count ?? 0) > 0" tone="neutral">{{ label('themes_in_use', 'In use') }}: {{ theme.usage_count }}</UiStatusBadge>
+                  <UiStatusBadge :tone="theme.is_valid ? 'success' : 'warning'">{{ theme.is_valid ? label('themes_valid', 'Valid') : label('themes_invalid', 'Invalid') }}</UiStatusBadge>
+                </div>
 
-            <div v-if="(theme.issues ?? []).length > 0" class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-              <p class="font-medium">{{ label('themes_manifest_issues', 'Manifest issues') }}</p>
-              <ul class="list-disc pl-5">
-                <li v-for="issue in theme.issues" :key="issue">{{ issue }}</li>
-              </ul>
-            </div>
+                <p class="text-sm text-slate-600">{{ theme.description || label('themes_no_description', 'No description.') }}</p>
 
-            <div v-if="(theme.active_sites ?? []).length > 0" class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
-              <p class="font-medium text-slate-800">{{ label('themes_active_sites', 'Active on sites') }}</p>
-              <p class="mt-1">{{ formatActiveSites(theme) }}</p>
-            </div>
+                <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                  <span>{{ label('themes_meta_author', 'Author') }}: {{ theme.author || '-' }}</span>
+                  <span>{{ label('themes_meta_version', 'Version') }}: {{ theme.version || '-' }}</span>
+                  <span>{{ label('slug', 'Slug') }}: {{ theme.slug }}</span>
+                </div>
 
-            <p v-if="theme.can_delete !== true" class="text-xs text-slate-500">
-              {{ theme.is_default
-                ? label('themes_delete_blocked_default', 'Default theme cannot be deleted.')
-                : label('themes_delete_blocked_in_use', 'Theme cannot be deleted while in use.')
-              }}
-            </p>
+                <div v-if="(theme.active_sites ?? []).length > 0" class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+                  <p class="font-medium text-slate-800">{{ label('themes_active_sites', 'Active on sites') }}</p>
+                  <p class="mt-1">{{ formatActiveSites(theme) }}</p>
+                </div>
 
-            <div class="flex flex-wrap gap-2">
-              <UiButton type="button" tone="neutral" :disabled="busyBySlug[theme.slug]" @click="saveTheme(theme)">
-                {{ busyBySlug[theme.slug] ? label('loading', 'Loading...') : label('update', 'Update') }}
-              </UiButton>
-              <UiButton type="button" tone="primary" :disabled="busyBySlug[theme.slug] || !theme.is_valid" @click="activateTheme(theme)">
-                {{ label('themes_activate', 'Activate') }}
-              </UiButton>
-              <UiButton
-                type="button"
-                tone="danger"
-                :disabled="busyBySlug[theme.slug] || theme.can_delete !== true"
-                @click="removeTheme(theme)"
-              >
-                {{ label('delete', 'Delete') }}
-              </UiButton>
+                <div v-if="editingThemeSlug === theme.slug" class="grid grid-cols-1 gap-2 rounded-lg border border-slate-200 p-3 md:grid-cols-2">
+                  <UiInput v-model="editForm.name" :placeholder="label('name', 'Name')" />
+                  <UiInput v-model="editForm.version" :placeholder="label('themes_version', 'Version')" />
+                  <UiInput v-model="editForm.author" :placeholder="label('themes_author', 'Author')" />
+                  <UiInput v-model="editForm.description" :placeholder="label('description', 'Description')" class="md:col-span-2" />
+
+                  <div class="md:col-span-2 flex flex-wrap gap-2">
+                    <UiButton type="button" tone="primary" :disabled="busyBySlug[theme.slug]" @click="saveThemeProperties(theme)">
+                      {{ busyBySlug[theme.slug] ? label('loading', 'Loading...') : label('themes_save_properties', 'Save properties') }}
+                    </UiButton>
+                    <UiButton type="button" tone="neutral" :disabled="busyBySlug[theme.slug]" @click="cancelEditProperties">
+                      {{ label('cancel', 'Cancel') }}
+                    </UiButton>
+                  </div>
+                </div>
+              </div>
+
+              <div class="relative shrink-0">
+                <div class="flex items-center gap-2">
+                  <UiButton
+                    type="button"
+                    tone="primary"
+                    :disabled="busyBySlug[theme.slug] || !theme.is_valid"
+                    @click="activateTheme(theme)"
+                  >
+                    {{ label('themes_activate', 'Activate') }}
+                  </UiButton>
+
+                  <UiButton
+                    type="button"
+                    tone="neutral"
+                    :disabled="busyBySlug[theme.slug]"
+                    @click="openManageMenu(theme.slug)"
+                  >
+                    {{ label('themes_manage', 'Manage') }}
+                  </UiButton>
+                </div>
+
+                <div
+                  v-if="managingThemeSlug === theme.slug"
+                  class="absolute right-0 z-20 mt-2 w-44 rounded-lg border border-slate-200 bg-white p-1 shadow-lg"
+                >
+                  <button
+                    type="button"
+                    class="block w-full rounded px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
+                    @click="startEditProperties(theme)"
+                  >
+                    {{ label('themes_manage_edit_properties', 'Edit Properties') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="block w-full rounded px-3 py-2 text-left text-sm text-rose-700 hover:bg-rose-50 disabled:text-slate-400"
+                    :disabled="theme.can_delete !== true"
+                    @click="removeTheme(theme)"
+                  >
+                    {{ label('themes_manage_delete', 'Delete') }}
+                  </button>
+                </div>
+              </div>
             </div>
           </li>
         </ul>
       </UiCard>
+
+      <div v-if="managingThemeSlug" class="fixed inset-0 z-10" @click="closeManageMenu" />
     </div>
   </AdminLayout>
 </template>

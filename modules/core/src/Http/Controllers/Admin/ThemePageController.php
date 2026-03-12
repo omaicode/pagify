@@ -21,7 +21,6 @@ class ThemePageController extends Controller
         return Inertia::render('Admin/Themes/Index', [
             'apiRoutes' => [
                 'index' => route('core.api.v1.admin.themes.index'),
-                'store' => route('core.api.v1.admin.themes.store'),
                 'updateBase' => route('core.api.v1.admin.themes.update', ['theme' => '__THEME__']),
                 'activateBase' => route('core.api.v1.admin.themes.activate', ['theme' => '__THEME__']),
                 'deleteBase' => route('core.api.v1.admin.themes.destroy', ['theme' => '__THEME__']),
