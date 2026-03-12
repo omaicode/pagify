@@ -14,6 +14,7 @@ use Pagify\Core\Http\Controllers\Admin\PermissionPageController;
 use Pagify\Core\Http\Controllers\Admin\ProfilePageController;
 use Pagify\Core\Http\Controllers\Admin\SettingsPageController;
 use Pagify\Core\Http\Controllers\Admin\ThemePageController;
+use Pagify\Core\Http\Controllers\FrontendFallbackPageController;
 use Pagify\Core\Http\Controllers\FrontendThemeAssetController;
 use Pagify\Core\Http\Controllers\Api\AdminGroupController;
 use Pagify\Core\Http\Controllers\Api\AdminManagerController;
@@ -128,3 +129,7 @@ Route::prefix('api/v1/'.config('app.admin_url_prefix'))
         Route::put('/themes/{theme}/activate', [AdminThemeController::class, 'activate'])->name('themes.activate');
         Route::delete('/themes/{theme}', [AdminThemeController::class, 'destroy'])->name('themes.destroy');
     });
+
+Route::fallback(FrontendFallbackPageController::class)
+    ->middleware(['web', ResolveSite::class, SetLocaleFromSite::class])
+    ->name('core.frontend.fallback');
