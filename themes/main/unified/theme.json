@@ -2,8 +2,18 @@
   "slug": "unified",
   "name": "Unified",
   "version": "1.0.0",
-  "description": "Default theme for Pagify.",
+  "description": "Multipurpose default theme for introducing Pagify CMS.",
   "author": "Pagify",
+  "design": {
+    "color_presets": [
+      "ocean",
+      "forest",
+      "sunset"
+    ],
+    "default_preset": "ocean",
+    "responsive": true,
+    "style": "tailwind"
+  },
   "render": {
     "engine": "twig"
   },

@@ -142,9 +142,16 @@ php artisan db:seed --class="Pagify\\Core\\Database\\Seeders\\CoreDatabaseSeeder
 php artisan db:seed --class="Pagify\\Content\\Database\\Seeders\\ContentDatabaseSeeder"
 ```
 
+- Seed default Unified pages for public frontend demo:
+
+```bash
+php artisan db:seed --class="Pagify\\PageBuilder\\Database\\Seeders\\PageBuilderDatabaseSeeder"
+```
+
 - This seed creates/updates demo content types including:
 	- `article`
 	- `qa-visual-builder` (covers all field types for visual schema builder QA)
+	- `docs-page` (documentation pages for Unified default theme)
 - If config/view cache causes stale behavior, clear Laravel caches:
 
 ```bash

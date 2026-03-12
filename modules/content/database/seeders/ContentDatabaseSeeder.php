@@ -179,6 +179,139 @@ class ContentDatabaseSeeder extends Seeder
         }
 
         $this->seedVisualBuilderQaDemoType($site?->id, $contentType->slug);
+        $this->seedDocsContent($site?->id);
+    }
+
+    private function seedDocsContent(?int $siteId): void
+    {
+        $docsFields = [
+            [
+                'key' => 'title',
+                'label' => 'Title',
+                'field_type' => 'text',
+                'config' => [],
+                'validation' => ['rules' => ['required', 'string', 'max:180']],
+                'conditional' => [],
+                'sort_order' => 0,
+                'is_required' => true,
+                'is_localized' => true,
+            ],
+            [
+                'key' => 'summary',
+                'label' => 'Summary',
+                'field_type' => 'richtext',
+                'config' => [],
+                'validation' => [],
+                'conditional' => [],
+                'sort_order' => 1,
+                'is_required' => false,
+                'is_localized' => true,
+            ],
+            [
+                'key' => 'body',
+                'label' => 'Body',
+                'field_type' => 'richtext',
+                'config' => [],
+                'validation' => [],
+                'conditional' => [],
+                'sort_order' => 2,
+                'is_required' => false,
+                'is_localized' => true,
+            ],
+            [
+                'key' => 'category',
+                'label' => 'Category',
+                'field_type' => 'select',
+                'config' => [
+                    'options' => ['quickstart', 'architecture', 'operations'],
+                ],
+                'validation' => ['rules' => ['required']],
+                'conditional' => [],
+                'sort_order' => 3,
+                'is_required' => true,
+                'is_localized' => false,
+            ],
+        ];
+
+        $docsType = ContentType::withoutGlobalScopes()->updateOrCreate(
+            [
+                'site_id' => $siteId,
+                'slug' => 'docs-page',
+            ],
+            [
+                'name' => 'Docs Page',
+                'description' => 'Seeded documentation content type for the Unified default theme.',
+                'is_active' => true,
+                'schema_json' => [
+                    'version' => 1,
+                    'fields' => $docsFields,
+                ],
+            ]
+        );
+
+        foreach ($docsFields as $field) {
+            $docsType->fields()->updateOrCreate(
+                ['key' => $field['key']],
+                [
+                    'label' => $field['label'],
+                    'field_type' => $field['field_type'],
+                    'config_json' => $field['config'],
+                    'validation_json' => $field['validation'],
+                    'conditional_json' => $field['conditional'],
+                    'sort_order' => $field['sort_order'],
+                    'is_required' => $field['is_required'],
+                    'is_localized' => $field['is_localized'],
+                ]
+            );
+        }
+
+        $docsEntries = [
+            [
+                'slug' => 'quickstart',
+                'category' => 'quickstart',
+                'title' => 'Quickstart Pagify CMS',
+                'summary' => 'Install dependencies, migrate, seed, and publish your first page.',
+                'body' => 'Run composer setup, verify site context, then publish pages from Page Builder.',
+            ],
+            [
+                'slug' => 'architecture-overview',
+                'category' => 'architecture',
+                'title' => 'Architecture Overview',
+                'summary' => 'Understand module boundaries and domain responsibilities.',
+                'body' => 'Core manages permissions and site context. Content handles schema-driven data. Page Builder handles visual pages.',
+            ],
+            [
+                'slug' => 'operations-checklist',
+                'category' => 'operations',
+                'title' => 'Operations Checklist',
+                'summary' => 'Baseline runbook for queue workers, caching, and safe deploy checks.',
+                'body' => 'Monitor queue workers, clear caches after theme updates, and run focused module tests before release.',
+            ],
+        ];
+
+        foreach ($docsEntries as $entry) {
+            ContentEntry::withoutGlobalScopes()->updateOrCreate(
+                [
+                    'site_id' => $siteId,
+                    'content_type_id' => $docsType->id,
+                    'slug' => $entry['slug'],
+                ],
+                [
+                    'status' => 'published',
+                    'published_at' => Carbon::now()->subHours(2),
+                    'unpublished_at' => null,
+                    'scheduled_publish_at' => null,
+                    'scheduled_unpublish_at' => null,
+                    'data_json' => [
+                        'title' => $entry['title'],
+                        'summary' => $entry['summary'],
+                        'body' => $entry['body'],
+                        'category' => $entry['category'],
+                    ],
+                    'schedule_metadata_json' => [],
+                ]
+            );
+        }
     }
 
     private function seedVisualBuilderQaDemoType(?int $siteId, string $articleTypeSlug): void
