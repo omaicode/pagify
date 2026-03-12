@@ -2,6 +2,8 @@
 
 namespace Pagify\PageBuilder\Http\Controllers\Admin;
 
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -9,6 +11,9 @@ use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
 use Pagify\Core\Services\AuditLogger;
+use Pagify\Core\Services\FrontendThemeManagerService;
+use Pagify\Core\Services\FrontendThemeTwigEngine;
+use Pagify\Core\Services\ThemeHelpers\AssetThemeHelper;
 use Pagify\PageBuilder\Http\Requests\Admin\StorePageRequest;
 use Pagify\PageBuilder\Http\Requests\Admin\UpdatePageRequest;
 use Pagify\PageBuilder\Models\Page;
@@ -25,6 +30,10 @@ class PageController extends Controller
 		private readonly PageService $pageService,
 		private readonly BlockRegistryService $blockRegistry,
 		private readonly AuditLogger $auditLogger,
+		private readonly FrontendThemeManagerService $themes,
+		private readonly FrontendThemeTwigEngine $twigEngine,
+		private readonly AssetThemeHelper $assetTheme,
+		private readonly Filesystem $files,
 	) {
 	}
 
@@ -65,10 +74,7 @@ class PageController extends Controller
 		$templateLayout = is_string($templateSlug) ? $this->pageService->resolveTemplate($templateSlug) : null;
 
 		return Inertia::render('PageBuilder/Pages/Create', [
-			'editor' => [
-				'blocks' => $this->blockRegistry->all(),
-				'breakpoints' => array_values((array) config('page-builder.breakpoints', ['desktop', 'tablet', 'mobile'])),
-			],
+			'editor' => $this->editorPayload(),
 			'startup' => [
 				'template_slug' => $templateSlug,
 				'layout' => $templateLayout,
@@ -119,22 +125,587 @@ class PageController extends Controller
 				'seo_meta' => (array) ($page->seo_meta_json ?? []),
 				'published_at' => $page->published_at?->toDateTimeString(),
 			],
-			'editor' => [
-				'blocks' => $this->blockRegistry->all(),
-				'breakpoints' => array_values((array) config('page-builder.breakpoints', ['desktop', 'tablet', 'mobile'])),
-			],
+			'editor' => $this->editorPayload($page),
 			'templates' => $this->templatePayload(),
 			'sections' => $this->sectionPayload(),
 			'routes' => [
 				'update' => route('page-builder.admin.pages.update', $page),
 				'destroy' => route('page-builder.admin.pages.destroy', $page),
 				'publish' => route('page-builder.admin.pages.publish', $page),
-				'revisions' => route('page-builder.admin.pages.revisions.index', $page),
 				'index' => route('page-builder.admin.pages.index'),
 				'storeSectionTemplate' => route('page-builder.admin.library.sections.store'),
 				'storePageTemplate' => route('page-builder.admin.library.templates.store'),
 			],
 		]);
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	private function editorPayload(?Page $page = null): array
+	{
+		$allBlocks = $this->blockRegistry->all();
+		$editorConfig = (array) config('page-builder.editor', []);
+		$simplifiedMode = (bool) ($editorConfig['simplified_mode'] ?? true);
+		$primaryBlockKeys = array_values(array_filter(array_map(
+			static fn (mixed $key): string => trim((string) $key),
+			(array) ($editorConfig['primary_blocks'] ?? []),
+		), static fn (string $key): bool => $key !== ''));
+
+		$blocks = $this->sortBlocksForEditor($allBlocks, $primaryBlockKeys);
+		$activeThemeSlug = $this->themes->activeThemeForCurrentSite();
+		$layouts = $this->activeThemeLayouts($activeThemeSlug);
+		$canvasStyles = [];
+
+		if ((bool) ($editorConfig['load_active_theme_styles'] ?? true)) {
+			$canvasStyles[] = $this->assetTheme->url('css/main.css', $activeThemeSlug);
+		}
+
+		$previewUrl = $page !== null
+			? route('page-builder.admin.pages.preview', $page)
+			: null;
+
+		return [
+			'blocks' => $blocks,
+			'layouts' => $layouts,
+			'default_layout' => $layouts[0]['path'] ?? '',
+			'breakpoints' => array_values((array) config('page-builder.breakpoints', ['desktop', 'tablet', 'mobile'])),
+			'simple_mode' => $simplifiedMode,
+			'primary_block_keys' => $primaryBlockKeys,
+			'active_theme' => $activeThemeSlug,
+			'canvas_styles' => $canvasStyles,
+			'preview_url' => $previewUrl,
+		];
+	}
+
+	public function preview(Page $page): HttpResponse
+	{
+		$this->authorize('view', $page);
+
+		$layout = (array) ($page->layout_json ?? []);
+		$grapes = (array) ($layout['grapes'] ?? []);
+		$grapesHtml = is_string($grapes['html'] ?? null) ? (string) $grapes['html'] : '';
+		$grapesCss = is_string($grapes['css'] ?? null) ? trim((string) $grapes['css']) : '';
+
+		$content = $this->extractContentSlotHtml($grapesHtml);
+
+		if ($content === '') {
+			$content = trim($grapesHtml);
+		}
+
+		if ($content === '' && is_string($page->snapshot_html) && trim($page->snapshot_html) !== '') {
+			$snapshotBody = $this->extractBodyFromHtml((string) $page->snapshot_html);
+			$snapshotSource = $snapshotBody !== '' ? $snapshotBody : (string) $page->snapshot_html;
+			$slotContent = $this->extractContentSlotHtml($snapshotSource);
+
+			$content = $slotContent !== '' ? $slotContent : trim($snapshotSource);
+		}
+
+		if ($content === '') {
+			$content = '<section class="pbx-section"><h2 class="pbx-subheading">Preview is empty</h2><p class="pbx-text">Save content in editor, then open live preview again.</p></section>';
+		}
+
+		$seo = (array) ($page->seo_meta_json ?? []);
+		$title = e((string) ($seo['title'] ?? $page->title));
+		$description = e((string) ($seo['description'] ?? ''));
+		$canonical = e((string) ($seo['canonical_url'] ?? ''));
+		$ogImage = e((string) ($seo['og_image'] ?? ''));
+		$jsonLd = $seo['json_ld'] ?? null;
+		$jsonLdString = is_array($jsonLd) ? json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
+
+		$headParts = [
+			"<title>{$title}</title>",
+			$description !== '' ? "<meta name=\"description\" content=\"{$description}\">" : '',
+			$canonical !== '' ? "<link rel=\"canonical\" href=\"{$canonical}\">" : '',
+			$ogImage !== '' ? "<meta property=\"og:image\" content=\"{$ogImage}\">" : '',
+			is_string($jsonLdString) ? '<script type="application/ld+json">' . $jsonLdString . '</script>' : '',
+			$grapesCss !== '' ? '<style>' . $grapesCss . '</style>' : '',
+			'<meta name="robots" content="noindex,nofollow">',
+		];
+
+		$head = implode("\n", array_filter($headParts));
+
+		$rendered = $this->twigEngine->render($this->themes->viewPathsForCurrentSite(), 'pages/home.twig', [
+			'page' => $page,
+			'head' => $head,
+			'content' => $content,
+			'locale' => app()->getLocale(),
+			'request_path' => $page->slug,
+			'admin_prefix' => trim((string) config('app.admin_url_prefix', 'admin'), '/'),
+		]);
+
+		if (is_string($rendered) && trim($rendered) !== '') {
+			return response($rendered, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
+		}
+
+		return response($content, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
+	}
+
+	/**
+	 * @param array<int, array<string, mixed>> $blocks
+	 * @param array<int, string> $primaryBlockKeys
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function sortBlocksForEditor(array $blocks, array $primaryBlockKeys): array
+	{
+		if ($primaryBlockKeys === []) {
+			return $blocks;
+		}
+
+		$priority = array_flip($primaryBlockKeys);
+		$sorted = $blocks;
+
+		usort($sorted, static function (array $left, array $right) use ($priority): int {
+			$leftKey = (string) ($left['key'] ?? '');
+			$rightKey = (string) ($right['key'] ?? '');
+			$leftRank = array_key_exists($leftKey, $priority) ? (int) $priority[$leftKey] : PHP_INT_MAX;
+			$rightRank = array_key_exists($rightKey, $priority) ? (int) $priority[$rightKey] : PHP_INT_MAX;
+
+			if ($leftRank === $rightRank) {
+				return strcmp((string) ($left['label'] ?? $leftKey), (string) ($right['label'] ?? $rightKey));
+			}
+
+			return $leftRank <=> $rightRank;
+		});
+
+		return $sorted;
+	}
+
+	/**
+	 * @return array<int, array{path: string, label: string, editor_html: string, html_attributes: array<string, string>, body_attributes: array<string, string>, preview_styles: array<int, array<string, mixed>>, preview_scripts: array<int, array<string, mixed>>}>
+	 */
+	private function activeThemeLayouts(string $activeThemeSlug): array
+	{
+		$themesBasePath = trim((string) config('core.frontend_ui.themes_base_path', 'themes/main'), '/');
+		$themePath = base_path($themesBasePath . '/' . $activeThemeSlug);
+		$layoutDefinitions = $this->manifestLayoutDefinitions($themePath);
+
+		$layoutFiles = collect($layoutDefinitions)
+			->map(function (array $layoutDefinition) use ($themePath): array {
+				$template = (string) ($layoutDefinition['path'] ?? 'layouts/app.twig');
+				$label = (string) ($layoutDefinition['label'] ?? basename($template));
+				$absoluteTemplatePath = $themePath . '/' . str_replace('/', DIRECTORY_SEPARATOR, $template);
+				$raw = $this->files->exists($absoluteTemplatePath)
+					? $this->files->get($absoluteTemplatePath)
+					: '';
+				$renderedLayoutPayload = $this->renderLayoutForEditor($themePath, $template, $label);
+
+				return [
+					'path' => $template,
+					'label' => $label,
+					'editor_html' => $renderedLayoutPayload['editor_html'] ?? $this->editorLayoutHtmlFromTwig($raw, $label),
+					'html_attributes' => (array) ($renderedLayoutPayload['html_attributes'] ?? []),
+					'body_attributes' => (array) ($renderedLayoutPayload['body_attributes'] ?? []),
+					'preview_styles' => (array) ($renderedLayoutPayload['preview_styles'] ?? []),
+					'preview_scripts' => (array) ($renderedLayoutPayload['preview_scripts'] ?? []),
+				];
+			})
+			->sortBy('label')
+			->values()
+			->all();
+
+		if ($layoutFiles === []) {
+			return [
+				[
+					'path' => 'layouts/app.twig',
+					'label' => 'App layout',
+					'editor_html' => $this->defaultEditorLayoutHtml('app.twig'),
+					'html_attributes' => [],
+					'body_attributes' => [],
+					'preview_styles' => [],
+					'preview_scripts' => [],
+				],
+			];
+		}
+
+		return $layoutFiles;
+	}
+
+	/**
+	 * @return array<int, array{path: string, label: string}>
+	 */
+	private function manifestLayoutDefinitions(string $themePath): array
+	{
+		$manifestPath = $themePath . '/theme.json';
+
+		if (! $this->files->exists($manifestPath)) {
+			return [];
+		}
+
+		$decoded = json_decode((string) $this->files->get($manifestPath), true);
+
+		if (! is_array($decoded)) {
+			return [];
+		}
+
+		$rawLayouts = $decoded['layouts'] ?? null;
+
+		if (! is_array($rawLayouts)) {
+			return [];
+		}
+
+		$definitions = [];
+
+		foreach ($rawLayouts as $key => $item) {
+			$file = '';
+			$label = '';
+
+			if (is_array($item)) {
+				$file = trim((string) ($item['file'] ?? ''));
+				$label = trim((string) ($item['label'] ?? ''));
+			} elseif (is_string($item)) {
+				$file = trim($item);
+				$label = is_string($key) ? trim($key) : '';
+			}
+
+			if ($file === '') {
+				continue;
+			}
+
+			$normalizedFile = trim(str_replace('\\', '/', $file), '/');
+
+			if (! str_starts_with($normalizedFile, 'layouts/')) {
+				$normalizedFile = 'layouts/' . $normalizedFile;
+			}
+
+			$absolutePath = $themePath . '/' . str_replace('/', DIRECTORY_SEPARATOR, $normalizedFile);
+
+			if (! $this->files->exists($absolutePath)) {
+				continue;
+			}
+
+			$definitions[] = [
+				'path' => $normalizedFile,
+				'label' => $label !== '' ? $label : basename($normalizedFile),
+			];
+		}
+
+		return array_values(array_unique($definitions, SORT_REGULAR));
+	}
+
+	/**
+	 * @return array{editor_html: string, html_attributes: array<string, string>, body_attributes: array<string, string>, preview_styles: array<int, array<string, mixed>>, preview_scripts: array<int, array<string, mixed>>}|null
+	 */
+	private function renderLayoutForEditor(string $themePath, string $template, string $label): ?array
+	{
+		$contentSlotHtml = '<main data-pbx-content-slot="true" class="pbx-layout-content"><section class="pbx-section"><h2 class="pbx-subheading">Editable content area</h2><p class="pbx-text">Drag, drop, add, remove, or edit blocks in this area.</p></section></main>';
+
+		$rendered = $this->twigEngine->render([$themePath], $template, [
+			'head' => '',
+			'content' => $contentSlotHtml,
+			'locale' => app()->getLocale(),
+			'request_path' => '',
+			'admin_prefix' => trim((string) config('app.admin_url_prefix', 'admin'), '/'),
+		]);
+
+		if (! is_string($rendered) || trim($rendered) === '') {
+			return null;
+		}
+
+		$body = $this->extractBodyFromHtml($rendered);
+		$markup = $body !== '' ? $body : $rendered;
+		$htmlAttributes = $this->extractTagAttributesFromHtml($rendered, 'html');
+		$bodyAttributes = $this->extractBodyAttributesFromHtml($rendered);
+		$previewStyles = $this->extractPreviewSafeStyleLinksFromHtml($rendered);
+		$previewScripts = $this->extractPreviewSafeScriptsFromHtml($rendered);
+
+		if (! str_contains($markup, 'data-pbx-content-slot="true"')) {
+			$markup .= $contentSlotHtml;
+		}
+
+		return [
+			'editor_html' => '<div data-pbx-layout="' . e($label) . '">' . trim($markup) . '</div>',
+			'html_attributes' => $htmlAttributes,
+			'body_attributes' => $bodyAttributes,
+			'preview_styles' => $previewStyles,
+			'preview_scripts' => $previewScripts,
+		];
+	}
+
+	/**
+	 * @return array<int, array{href: string, media?: string}>
+	 */
+	private function extractPreviewSafeStyleLinksFromHtml(string $html): array
+	{
+		if (preg_match_all('/<link\b([^>]*)>/is', $html, $matches) < 1) {
+			return [];
+		}
+
+		$styles = [];
+
+		foreach ((array) ($matches[1] ?? []) as $rawAttributes) {
+			$attributes = $this->parseHtmlAttributes((string) $rawAttributes);
+			$rel = strtolower(trim((string) ($attributes['rel'] ?? '')));
+
+			if ($rel === '' || ! str_contains($rel, 'stylesheet')) {
+				continue;
+			}
+
+			$href = trim((string) ($attributes['href'] ?? ''));
+
+			if ($href === '' || ! $this->isSafePreviewStyleUrl($href)) {
+				continue;
+			}
+
+			$style = ['href' => $href];
+
+			$media = trim((string) ($attributes['media'] ?? ''));
+			if ($media !== '') {
+				$style['media'] = $media;
+			}
+
+			$styles[] = $style;
+		}
+
+		return $styles;
+	}
+
+	private function editorLayoutHtmlFromTwig(string $rawTwig, string $label): string
+	{
+		$markup = preg_replace_callback(
+			'/\{\%\s*include\s+[\"\']([^\"\']+)[\"\']\s*\%\}/',
+			static fn (array $matches): string => '<section class="pbx-card" data-pbx-locked="true"><p class="pbx-caption">Included: ' . e((string) ($matches[1] ?? 'component')) . '</p></section>',
+			$rawTwig,
+		);
+
+		$markup = preg_replace(
+			'/\{\%\s*block\s+body\s*\%\}(.*?)\{\%\s*endblock\s*\%\}/s',
+			'<main data-pbx-content-slot="true" class="pbx-layout-content"><section class="pbx-section"><h2 class="pbx-subheading">Editable content area</h2><p class="pbx-text">Drag, drop, add, remove, or edit blocks in this area.</p></section></main>',
+			(string) $markup,
+		);
+
+		$markup = preg_replace('/\{\%[^\%]*\%\}/', '', (string) $markup);
+		$markup = preg_replace('/\{\{[^\}]*\}\}/', '', (string) $markup);
+
+		$body = '';
+		if (preg_match('/<body[^>]*>(.*?)<\/body>/is', (string) $markup, $matches) === 1) {
+			$body = trim((string) ($matches[1] ?? ''));
+		} else {
+			$body = trim((string) $markup);
+		}
+
+		if (! str_contains($body, 'data-pbx-content-slot="true"')) {
+			$body .= '<main data-pbx-content-slot="true" class="pbx-layout-content"><section class="pbx-section"><h2 class="pbx-subheading">Editable content area</h2><p class="pbx-text">Drag, drop, add, remove, or edit blocks in this area.</p></section></main>';
+		}
+
+		$body = trim($body);
+		if ($body === '') {
+			return $this->defaultEditorLayoutHtml($label);
+		}
+
+		return '<div data-pbx-layout="' . e($label) . '">' . $body . '</div>';
+	}
+
+	private function defaultEditorLayoutHtml(string $label): string
+	{
+		return '<div data-pbx-layout="' . e($label) . '"><main data-pbx-content-slot="true" class="pbx-layout-content"><section class="pbx-section"><h2 class="pbx-subheading">Editable content area</h2><p class="pbx-text">Drag, drop, add, remove, or edit blocks in this area.</p></section></main></div>';
+	}
+
+	private function extractBodyFromHtml(string $html): string
+	{
+		if (preg_match('/<body[^>]*>(.*?)<\/body>/is', $html, $matches) !== 1) {
+			return '';
+		}
+
+		return trim((string) ($matches[1] ?? ''));
+	}
+
+	private function extractContentSlotHtml(string $html): string
+	{
+		if (trim($html) === '' || ! class_exists(\DOMDocument::class)) {
+			return '';
+		}
+
+		$dom = new \DOMDocument('1.0', 'UTF-8');
+		$wrapped = '<!doctype html><html><body>' . $html . '</body></html>';
+
+		$internalErrors = libxml_use_internal_errors(true);
+		$loaded = $dom->loadHTML($wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+		libxml_clear_errors();
+		libxml_use_internal_errors($internalErrors);
+
+		if (! $loaded) {
+			return '';
+		}
+
+		$xpath = new \DOMXPath($dom);
+		$nodes = $xpath->query('//*[@data-pbx-content-slot="true"]');
+
+		if ($nodes === false || $nodes->length < 1) {
+			return '';
+		}
+
+		$slot = $nodes->item(0);
+
+		if (! $slot instanceof \DOMElement) {
+			return '';
+		}
+
+		$content = '';
+
+		foreach ($slot->childNodes as $child) {
+			$content .= $dom->saveHTML($child);
+		}
+
+		return trim($content);
+	}
+
+	/**
+	 * @return array<string, string>
+	 */
+	private function extractBodyAttributesFromHtml(string $html): array
+	{
+		return $this->extractTagAttributesFromHtml($html, 'body');
+	}
+
+	/**
+	 * @return array<string, string>
+	 */
+	private function extractTagAttributesFromHtml(string $html, string $tag): array
+	{
+		if (preg_match('/<' . preg_quote($tag, '/') . '([^>]*)>/is', $html, $matches) !== 1) {
+			return [];
+		}
+
+		$rawAttributes = trim((string) ($matches[1] ?? ''));
+
+		if ($rawAttributes === '') {
+			return [];
+		}
+
+		preg_match_all('/([a-zA-Z_:][a-zA-Z0-9_:\-.]*)\s*=\s*(["\'])(.*?)\2/s', $rawAttributes, $attributeMatches, PREG_SET_ORDER);
+
+		$attributes = [];
+
+		foreach ($attributeMatches as $attributeMatch) {
+			$name = strtolower(trim((string) ($attributeMatch[1] ?? '')));
+			$value = trim((string) ($attributeMatch[3] ?? ''));
+
+			if ($name === '') {
+				continue;
+			}
+
+			$attributes[$name] = $value;
+		}
+
+		return $attributes;
+	}
+
+	/**
+	 * @return array<int, array{src: string, defer: bool, async: bool, type?: string}>
+	 */
+	private function extractPreviewSafeScriptsFromHtml(string $html): array
+	{
+		if (preg_match_all('/<script\b([^>]*)><\/script>/is', $html, $matches) < 1) {
+			return [];
+		}
+
+		$scripts = [];
+
+		foreach ((array) ($matches[1] ?? []) as $rawAttributes) {
+			$attributes = $this->parseHtmlAttributes((string) $rawAttributes);
+			$src = trim((string) ($attributes['src'] ?? ''));
+
+			if ($src === '' || ! $this->isSafePreviewScriptUrl($src)) {
+				continue;
+			}
+
+			$script = [
+				'src' => $src,
+				'defer' => array_key_exists('defer', $attributes),
+				'async' => array_key_exists('async', $attributes),
+			];
+
+			$type = trim((string) ($attributes['type'] ?? ''));
+			if ($type !== '') {
+				$script['type'] = $type;
+			}
+
+			$scripts[] = $script;
+		}
+
+		return $scripts;
+	}
+
+	/**
+	 * @return array<string, string>
+	 */
+	private function parseHtmlAttributes(string $rawAttributes): array
+	{
+		$raw = trim($rawAttributes);
+
+		if ($raw === '') {
+			return [];
+		}
+
+		preg_match_all('/([a-zA-Z_:][a-zA-Z0-9_:\-.]*)(?:\s*=\s*(["\'])(.*?)\2)?/s', $raw, $attributeMatches, PREG_SET_ORDER);
+
+		$attributes = [];
+
+		foreach ($attributeMatches as $attributeMatch) {
+			$name = strtolower(trim((string) ($attributeMatch[1] ?? '')));
+			$value = trim((string) ($attributeMatch[3] ?? ''));
+
+			if ($name === '') {
+				continue;
+			}
+
+			$attributes[$name] = $value;
+		}
+
+		return $attributes;
+	}
+
+	private function isSafePreviewScriptUrl(string $src): bool
+	{
+		$path = (string) parse_url($src, PHP_URL_PATH);
+
+		if ($path === '') {
+			return false;
+		}
+
+		if (! str_ends_with(strtolower($path), '.js')) {
+			return false;
+		}
+
+		if (str_starts_with($path, '/theme-assets/')) {
+			return true;
+		}
+
+		if (str_starts_with($path, '/build/')) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private function isSafePreviewStyleUrl(string $href): bool
+	{
+		$lower = strtolower($href);
+
+		if (str_starts_with($lower, 'https://fonts.googleapis.com/')) {
+			return true;
+		}
+
+		$path = (string) parse_url($href, PHP_URL_PATH);
+
+		if ($path === '') {
+			return false;
+		}
+
+		if (! str_ends_with(strtolower($path), '.css')) {
+			return false;
+		}
+
+		if (str_starts_with($path, '/theme-assets/')) {
+			return true;
+		}
+
+		if (str_starts_with($path, '/build/')) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public function update(UpdatePageRequest $request, Page $page): RedirectResponse

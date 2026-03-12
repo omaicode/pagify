@@ -1,9 +1,9 @@
 {% set current_path = request_path|default('')|trim('/') %}
 <header class="mx-auto w-full max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
     <div class="rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-card)]/95 px-4 py-3 shadow-[0_14px_50px_-24px_var(--shadow-color)] backdrop-blur sm:px-6">
-        <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="relative flex flex-wrap items-center justify-between gap-3">
             <a href="{{ site_url('home') }}" class="font-display text-lg font-extrabold tracking-tight text-[var(--brand-700)]">Pagify CMS</a>
-            <nav class="hidden flex-wrap items-center gap-3 text-sm font-semibold text-[var(--text-soft)] md:flex">
+            <nav class="hidden flex-wrap items-center gap-3 text-sm font-semibold text-[var(--text-soft)] md:absolute md:left-1/2 md:top-1/2 md:flex md:w-max md:-translate-x-1/2 md:-translate-y-1/2 md:flex-nowrap">
                 {% include 'components/nav-links.twig' with { current_path: current_path } only %}
             </nav>
             {% include 'components/theme-preset-switcher.twig' %}

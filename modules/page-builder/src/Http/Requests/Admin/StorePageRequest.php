@@ -49,15 +49,18 @@ class StorePageRequest extends FormRequest
 	protected function prepareForValidation(): void
 	{
 		$rawSlug = $this->input('slug');
+		$title = $this->input('title');
 
-		if (! is_string($rawSlug)) {
-			return;
+		$slugSource = is_string($rawSlug) ? trim($rawSlug) : '';
+
+		if ($slugSource === '' && is_string($title)) {
+			$slugSource = trim($title);
 		}
 
-		$normalizedSlug = Str::slug(trim($rawSlug));
+		$normalizedSlug = Str::slug($slugSource);
 
 		$this->merge([
-			'slug' => $normalizedSlug !== '' ? $normalizedSlug : trim($rawSlug),
+			'slug' => $normalizedSlug !== '' ? $normalizedSlug : $slugSource,
 		]);
 	}
 }

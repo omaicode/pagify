@@ -55,6 +55,12 @@ class MakeThemeCommand extends Command
             'render' => [
                 'engine' => 'twig',
             ],
+            'layouts' => [
+                [
+                    'file' => 'layouts/app.twig',
+                    'label' => 'Main Layout',
+                ],
+            ],
             'requires' => [
                 'php' => '>=8.2',
                 'laravel' => '^12.0',

@@ -46,6 +46,10 @@ class FrontendThemeManifestService
             'supports' => ['nullable', 'array'],
             'render' => ['required', 'array'],
             'render.engine' => ['required', 'string', 'in:twig'],
+            'layouts' => ['required', 'array'],
+            'layouts.*.file' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9]+(?:-[a-z0-9]+)*\.twig$/'],
+            'layouts.*.label' => ['required', 'string', 'max:255'],
+        ], [
         ]);
 
         if ($validator->fails()) {

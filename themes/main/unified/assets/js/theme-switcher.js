@@ -12,6 +12,12 @@
 
         document.body.setAttribute('data-color-preset', normalized);
 
+        var presetSelect = document.querySelector('[data-theme-preset-select]');
+
+        if (presetSelect) {
+            presetSelect.value = normalized;
+        }
+
         var buttons = document.querySelectorAll('[data-theme-preset]');
 
         buttons.forEach(function (button) {
@@ -32,6 +38,15 @@
     }
 
     function bindPresetSwitch() {
+        var presetSelect = document.querySelector('[data-theme-preset-select]');
+
+        if (presetSelect) {
+            presetSelect.addEventListener('change', function () {
+                var value = presetSelect.value || DEFAULT_PRESET;
+                applyPreset(value);
+            });
+        }
+
         var buttons = document.querySelectorAll('[data-theme-preset]');
 
         buttons.forEach(function (button) {

@@ -11,7 +11,6 @@ use Pagify\PageBuilder\Http\Controllers\Admin\PageController;
 use Pagify\PageBuilder\Http\Controllers\Admin\PageLibraryController;
 use Pagify\PageBuilder\Http\Controllers\Admin\PageRevisionController;
 use Pagify\PageBuilder\Http\Controllers\Api\AdminPageBuilderRegistryController;
-use Pagify\PageBuilder\Http\Controllers\PublicPageController;
 
 Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(function (): void {
 	Route::prefix(config('app.admin_url_prefix').'/page-builder')
@@ -22,6 +21,7 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
 			Route::get('/pages/create', [PageController::class, 'create'])->name('pages.create');
 			Route::post('/pages', [PageController::class, 'store'])->name('pages.store');
 			Route::get('/pages/{page}/edit', [PageController::class, 'edit'])->name('pages.edit');
+			Route::get('/pages/{page}/preview', [PageController::class, 'preview'])->name('pages.preview');
 			Route::put('/pages/{page}', [PageController::class, 'update'])->name('pages.update');
 			Route::post('/pages/{page}/publish', [PageController::class, 'publish'])->name('pages.publish');
 			Route::delete('/pages/{page}', [PageController::class, 'destroy'])->name('pages.destroy');
@@ -42,6 +42,3 @@ Route::prefix('api/v1/'.config('app.admin_url_prefix').'/page-builder')
 		Route::get('/sections', [AdminPageBuilderRegistryController::class, 'sections'])->name('sections');
 	});
 
-Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class, EnsureModuleEnabled::class . ':page-builder'])
-	->get('/pages/{slug}', PublicPageController::class)
-	->name('page-builder.pages.show');

@@ -3,6 +3,21 @@
 return [
 	'breakpoints' => ['desktop', 'tablet', 'mobile'],
 
+	'editor' => [
+		'simplified_mode' => true,
+		'load_active_theme_styles' => true,
+		'primary_blocks' => [
+			'hero-banner',
+			'columns-2',
+			'image',
+			'paragraph',
+			'button',
+			'stats-row',
+			'cta-panel',
+			'contact-form',
+		],
+	],
+
 	'permissions' => [
 		'page-builder.page.viewAny',
 		'page-builder.page.view',

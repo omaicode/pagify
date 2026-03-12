@@ -7,7 +7,7 @@
 
 ## Overview
 
-This admin interface contains **9 reusable UI primitives** that standardize all Admin interface patterns across Pagify. All components follow **canonical prop naming conventions** with **backwards-compatible legacy aliases** for smooth migration.
+This admin interface contains **10 reusable UI primitives** that standardize all Admin interface patterns across Pagify. All components follow **canonical prop naming conventions** with **backwards-compatible legacy aliases** for smooth migration.
 
 ---
 
@@ -20,6 +20,7 @@ This admin interface contains **9 reusable UI primitives** that standardize all 
 | **UiInput** | Polymorphic form control | `tag`, `modelValue`, `type`, `rows` |
 | **UiField** | Form field label wrapper | `label`, `for`, `labelTone` |
 | **UiAlert** | Status/feedback messages | `tone` (danger/warning/success/info) |
+| **UiSwitch** | Boolean toggle control | `modelValue`, `trueLabel`, `falseLabel`, `disabled` |
 | **UiStatusBadge** | Inline status indicators | `tone` (neutral/success/warning/danger) |
 | **UiPageHeader** | Page title/subtitle | `title`, `subtitle` |
 | **UiTableShell** | Card-wrapped table | `tableClass`, `headClass`, `bodyClass` |

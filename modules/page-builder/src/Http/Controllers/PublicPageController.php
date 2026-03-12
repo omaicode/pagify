@@ -51,7 +51,8 @@ class PublicPageController extends Controller
 		$snapshotHead = $this->extractHeadContent($html);
 		$snapshotBody = $this->extractBodyContent($html);
 		$combinedHead = trim(implode("\n", array_filter([$snapshotHead, $head])));
-		$content = $snapshotBody !== '' ? $snapshotBody : $html;
+		$slotContent = $this->extractContentSlotHtml($snapshotBody !== '' ? $snapshotBody : $html);
+		$content = $slotContent !== '' ? $slotContent : ($snapshotBody !== '' ? $snapshotBody : $html);
 
 		$rendered = $twigEngine->render($themes->viewPathsForCurrentSite(), 'pages/home.twig', [
 			'page' => $page,
@@ -85,5 +86,45 @@ class PublicPageController extends Controller
 		}
 
 		return trim((string) ($matches[1] ?? ''));
+	}
+
+	private function extractContentSlotHtml(string $html): string
+	{
+		if (trim($html) === '' || ! class_exists(\DOMDocument::class)) {
+			return '';
+		}
+
+		$dom = new \DOMDocument('1.0', 'UTF-8');
+		$wrapped = '<!doctype html><html><body>' . $html . '</body></html>';
+
+		$internalErrors = libxml_use_internal_errors(true);
+		$loaded = $dom->loadHTML($wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+		libxml_clear_errors();
+		libxml_use_internal_errors($internalErrors);
+
+		if (! $loaded) {
+			return '';
+		}
+
+		$xpath = new \DOMXPath($dom);
+		$nodes = $xpath->query('//*[@data-pbx-content-slot="true"]');
+
+		if ($nodes === false || $nodes->length < 1) {
+			return '';
+		}
+
+		$slot = $nodes->item(0);
+
+		if (! $slot instanceof \DOMElement) {
+			return '';
+		}
+
+		$content = '';
+
+		foreach ($slot->childNodes as $child) {
+			$content .= $dom->saveHTML($child);
+		}
+
+		return trim($content);
 	}
 }

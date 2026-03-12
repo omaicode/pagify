@@ -19,7 +19,7 @@ class UrlThemeHelper
             return url('/');
         }
 
-        return url('/pages/'.$normalized);
+        return url('/'.$normalized);
     }
 
     public function site(string $path = ''): string

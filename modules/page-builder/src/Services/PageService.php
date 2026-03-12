@@ -104,7 +104,9 @@ class PageService
 
 	public function delete(Page $page): void
 	{
-		$page->delete();
+		DB::transaction(static function () use ($page): void {
+			$page->forceDelete();
+		});
 	}
 
 	public function resolveTemplate(?string $templateSlug): ?array
