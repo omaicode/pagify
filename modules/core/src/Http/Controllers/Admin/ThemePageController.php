@@ -8,6 +8,7 @@ use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
 use Pagify\Core\Models\Admin;
+use Pagify\Core\Models\Site;
 
 class ThemePageController extends Controller
 {
@@ -25,6 +26,18 @@ class ThemePageController extends Controller
                 'activateBase' => route('core.api.v1.admin.themes.activate', ['theme' => '__THEME__']),
                 'deleteBase' => route('core.api.v1.admin.themes.destroy', ['theme' => '__THEME__']),
             ],
+            'sites' => Site::query()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'slug', 'domain'])
+                ->map(static fn (Site $site): array => [
+                    'id' => (int) $site->id,
+                    'name' => (string) $site->name,
+                    'slug' => (string) $site->slug,
+                    'domain' => (string) ($site->domain ?? ''),
+                ])
+                ->values()
+                ->all(),
             'breadcrumbs' => [
                 [
                     'href' => route('core.admin.dashboard'),

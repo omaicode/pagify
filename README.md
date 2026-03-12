@@ -42,6 +42,7 @@ composer create pagify/pagify your-project-name
 Project commands are standardized in the runbook:
 
 - [docs/runbook.md](docs/runbook.md)
+- [docs/theme-development.md](docs/theme-development.md)
 
 Quick commands:
 
@@ -57,6 +58,14 @@ Admin UI theme can be switched by setting `ADMIN_THEME` (default: `default`):
 export ADMIN_THEME=v2
 composer dev
 ```
+
+Frontend public theme is resolved from `themes/main/{THEME_NAME}` and supports site-level activation via Theme Manager.
+
+Environment variables:
+
+- `FRONTEND_THEMES_BASE_PATH` (default: `themes/main`)
+- `FRONTEND_THEME` (default: `default`)
+- `FRONTEND_THEME_FALLBACK` (default: `default`)
 
 ## Contributing
 We welcome contributions to Pagify! If you would like to contribute, please fork the repository and submit a pull request with your changes. Make sure to follow our coding standards and include tests for any new features or bug fixes.

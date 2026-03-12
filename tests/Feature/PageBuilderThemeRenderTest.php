@@ -47,6 +47,16 @@ class PageBuilderThemeRenderTest extends TestCase
 
         File::put(base_path('storage/testing/themes/main/ocean/resources/views/layouts/app.blade.php'), "<!doctype html><html><head>@yield('head')</head><body><div data-theme=\"ocean\">@yield('content')</div></body></html>");
         File::put(base_path('storage/testing/themes/main/ocean/resources/views/pages/page.blade.php'), "@extends('layouts.app')\n@section('head'){!! \$head ?? '' !!}@endsection\n@section('content'){!! \$content ?? '' !!}@endsection\n");
+
+        File::ensureDirectoryExists(base_path('storage/testing/themes/main/broken/resources/views/layouts'));
+        File::ensureDirectoryExists(base_path('storage/testing/themes/main/broken/resources/views/pages'));
+        File::put(base_path('storage/testing/themes/main/broken/theme.json'), json_encode([
+            'slug' => 'wrong-slug',
+            'name' => 'Broken',
+            'version' => '1.0.0',
+        ], JSON_PRETTY_PRINT));
+        File::put(base_path('storage/testing/themes/main/broken/resources/views/layouts/app.blade.php'), "<!doctype html><html><head>@yield('head')</head><body><div data-theme=\"broken\">@yield('content')</div></body></html>");
+        File::put(base_path('storage/testing/themes/main/broken/resources/views/pages/page.blade.php'), "@extends('layouts.app')\n@section('head'){!! \$head ?? '' !!}@endsection\n@section('content'){!! \$content ?? '' !!}@endsection\n");
     }
 
     protected function tearDown(): void
@@ -85,5 +95,76 @@ class PageBuilderThemeRenderTest extends TestCase
         $response->assertOk();
         $response->assertSee('data-theme="ocean"', false);
         $response->assertSee('<main id="demo-body">Hello Theme</main>', false);
+    }
+
+    public function test_fallback_uses_configured_fallback_when_active_theme_is_invalid(): void
+    {
+        config()->set('core.frontend_ui.fallback_theme', 'ocean');
+
+        $site = Site::factory()->create([
+            'slug' => 'default',
+            'domain' => 'localhost',
+            'is_active' => true,
+        ]);
+
+        Setting::query()->create([
+            'site_id' => $site->id,
+            'key' => 'theme.main.active',
+            'value' => 'broken',
+        ]);
+
+        Page::query()->create([
+            'site_id' => $site->id,
+            'title' => 'Pricing',
+            'slug' => 'pricing',
+            'status' => 'published',
+            'layout_json' => ['sections' => []],
+            'seo_meta_json' => ['title' => 'Pricing SEO'],
+            'snapshot_html' => '<!doctype html><html><head></head><body><main>Fallback chain</main></body></html>',
+        ]);
+
+        $response = $this->get('/pages/pricing');
+
+        $response->assertOk();
+        $response->assertSee('data-theme="ocean"', false);
+        $response->assertDontSee('data-theme="broken"', false);
+    }
+
+    public function test_fallback_uses_default_theme_when_active_and_fallback_page_view_missing(): void
+    {
+        config()->set('core.frontend_ui.fallback_theme', 'ocean');
+        File::put(base_path('storage/testing/themes/main/ocean/theme.json'), json_encode([
+            'slug' => 'ocean-broken',
+            'name' => 'Ocean Broken',
+            'version' => '1.0.0',
+        ], JSON_PRETTY_PRINT));
+
+        $site = Site::factory()->create([
+            'slug' => 'default',
+            'domain' => 'localhost',
+            'is_active' => true,
+        ]);
+
+        Setting::query()->create([
+            'site_id' => $site->id,
+            'key' => 'theme.main.active',
+            'value' => 'missing-active-theme',
+        ]);
+
+        Page::query()->create([
+            'site_id' => $site->id,
+            'title' => 'About',
+            'slug' => 'about',
+            'status' => 'published',
+            'layout_json' => ['sections' => []],
+            'seo_meta_json' => ['title' => 'About SEO'],
+            'snapshot_html' => '<!doctype html><html><head></head><body><main>Default fallback</main></body></html>',
+        ]);
+
+        $response = $this->get('/pages/about');
+
+        $response->assertOk();
+        $response->assertSee('data-theme="default"', false);
+        $response->assertDontSee('data-theme="ocean"', false);
     }
 }

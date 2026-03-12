@@ -37,6 +37,10 @@ class FrontendThemeManagerService
 
         sort($directories);
 
+        $sitesById = Site::query()
+            ->get(['id', 'name', 'slug', 'domain'])
+            ->keyBy('id');
+
         $usageIndex = $this->usageIndex();
         $defaultTheme = $this->defaultThemeSlug();
         $currentSiteId = $this->siteContext->siteId();
@@ -54,6 +58,23 @@ class FrontendThemeManagerService
             }
 
             $activeSiteIds = $usageIndex[$slug] ?? [];
+            $activeSites = array_values(array_filter(array_map(
+                static function (int $siteId) use ($sitesById): ?array {
+                    $site = $sitesById->get($siteId);
+
+                    if ($site === null) {
+                        return null;
+                    }
+
+                    return [
+                        'id' => (int) $site->id,
+                        'name' => (string) $site->name,
+                        'slug' => (string) $site->slug,
+                        'domain' => (string) ($site->domain ?? ''),
+                    ];
+                },
+                $activeSiteIds,
+            )));
 
             $themes[] = [
                 'slug' => $slug,
@@ -67,6 +88,7 @@ class FrontendThemeManagerService
                 'is_default' => $slug === $defaultTheme,
                 'usage_count' => count($activeSiteIds),
                 'active_site_ids' => $activeSiteIds,
+                'active_sites' => $activeSites,
                 'is_active_for_current_site' => $currentSiteId !== null && in_array($currentSiteId, $activeSiteIds, true),
                 'can_delete' => $slug !== $defaultTheme && $activeSiteIds === [],
             ];
@@ -275,6 +297,10 @@ class FrontendThemeManagerService
         $paths = [];
 
         foreach ($slugs as $slug) {
+            if (! $this->isRuntimeUsable($slug)) {
+                continue;
+            }
+
             $path = $this->themePath($slug).'/resources/views';
 
             if ($this->files->isDirectory($path)) {
@@ -366,5 +392,30 @@ class FrontendThemeManagerService
     private function defaultPageTemplate(): string
     {
         return "@extends('layouts.app')\n\n@section('head')\n    {!! \$head ?? '' !!}\n@endsection\n\n@section('content')\n    {!! \$content ?? '' !!}\n@endsection\n";
+    }
+
+    private function isRuntimeUsable(string $slug): bool
+    {
+        $themePath = $this->themePath($slug);
+
+        if (! $this->files->isDirectory($themePath)) {
+            return false;
+        }
+
+        $parsed = $this->manifestService->readManifestFile($themePath.'/theme.json');
+
+        if (! is_array($parsed['manifest'])) {
+            return false;
+        }
+
+        if ((string) (($parsed['manifest']['slug'] ?? '')) !== $slug) {
+            return false;
+        }
+
+        if ($parsed['errors'] !== []) {
+            return false;
+        }
+
+        return true;
     }
 }

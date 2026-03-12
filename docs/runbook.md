@@ -12,6 +12,12 @@ Admin theme is configurable by environment variables:
 - `ADMIN_THEME` (default: `default`)
 - `ADMIN_THEME_FALLBACK` (default: `default`)
 
+Frontend public theme is configurable by environment variables:
+
+- `FRONTEND_THEMES_BASE_PATH` (default: `themes/main`)
+- `FRONTEND_THEME` (default: `default`)
+- `FRONTEND_THEME_FALLBACK` (default: `default`)
+
 Default admin UI path is `themes/admin/default`. If you switch to `ADMIN_THEME=v2`, the app will load views and frontend tooling from `themes/admin/v2`.
 
 ## Prerequisites
@@ -107,6 +113,11 @@ composer dev
 - Admin frontend translations: `${ADMIN_THEMES_BASE_PATH}/${ADMIN_THEME}/lang/{locale}/ui.php`
 - Admin root Inertia view: `${ADMIN_THEMES_BASE_PATH}/${ADMIN_THEME}/resources/views/admin/app.blade.php`
 - Admin login page (Vue): `${ADMIN_THEMES_BASE_PATH}/${ADMIN_THEME}/resources/js/Pages/Admin/Auth/Login.vue`
+- Active frontend theme root (runtime default): `${FRONTEND_THEMES_BASE_PATH}/${FRONTEND_THEME}`
+- Frontend fallback theme root: `${FRONTEND_THEMES_BASE_PATH}/${FRONTEND_THEME_FALLBACK}`
+- Frontend manifest: `${FRONTEND_THEMES_BASE_PATH}/{THEME_NAME}/theme.json`
+- Frontend page view entry: `${FRONTEND_THEMES_BASE_PATH}/{THEME_NAME}/resources/views/pages/page.blade.php`
+- Frontend layout view: `${FRONTEND_THEMES_BASE_PATH}/{THEME_NAME}/resources/views/layouts/app.blade.php`
 
 ## Troubleshooting
 
