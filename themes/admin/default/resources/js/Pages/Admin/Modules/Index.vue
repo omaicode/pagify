@@ -2,10 +2,10 @@
 import { computed, onMounted, ref } from 'vue'
 import axios from 'axios'
 import { usePage } from '@inertiajs/vue3'
-import AdminLayout from '../../../Layouts/AdminLayout.vue'
-import UiCard from '../../../Components/UI/UiCard.vue'
-import UiButton from '../../../Components/UI/UiButton.vue'
-import UiStatusBadge from '../../../Components/UI/UiStatusBadge.vue'
+import AdminLayout from '@admin-theme/Layouts/AdminLayout.vue'
+import UiCard from '@admin-theme/Components/UI/UiCard.vue'
+import UiButton from '@admin-theme/Components/UI/UiButton.vue'
+import UiStatusBadge from '@admin-theme/Components/UI/UiStatusBadge.vue'
 
 const props = defineProps({
   apiRoutes: {

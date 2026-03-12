@@ -2,12 +2,12 @@
 import axios from 'axios'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { usePage } from '@inertiajs/vue3'
-import AdminLayout from '../../../Layouts/AdminLayout.vue'
-import UiCard from '../../../Components/UI/UiCard.vue'
-import UiButton from '../../../Components/UI/UiButton.vue'
-import UiAlert from '../../../Components/UI/UiAlert.vue'
-import UiTableShell from '../../../Components/UI/UiTableShell.vue'
-import UiStatusBadge from '../../../Components/UI/UiStatusBadge.vue'
+import AdminLayout from '@admin-theme/Layouts/AdminLayout.vue'
+import UiCard from '@admin-theme/Components/UI/UiCard.vue'
+import UiButton from '@admin-theme/Components/UI/UiButton.vue'
+import UiAlert from '@admin-theme/Components/UI/UiAlert.vue'
+import UiTableShell from '@admin-theme/Components/UI/UiTableShell.vue'
+import UiStatusBadge from '@admin-theme/Components/UI/UiStatusBadge.vue'
 
 const props = defineProps({
   apiRoutes: {

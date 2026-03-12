@@ -1,12 +1,12 @@
 <script setup>
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed, reactive } from 'vue';
-import AdminLayout from '../../../Layouts/AdminLayout.vue';
-import UiCard from '../../../Components/UI/UiCard.vue';
-import UiButton from '../../../Components/UI/UiButton.vue';
-import UiInput from '../../../Components/UI/UiInput.vue';
-import UiTableShell from '../../../Components/UI/UiTableShell.vue';
-import UiPageHeader from '../../../Components/UI/UiPageHeader.vue';
+import AdminLayout from '@admin-theme/Layouts/AdminLayout.vue';
+import UiCard from '@admin-theme/Components/UI/UiCard.vue';
+import UiButton from '@admin-theme/Components/UI/UiButton.vue';
+import UiInput from '@admin-theme/Components/UI/UiInput.vue';
+import UiTableShell from '@admin-theme/Components/UI/UiTableShell.vue';
+import UiPageHeader from '@admin-theme/Components/UI/UiPageHeader.vue';
 
 const props = defineProps({
     filters: {

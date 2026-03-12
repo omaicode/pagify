@@ -1,8 +1,9 @@
 <script setup>
 import { computed } from 'vue'
 import { usePage } from '@inertiajs/vue3'
-import AdminLayout from '../../../Layouts/AdminLayout.vue'
-import UiCard from '../../../Components/UI/UiCard.vue'
+import AdminLayout from '@admin-theme/Layouts/AdminLayout.vue'
+import UiCard from '@admin-theme/Components/UI/UiCard.vue'
+import UiPageHeader from '@admin-theme/Components/UI/UiPageHeader.vue'
 
 defineProps({
   groups: {
@@ -18,12 +19,10 @@ const t = computed(() => page.props.translations?.ui ?? {})
 <template>
   <AdminLayout>
     <div class="space-y-6">
-      <UiCard tag="section" class="p-5">
-        <h1 class="text-lg font-semibold text-[#1e1b4b]">{{ t.settings ?? 'Settings' }}</h1>
-        <p class="mt-1 text-sm text-slate-600">
-          {{ t.settings_subtitle ?? 'Advanced configuration is grouped here to keep daily CMS navigation focused on core editing tasks.' }}
-        </p>
-      </UiCard>
+      <UiPageHeader
+        :title="t.settings ?? 'Settings'"
+        :subtitle="t.settings_subtitle ?? 'Advanced configuration is grouped here to keep daily CMS navigation focused on core editing tasks.'"
+      />
 
       <UiCard
         tag="section"

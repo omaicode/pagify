@@ -1,11 +1,11 @@
 <script setup>
 import { Head, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import UiCard from '../../../Components/UI/UiCard.vue';
-import UiButton from '../../../Components/UI/UiButton.vue';
-import UiInput from '../../../Components/UI/UiInput.vue';
-import UiField from '../../../Components/UI/UiField.vue';
-import UiAlert from '../../../Components/UI/UiAlert.vue';
+import UiCard from '@admin-theme/Components/UI/UiCard.vue';
+import UiButton from '@admin-theme/Components/UI/UiButton.vue';
+import UiInput from '@admin-theme/Components/UI/UiInput.vue';
+import UiField from '@admin-theme/Components/UI/UiField.vue';
+import UiAlert from '@admin-theme/Components/UI/UiAlert.vue';
 
 const props = defineProps({
     loginAction: {
