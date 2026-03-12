@@ -4,12 +4,13 @@ namespace Pagify\PageBuilder\Http\Controllers;
 
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Routing\Controller;
+use Pagify\Core\Services\FrontendThemeManagerService;
 use Pagify\PageBuilder\Models\Page;
 use Pagify\PageBuilder\Services\PageSnapshotService;
 
 class PublicPageController extends Controller
 {
-	public function __invoke(string $slug, PageSnapshotService $snapshotService): HttpResponse
+	public function __invoke(string $slug, PageSnapshotService $snapshotService, FrontendThemeManagerService $themes): HttpResponse
 	{
 		$page = Page::query()
 			->where('slug', $slug)
@@ -41,10 +42,43 @@ class PublicPageController extends Controller
 
 		$head = implode("\n", array_filter($headParts));
 
-		if (str_contains($html, '</head>')) {
-			$html = str_replace('</head>', $head . "\n</head>", $html);
+		$snapshotHead = $this->extractHeadContent($html);
+		$snapshotBody = $this->extractBodyContent($html);
+		$combinedHead = trim(implode("\n", array_filter([$snapshotHead, $head])));
+		$content = $snapshotBody !== '' ? $snapshotBody : $html;
+
+		foreach (array_reverse($themes->viewPathsForCurrentSite()) as $path) {
+			view()->getFinder()->prependLocation($path);
+		}
+
+		if (view()->exists('pages.page')) {
+			$rendered = view('pages.page', [
+				'page' => $page,
+				'head' => $combinedHead,
+				'content' => $content,
+			])->render();
+
+			return response($rendered, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
 		}
 
 		return response($html, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
+	}
+
+	private function extractHeadContent(string $html): string
+	{
+		if (preg_match('/<head[^>]*>(.*?)<\/head>/is', $html, $matches) !== 1) {
+			return '';
+		}
+
+		return trim((string) ($matches[1] ?? ''));
+	}
+
+	private function extractBodyContent(string $html): string
+	{
+		if (preg_match('/<body[^>]*>(.*?)<\/body>/is', $html, $matches) !== 1) {
+			return '';
+		}
+
+		return trim((string) ($matches[1] ?? ''));
 	}
 }

@@ -35,4 +35,9 @@ class AdminPolicy
     {
         return $admin->can('core.updater.manage');
     }
+
+    public function manageThemes(Admin $admin): bool
+    {
+        return $admin->can('core.theme.manage');
+    }
 }

@@ -7,6 +7,12 @@ return [
         'fallback_theme' => env('ADMIN_THEME_FALLBACK', 'default'),
     ],
 
+    'frontend_ui' => [
+        'themes_base_path' => env('FRONTEND_THEMES_BASE_PATH', 'themes/main'),
+        'theme' => env('FRONTEND_THEME', 'default'),
+        'fallback_theme' => env('FRONTEND_THEME_FALLBACK', 'default'),
+    ],
+
     'locales' => [
         'default' => 'en',
         'supported' => ['en', 'vi'],

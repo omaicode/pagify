@@ -52,6 +52,14 @@ class SettingsPageController extends Controller
                             allowed: $admin?->can('manageModules', Admin::class) === true,
                         ),
                         $this->makeItem(
+                            label: 'Themes',
+                            labelKey: 'settings_item_themes',
+                            description: 'Create, update, activate, and remove frontend themes for each site.',
+                            descriptionKey: 'settings_item_themes_description',
+                            href: route('core.admin.themes.index'),
+                            allowed: $admin?->can('manageThemes', Admin::class) === true,
+                        ),
+                        $this->makeItem(
                             label: 'Updater',
                             labelKey: 'settings_item_updater',
                             description: 'Queue updates, monitor progress, and rollback failed executions.',

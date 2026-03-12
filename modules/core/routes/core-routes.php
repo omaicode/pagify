@@ -13,12 +13,14 @@ use Pagify\Core\Http\Controllers\Admin\PluginPageController;
 use Pagify\Core\Http\Controllers\Admin\PermissionPageController;
 use Pagify\Core\Http\Controllers\Admin\ProfilePageController;
 use Pagify\Core\Http\Controllers\Admin\SettingsPageController;
+use Pagify\Core\Http\Controllers\Admin\ThemePageController;
 use Pagify\Core\Http\Controllers\Api\AdminGroupController;
 use Pagify\Core\Http\Controllers\Api\AdminManagerController;
 use Pagify\Core\Http\Controllers\Api\AdminPermissionController;
 use Pagify\Core\Http\Controllers\Api\AdminProfileController;
 use Pagify\Core\Http\Controllers\Api\AdminModuleController;
 use Pagify\Core\Http\Controllers\Api\AdminPluginController;
+use Pagify\Core\Http\Controllers\Api\AdminThemeController;
 use Pagify\Core\Http\Controllers\Api\AdminTokenController;
 use Pagify\Core\Http\Middleware\EnsureApiErrorEnvelope;
 use Pagify\Core\Http\Middleware\HandleInertiaRequests;
@@ -55,6 +57,7 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
             Route::get('/admins', AdminManagerPageController::class)->name('admins.index');
             Route::get('/modules', ModulePageController::class)->name('modules.index');
             Route::get('/plugins', PluginPageController::class)->name('plugins.index');
+            Route::get('/themes', ThemePageController::class)->name('themes.index');
             Route::get('/profile', ProfilePageController::class)->name('profile.index');
             Route::get('/settings', SettingsPageController::class)->name('settings.index');
         });
@@ -113,4 +116,10 @@ Route::prefix('api/v1/'.config('app.admin_url_prefix'))
         Route::post('/plugins/install/zip', [AdminPluginController::class, 'installZip'])->name('plugins.install.zip');
         Route::delete('/plugins/{plugin}', [AdminPluginController::class, 'destroy'])->name('plugins.destroy');
         Route::get('/plugins/extensions', [AdminPluginController::class, 'extensions'])->name('plugins.extensions');
+
+        Route::get('/themes', [AdminThemeController::class, 'index'])->name('themes.index');
+        Route::post('/themes', [AdminThemeController::class, 'store'])->name('themes.store');
+        Route::patch('/themes/{theme}', [AdminThemeController::class, 'update'])->name('themes.update');
+        Route::put('/themes/{theme}/activate', [AdminThemeController::class, 'activate'])->name('themes.activate');
+        Route::delete('/themes/{theme}', [AdminThemeController::class, 'destroy'])->name('themes.destroy');
     });

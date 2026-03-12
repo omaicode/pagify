@@ -45,6 +45,7 @@ class CoreDatabaseSeeder extends Seeder
             'core.token.manage',
             'core.module.manage',
             'core.updater.manage',
+            'core.theme.manage',
             'content.type.viewAny',
             'content.type.create',
             'content.type.update',
