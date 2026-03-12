@@ -104,7 +104,8 @@ class PageBuilderThemeRenderTest extends TestCase
         $response->assertOk();
         $response->assertSee('data-theme="ocean"', false);
         $response->assertSee('<main id="demo-body">Hello Theme</main>', false);
-        $response->assertSee('data-site-url="http://localhost/hello"', false);
+        $response->assertSee('data-site-url="', false);
+        $response->assertSee('/hello"', false);
     }
 
     public function test_fallback_uses_configured_fallback_when_active_theme_is_invalid(): void
@@ -179,5 +180,73 @@ class PageBuilderThemeRenderTest extends TestCase
         $response->assertOk();
         $response->assertSee('data-theme="default"', false);
         $response->assertDontSee('data-theme="ocean"', false);
+    }
+
+    public function test_site_url_prefers_app_url_when_site_domain_is_default_localhost(): void
+    {
+        config()->set('app.url', 'https://cms.pagify.test');
+
+        $site = Site::factory()->create([
+            'slug' => 'default',
+            'domain' => 'localhost',
+            'is_active' => true,
+        ]);
+
+        Setting::query()->create([
+            'site_id' => $site->id,
+            'key' => 'theme.main.active',
+            'value' => 'ocean',
+        ]);
+
+        Page::query()->create([
+            'site_id' => $site->id,
+            'title' => 'Host test',
+            'slug' => 'host-test',
+            'status' => 'published',
+            'layout_json' => ['sections' => []],
+            'seo_meta_json' => ['title' => 'Host test'],
+            'snapshot_html' => '<!doctype html><html><head></head><body><main>Host</main></body></html>',
+        ]);
+
+        $response = $this->get('/pages/host-test');
+
+        $response->assertOk();
+        $response->assertSee('data-site-url="https://cms.pagify.test/hello"', false);
+    }
+
+    public function test_site_url_uses_request_host_when_site_domain_and_app_url_are_localhost(): void
+    {
+        config()->set('app.url', 'http://localhost');
+
+        $site = Site::factory()->create([
+            'slug' => 'default',
+            'domain' => 'localhost',
+            'is_active' => true,
+        ]);
+
+        Setting::query()->create([
+            'site_id' => $site->id,
+            'key' => 'theme.main.active',
+            'value' => 'ocean',
+        ]);
+
+        Page::query()->create([
+            'site_id' => $site->id,
+            'title' => 'Host request test',
+            'slug' => 'host-request-test',
+            'status' => 'published',
+            'layout_json' => ['sections' => []],
+            'seo_meta_json' => ['title' => 'Host request test'],
+            'snapshot_html' => '<!doctype html><html><head></head><body><main>Host request</main></body></html>',
+        ]);
+
+        $response = $this->withServerVariables([
+            'HTTP_HOST' => 'demo.pagify.test',
+            'REQUEST_SCHEME' => 'https',
+            'HTTPS' => 'on',
+        ])->get('/pages/host-request-test');
+
+        $response->assertOk();
+        $response->assertSee('data-site-url="https://demo.pagify.test/hello"', false);
     }
 }

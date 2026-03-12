@@ -56,7 +56,26 @@ class FrontendThemeAssetController extends Controller
         }
 
         return response()->file($assetPathReal, [
+            'Content-Type' => $this->contentTypeFor($assetPathReal),
             'Cache-Control' => 'public, max-age=3600',
         ]);
+    }
+
+    private function contentTypeFor(string $assetPathReal): string
+    {
+        $extension = strtolower((string) pathinfo($assetPathReal, PATHINFO_EXTENSION));
+
+        return match ($extension) {
+            'css' => 'text/css; charset=utf-8',
+            'js' => 'application/javascript; charset=utf-8',
+            'json' => 'application/json; charset=utf-8',
+            'svg' => 'image/svg+xml',
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            'ico' => 'image/x-icon',
+            default => 'application/octet-stream',
+        };
     }
 }

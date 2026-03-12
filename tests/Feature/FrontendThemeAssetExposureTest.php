@@ -49,6 +49,7 @@ class FrontendThemeAssetExposureTest extends TestCase
         $response = $this->get('/theme-assets/unified-assets/css/site.css');
 
         $response->assertOk();
+        $response->assertHeader('Content-Type', 'text/css; charset=utf-8');
 
         $baseResponse = $response->baseResponse;
         $this->assertInstanceOf(BinaryFileResponse::class, $baseResponse);
