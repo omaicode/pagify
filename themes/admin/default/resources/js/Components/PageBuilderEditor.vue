@@ -1,6 +1,8 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import Fuse from 'fuse.js';
+import { toast } from 'vue3-toastify';
 
 const props = defineProps({
     modelValue: {
@@ -35,9 +37,17 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    blockSearchConfig: {
+        type: Object,
+        default: () => ({}),
+    },
+    compactHeader: {
+        type: Boolean,
+        default: false,
+    },
 });
 
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue', 'editor-state-change']);
 const page = usePage();
 const t = computed(() => page.props.translations?.ui ?? {});
 const label = (key, fallback) => t.value?.[key] ?? fallback;
@@ -45,16 +55,182 @@ const label = (key, fallback) => t.value?.[key] ?? fallback;
 const editorContainer = ref(null);
 const isEditorLoading = ref(true);
 const editorLoadError = ref('');
+const editorSyncState = ref('synced');
+const lastSyncedAt = ref('');
+const blockSearchTerm = ref('');
+const filteredBlockCount = ref(0);
+const recentBlockKeys = ref([]);
+const isFocusMode = ref(false);
+const showEditorGuide = ref(true);
+const editorHealth = ref({
+    state: 'unknown',
+    slotFound: false,
+    contentBlocks: 0,
+    outsideBlocks: 0,
+    updatedAt: '',
+});
 
 let editor = null;
 let syncTimeout = null;
 let unmounted = false;
 let relocatingComponent = false;
+let registeredBlocks = [];
+let activeDraggedBlockKey = null;
+let blockSearchIndex = null;
+
+const RECENT_BLOCK_STORAGE_KEY = 'pagify:page-builder:recent-blocks';
+const RECENT_BLOCK_LIMIT = 6;
+const EDITOR_PREFS_STORAGE_KEY = 'pagify:page-builder:editor-prefs';
+const DEFAULT_BLOCK_SEARCH_OPTIONS = {
+    includeScore: false,
+    threshold: 0.34,
+    ignoreLocation: true,
+    minMatchCharLength: 2,
+    keys: [
+        { name: 'label', weight: 0.5 },
+        { name: 'key', weight: 0.25 },
+        { name: 'description', weight: 0.2 },
+        { name: 'category', weight: 0.05 },
+    ],
+};
+
+const editorCanvasHeight = computed(() => (isFocusMode.value ? '82vh' : '70vh'));
+
+const editorHealthClass = computed(() => {
+    if (editorHealth.value.state === 'warning') {
+        return 'border-amber-200 bg-amber-50 text-amber-700';
+    }
+
+    if (editorHealth.value.state === 'healthy') {
+        return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+    }
+
+    return 'border-slate-200 bg-slate-50 text-slate-600';
+});
+
+const editorHealthLabel = computed(() => {
+    if (editorHealth.value.state === 'warning') {
+        return label('pb_health_status_warning', 'Layout needs attention');
+    }
+
+    if (editorHealth.value.state === 'healthy') {
+        return label('pb_health_status_healthy', 'Layout healthy');
+    }
+
+    return label('pb_health_status_checking', 'Checking layout health...');
+});
+
+const editorSyncLabel = computed(() => {
+    if (editorSyncState.value === 'syncing') {
+        return label('pb_editor_state_syncing', 'Syncing changes...');
+    }
+
+    if (editorSyncState.value === 'dirty') {
+        return label('pb_editor_state_unsaved', 'Unsaved changes');
+    }
+
+    return label('pb_editor_state_synced', 'Changes synced');
+});
+
+const editorSyncClass = computed(() => {
+    if (editorSyncState.value === 'syncing') {
+        return 'border-amber-200 bg-amber-50 text-amber-700';
+    }
+
+    if (editorSyncState.value === 'dirty') {
+        return 'border-sky-200 bg-sky-50 text-sky-700';
+    }
+
+    return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+});
+
+const markEditorDirty = () => {
+    editorSyncState.value = 'dirty';
+    emit('editor-state-change', {
+        state: 'dirty',
+        syncedAt: lastSyncedAt.value,
+    });
+};
+
+const markEditorSynced = () => {
+    editorSyncState.value = 'synced';
+    lastSyncedAt.value = new Date().toLocaleTimeString();
+    emit('editor-state-change', {
+        state: 'synced',
+        syncedAt: lastSyncedAt.value,
+    });
+};
+
+const applyEditorCanvasHeight = () => {
+    if (!editorContainer.value) {
+        return;
+    }
+
+    editorContainer.value.style.height = editorCanvasHeight.value;
+
+    if (editor && typeof editor.refresh === 'function') {
+        editor.refresh();
+    }
+};
+
+const loadEditorPreferences = () => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    try {
+        const raw = window.localStorage.getItem(EDITOR_PREFS_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : {};
+
+        isFocusMode.value = Boolean(parsed?.focusMode);
+        showEditorGuide.value = parsed?.guideDismissed ? false : true;
+    } catch (_) {
+        isFocusMode.value = false;
+        showEditorGuide.value = true;
+    }
+};
+
+const persistEditorPreferences = () => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    try {
+        window.localStorage.setItem(EDITOR_PREFS_STORAGE_KEY, JSON.stringify({
+            focusMode: isFocusMode.value,
+            guideDismissed: !showEditorGuide.value,
+        }));
+    } catch (_) {
+        // No-op: localStorage might be unavailable in restricted browser contexts.
+    }
+};
+
+const clearBlockSearch = () => {
+    blockSearchTerm.value = '';
+};
+
+const clearRecentBlocks = () => {
+    recentBlockKeys.value = [];
+    persistRecentBlockKeys();
+    renderBlockManager(registeredBlocks, blockSearchTerm.value);
+    toast.info(label('pb_recent_blocks_cleared', 'Quick blocks cleared.'));
+};
+
+const dismissEditorGuide = () => {
+    showEditorGuide.value = false;
+    persistEditorPreferences();
+};
 
 const emitLayoutSnapshot = () => {
     if (!editor) {
         return;
     }
+
+    editorSyncState.value = 'syncing';
+    emit('editor-state-change', {
+        state: 'syncing',
+        syncedAt: lastSyncedAt.value,
+    });
 
     const grapesHtml = extractContentFromHtml(editor.getHtml());
 
@@ -69,12 +245,61 @@ const emitLayoutSnapshot = () => {
             updated_at: new Date().toISOString(),
         },
     });
+
+    markEditorSynced();
+    assessEditorHealth();
+};
+
+const assessEditorHealth = () => {
+    if (!editor) {
+        return;
+    }
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(`<body>${editor.getHtml()}</body>`, 'text/html');
+    const slot = doc.body.querySelector('[data-pbx-content-slot="true"]');
+
+    const allBlockNodes = Array.from(doc.body.querySelectorAll('[class*="pbx-"]'));
+    const outsideBlocks = slot
+        ? allBlockNodes.filter((node) => !slot.contains(node)).length
+        : allBlockNodes.length;
+    const contentBlocks = slot
+        ? slot.querySelectorAll('[class*="pbx-"]').length
+        : 0;
+
+    const state = !slot || outsideBlocks > 0 ? 'warning' : 'healthy';
+
+    editorHealth.value = {
+        state,
+        slotFound: !!slot,
+        contentBlocks,
+        outsideBlocks,
+        updatedAt: new Date().toLocaleTimeString(),
+    };
+};
+
+const handleGlobalKeydown = (event) => {
+    const isSaveShortcut = (event.metaKey || event.ctrlKey) && String(event.key ?? '').toLowerCase() === 's';
+
+    if (!isSaveShortcut) {
+        return;
+    }
+
+    event.preventDefault();
+    handleFlushRequest();
+    toast.success(label('pb_hotkey_saved', 'Changes synced locally.'));
+};
+
+const handleExternalSearchEvent = (event) => {
+    const term = String(event?.detail?.term ?? '');
+    blockSearchTerm.value = term;
 };
 
 const defaultBlockCss = `
 .pbx-section{padding:clamp(8px,1.2vw,14px);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#111827}
 main[data-pbx-content-slot="true"], .pbx-layout-content{padding-left:0!important;padding-right:0!important;padding-top: 1rem; padding-bottom: 1rem;}
-.pbx-layout-content{min-height:220px;display:flex;flex-direction:column;gap:18px}
+.pbx-layout-content{min-height:220px;display:flex;flex-direction:column;gap:18px;border:1px dashed #cbd5e1;border-radius:10px;background:linear-gradient(180deg,rgba(248,250,252,.96),rgba(248,250,252,.75));box-shadow:inset 0 0 0 1px rgba(255,255,255,.6)}
+.pbx-layout-content:empty::before{content:'Drop blocks here';display:block;padding:12px 14px;font-size:12px;color:#64748b}
 .pbx-layout-content > .pbx-section + .pbx-section{margin-top:18px}
 .pbx-heading{font-size:clamp(1.6rem,3vw,2.4rem);line-height:1.2;font-weight:700;margin:0 0 12px;color:#0f172a}
 .pbx-subheading{font-size:clamp(1.05rem,1.8vw,1.3rem);line-height:1.35;font-weight:600;margin:0 0 8px;color:#0f172a}
@@ -164,6 +389,147 @@ const selectedThemeLayout = computed({
     },
 });
 const primaryBlockKeySet = computed(() => new Set(props.primaryBlockKeys.map((item) => String(item))));
+
+const normalizeSearchValue = (value) => String(value ?? '').trim().toLowerCase();
+
+const sanitizeBlockSearchOptions = (config) => {
+    const input = config && typeof config === 'object' ? config : {};
+    const threshold = Number(input.threshold);
+    const minMatchCharLength = Number(input.minMatchCharLength);
+
+    const keys = Array.isArray(input.keys) && input.keys.length > 0
+        ? input.keys
+            .map((item) => {
+                if (typeof item === 'string') {
+                    return { name: item, weight: 1 };
+                }
+
+                if (!item || typeof item !== 'object') {
+                    return null;
+                }
+
+                const name = String(item.name ?? '').trim();
+                const weight = Number(item.weight);
+
+                if (name === '') {
+                    return null;
+                }
+
+                return {
+                    name,
+                    weight: Number.isFinite(weight) && weight > 0 ? weight : 1,
+                };
+            })
+            .filter((item) => item !== null)
+        : DEFAULT_BLOCK_SEARCH_OPTIONS.keys;
+
+    return {
+        ...DEFAULT_BLOCK_SEARCH_OPTIONS,
+        ...input,
+        threshold: Number.isFinite(threshold)
+            ? Math.min(1, Math.max(0, threshold))
+            : DEFAULT_BLOCK_SEARCH_OPTIONS.threshold,
+        minMatchCharLength: Number.isFinite(minMatchCharLength)
+            ? Math.max(1, Math.floor(minMatchCharLength))
+            : DEFAULT_BLOCK_SEARCH_OPTIONS.minMatchCharLength,
+        keys,
+    };
+};
+
+const resolvedBlockSearchOptions = computed(() => sanitizeBlockSearchOptions(props.blockSearchConfig));
+
+const buildBlockSearchIndex = (blocks) => {
+    blockSearchIndex = new Fuse(Array.isArray(blocks) ? blocks : [], resolvedBlockSearchOptions.value);
+};
+
+const findMatchingBlocks = (searchTerm, fallbackBlocks) => {
+    const normalizedSearch = normalizeSearchValue(searchTerm);
+
+    if (normalizedSearch === '') {
+        return Array.isArray(fallbackBlocks) ? fallbackBlocks : [];
+    }
+
+    if (!blockSearchIndex) {
+        buildBlockSearchIndex(fallbackBlocks);
+    }
+
+    return blockSearchIndex
+        .search(normalizedSearch)
+        .map((result) => result.item)
+        .filter((item) => !!item);
+};
+
+const sanitizeRecentBlockKeys = (keys, availableBlockKeys) => {
+    if (!Array.isArray(keys)) {
+        return [];
+    }
+
+    const available = new Set(Array.isArray(availableBlockKeys) ? availableBlockKeys : []);
+
+    return Array.from(new Set(
+        keys
+            .map((key) => String(key ?? '').trim())
+            .filter((key) => key !== '' && available.has(key)),
+    )).slice(0, RECENT_BLOCK_LIMIT);
+};
+
+const loadRecentBlockKeys = (availableBlockKeys) => {
+    if (typeof window === 'undefined') {
+        recentBlockKeys.value = [];
+        return;
+    }
+
+    try {
+        const raw = window.localStorage.getItem(RECENT_BLOCK_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        recentBlockKeys.value = sanitizeRecentBlockKeys(parsed, availableBlockKeys);
+    } catch (_) {
+        recentBlockKeys.value = [];
+    }
+};
+
+const persistRecentBlockKeys = () => {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    try {
+        window.localStorage.setItem(RECENT_BLOCK_STORAGE_KEY, JSON.stringify(recentBlockKeys.value));
+    } catch (_) {
+        // No-op: localStorage might be unavailable in restricted browser contexts.
+    }
+};
+
+const resolveBlockKeyFromBlockId = (blockId) => {
+    const normalized = String(blockId ?? '').trim();
+
+    if (!normalized.startsWith('pagify-')) {
+        return null;
+    }
+
+    return normalized.slice('pagify-'.length);
+};
+
+const markBlockAsRecentlyUsed = (blockKey) => {
+    const normalized = String(blockKey ?? '').trim();
+
+    if (normalized === '') {
+        return;
+    }
+
+    const availableKeys = registeredBlocks.map((item) => String(item?.key ?? '').trim());
+
+    if (!availableKeys.includes(normalized)) {
+        return;
+    }
+
+    recentBlockKeys.value = sanitizeRecentBlockKeys([normalized, ...recentBlockKeys.value], availableKeys);
+    persistRecentBlockKeys();
+
+    if (editor) {
+        renderBlockManager(registeredBlocks, blockSearchTerm.value);
+    }
+};
 
 const scheduleSync = () => {
     if (!editor) {
@@ -432,7 +798,7 @@ const findFirstContentSlotComponent = () => {
 
 const enforceDropInsideMain = (component) => {
     if (!component || relocatingComponent || isInsideContentSlot(component)) {
-        return;
+        return true;
     }
 
     const slot = findFirstContentSlotComponent();
@@ -442,7 +808,9 @@ const enforceDropInsideMain = (component) => {
             component.remove();
         }
 
-        return;
+        toast.warning(label('pb_drop_outside_content_warning', 'Blocks can only be dropped inside the content area.'));
+
+        return false;
     }
 
     const collection = typeof slot.components === 'function' ? slot.components() : null;
@@ -452,15 +820,21 @@ const enforceDropInsideMain = (component) => {
             component.remove();
         }
 
-        return;
+        toast.warning(label('pb_drop_outside_content_warning', 'Blocks can only be dropped inside the content area.'));
+
+        return false;
     }
 
     relocatingComponent = true;
     collection.add(component);
     relocatingComponent = false;
 
+    toast.info(label('pb_drop_moved_into_content', 'Block moved into the content area.'));
+
     lockToContentOnly();
     scheduleSync();
+
+    return true;
 };
 
 const lockToContentOnly = () => {
@@ -787,6 +1161,91 @@ const resolveBlockIconSvg = (block) => {
     return `<div style="display:flex;justify-content:center;align-items:center;padding:6px 0;"><div style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;background:linear-gradient(145deg,${primary},${accent});box-shadow:0 8px 16px color-mix(in srgb, ${primary} 35%, transparent);"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg><span style="position:absolute;right:-3px;bottom:-3px;width:9px;height:9px;border-radius:999px;background:${accent};border:2px solid #fff;"></span></div>`;
 };
 
+const renderBlockManager = (blocks, searchTerm = '') => {
+    if (!editor) {
+        return;
+    }
+
+    const filteredBlocks = findMatchingBlocks(searchTerm, blocks);
+
+    filteredBlockCount.value = filteredBlocks.length;
+
+    const manager = editor.BlockManager;
+    const categories = manager.getCategories();
+
+    manager.getAll().reset();
+    categories.reset();
+
+    const quickCategoryId = 'pb-quick-blocks';
+    const quickCategoryLabel = label('pb_quick_blocks', 'Quick blocks');
+    const themeCategoryId = 'pb-theme-blocks';
+    const themeCategoryLabel = label('pb_theme_blocks', 'Theme Blocks');
+
+    const recentBlockSet = new Set(recentBlockKeys.value);
+    const blockByKey = new Map(
+        filteredBlocks.map((item) => [String(item?.key ?? '').trim(), item]),
+    );
+    const quickBlocks = recentBlockKeys.value
+        .map((blockKey) => blockByKey.get(blockKey))
+        .filter((item) => !!item);
+    const remainingBlocks = filteredBlocks.filter((item) => !recentBlockSet.has(String(item?.key ?? '').trim()));
+
+    if (quickBlocks.length > 0) {
+        categories.add({
+            id: quickCategoryId,
+            label: quickCategoryLabel,
+            open: true,
+        });
+    }
+
+    categories.add({
+        id: themeCategoryId,
+        label: themeCategoryLabel,
+        open: true,
+    });
+
+    quickBlocks.forEach((block) => {
+        manager.add(`pagify-${block.key}`, {
+            label: block.label,
+            category: {
+                id: quickCategoryId,
+                label: quickCategoryLabel,
+                open: true,
+            },
+            media: resolveBlockIconSvg(block),
+            content: mapBlockContent(block),
+            attributes: {
+                title: block.description || block.label,
+            },
+        });
+    });
+
+    remainingBlocks.forEach((block) => {
+        const isThemeBlock = primaryBlockKeySet.value.has(String(block?.key ?? ''));
+
+        manager.add(`pagify-${block.key}`, {
+            label: block.label,
+            category: isThemeBlock
+                ? {
+                    id: themeCategoryId,
+                    label: themeCategoryLabel,
+                    open: true,
+                }
+                : (block.category || (block.source === 'plugin' ? label('pb_plugin_blocks', 'Plugin Blocks') : label('pb_core_blocks', 'Core Blocks'))),
+            media: resolveBlockIconSvg(block),
+            content: mapBlockContent(block),
+            attributes: {
+                title: block.description || block.label,
+            },
+        });
+    });
+
+    categories.each((category) => {
+        const categoryId = category.get('id');
+        category.set('open', categoryId === quickCategoryId || categoryId === themeCategoryId);
+    });
+};
+
 const ensureThemeLayoutDefault = () => {
     const current = layout.value?.theme_layout;
 
@@ -814,6 +1273,7 @@ onMounted(async () => {
 
     isEditorLoading.value = true;
     editorLoadError.value = '';
+    loadEditorPreferences();
     ensureThemeLayoutDefault();
 
     try {
@@ -828,7 +1288,7 @@ onMounted(async () => {
 
         editor = grapesjs.init({
             container: editorContainer.value,
-            height: '70vh',
+            height: editorCanvasHeight.value,
             storageManager: false,
             fromElement: false,
             canvas: {
@@ -847,13 +1307,6 @@ onMounted(async () => {
             },
         });
 
-        const themeCategoryId = 'pb-theme-blocks';
-        const themeCategoryLabel = label('pb_theme_blocks', 'Theme Blocks');
-        editor.BlockManager.getCategories().add({
-            id: themeCategoryId,
-            label: themeCategoryLabel,
-            open: true,
-        });
         const sortedBlocks = [...props.blocks].sort((left, right) => {
             const leftTheme = primaryBlockKeySet.value.has(String(left?.key ?? '')) ? 0 : 1;
             const rightTheme = primaryBlockKeySet.value.has(String(right?.key ?? '')) ? 0 : 1;
@@ -864,30 +1317,10 @@ onMounted(async () => {
 
             return String(left?.label ?? left?.key ?? '').localeCompare(String(right?.label ?? right?.key ?? ''));
         });
-
-        sortedBlocks.forEach((block) => {
-            const isThemeBlock = primaryBlockKeySet.value.has(String(block?.key ?? ''));
-
-            editor.BlockManager.add(`pagify-${block.key}`, {
-                label: block.label,
-                category: isThemeBlock
-                    ? {
-                        id: themeCategoryId,
-                        label: themeCategoryLabel,
-                        open: true,
-                    }
-                    : (block.category || (block.source === 'plugin' ? label('pb_plugin_blocks', 'Plugin Blocks') : label('pb_core_blocks', 'Core Blocks'))),
-                media: resolveBlockIconSvg(block),
-                content: mapBlockContent(block),
-                attributes: {
-                    title: block.description || block.label,
-                },
-            });
-        });
-
-        editor.BlockManager.getCategories().each((category) => {
-            category.set('open', category.get('id') === themeCategoryId);
-        });
+        registeredBlocks = sortedBlocks;
+        buildBlockSearchIndex(registeredBlocks);
+        loadRecentBlockKeys(registeredBlocks.map((item) => String(item?.key ?? '').trim()));
+        renderBlockManager(registeredBlocks, blockSearchTerm.value);
 
         editor.addStyle(defaultBlockCss);
 
@@ -902,12 +1335,37 @@ onMounted(async () => {
             applyCurrentLayoutContext();
         }
 
-        editor.on('update', scheduleSync);
+        editor.on('update', () => {
+            markEditorDirty();
+            scheduleSync();
+        });
+        editor.on('block:drag:start', (blockModel) => {
+            activeDraggedBlockKey = resolveBlockKeyFromBlockId(blockModel?.id);
+        });
         editor.on('load', applyCurrentLayoutContext);
         editor.on('canvas:frame:load', applyCurrentLayoutContext);
         editor.on('component:mount', lockToContentOnly);
-        editor.on('block:drag:stop', enforceDropInsideMain);
+        editor.on('block:drag:stop', (component, blockModel) => {
+            const isValidDrop = enforceDropInsideMain(component);
+
+            if (!isValidDrop) {
+                activeDraggedBlockKey = null;
+                return;
+            }
+
+            const blockKey = resolveBlockKeyFromBlockId(blockModel?.id) ?? activeDraggedBlockKey;
+
+            if (blockKey) {
+                markBlockAsRecentlyUsed(blockKey);
+            }
+
+            activeDraggedBlockKey = null;
+        });
         window.addEventListener('pbx-editor-flush', handleFlushRequest);
+        window.addEventListener('keydown', handleGlobalKeydown);
+        window.addEventListener('pbx-editor-search:set', handleExternalSearchEvent);
+        applyEditorCanvasHeight();
+        assessEditorHealth();
     } catch (_) {
         editorLoadError.value = label('pb_editor_load_failed', 'Unable to load GrapesJS editor. Please refresh and try again.');
     } finally {
@@ -928,6 +1386,8 @@ onBeforeUnmount(() => {
     }
 
     window.removeEventListener('pbx-editor-flush', handleFlushRequest);
+    window.removeEventListener('keydown', handleGlobalKeydown);
+    window.removeEventListener('pbx-editor-search:set', handleExternalSearchEvent);
 });
 
 watch(selectedThemeLayout, (next, previous) => {
@@ -937,19 +1397,138 @@ watch(selectedThemeLayout, (next, previous) => {
 
     applySelectedLayout();
 });
+
+watch(blockSearchTerm, (nextValue) => {
+    if (!editor) {
+        return;
+    }
+
+    renderBlockManager(registeredBlocks, nextValue);
+});
+
+watch(resolvedBlockSearchOptions, () => {
+    if (!editor) {
+        return;
+    }
+
+    buildBlockSearchIndex(registeredBlocks);
+    renderBlockManager(registeredBlocks, blockSearchTerm.value);
+});
+
+watch(isFocusMode, () => {
+    applyEditorCanvasHeight();
+    persistEditorPreferences();
+});
 </script>
 
 <template>
     <div class="space-y-3">
-        <div class="rounded border border-slate-200 bg-white p-3">
-            <p class="text-xs text-slate-500">
-                {{ props.simpleMode
-                    ? label('pb_editor_drag_drop_hint', 'Drag blocks from the right panel and drop directly into the canvas. Primary blocks are prioritized for quick use.')
-                    : label('pb_editor_hint', 'GrapesJS canvas is active. Use the right block manager and top device switcher for responsive editing.') }}
+        <div v-if="!props.compactHeader" class="rounded border border-slate-200 bg-white p-3">
+            <div class="flex flex-wrap items-center gap-2">
+                <p class="text-xs text-slate-500">
+                    {{ props.simpleMode
+                        ? label('pb_editor_drag_drop_hint', 'Drag blocks from the right panel and drop directly into the canvas. Primary blocks are prioritized for quick use.')
+                        : label('pb_editor_hint', 'GrapesJS canvas is active. Use the right block manager and top device switcher for responsive editing.') }}
+                </p>
+                <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium" :class="editorSyncClass">
+                    {{ editorSyncLabel }}
+                </span>
+            </div>
+            <div class="mt-2 flex flex-wrap items-center gap-2">
+                <button
+                    type="button"
+                    class="inline-flex items-center rounded border border-slate-200 px-2 py-1 text-[11px] font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+                    @click="isFocusMode = !isFocusMode"
+                >
+                    {{ isFocusMode
+                        ? label('pb_focus_mode_exit', 'Exit focus mode')
+                        : label('pb_focus_mode_enter', 'Focus mode') }}
+                </button>
+                <button
+                    v-if="blockSearchTerm.trim() !== ''"
+                    type="button"
+                    class="inline-flex items-center rounded border border-slate-200 px-2 py-1 text-[11px] font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+                    @click="clearBlockSearch"
+                >
+                    {{ label('pb_clear_search', 'Clear search') }}
+                </button>
+                <button
+                    v-if="recentBlockKeys.length > 0"
+                    type="button"
+                    class="inline-flex items-center rounded border border-slate-200 px-2 py-1 text-[11px] font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+                    @click="clearRecentBlocks"
+                >
+                    {{ label('pb_clear_quick_blocks', 'Clear quick blocks') }}
+                </button>
+            </div>
+            <p class="mt-1 text-[11px] text-slate-500">
+                {{ label('pb_content_slot_hint', 'Only the highlighted content area is editable. Header and footer remain locked.') }}
+            </p>
+            <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
+                <span class="inline-flex items-center rounded-full border px-2 py-0.5 font-medium" :class="editorHealthClass">
+                    {{ editorHealthLabel }}
+                </span>
+                <span class="text-slate-600">
+                    {{ label('pb_health_content_blocks', 'Content blocks') }}: {{ editorHealth.contentBlocks }}
+                </span>
+                <span class="text-slate-600">
+                    {{ label('pb_health_outside_blocks', 'Outside blocks') }}: {{ editorHealth.outsideBlocks }}
+                </span>
+                <button
+                    type="button"
+                    class="inline-flex items-center rounded border border-slate-200 px-2 py-0.5 font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+                    @click="assessEditorHealth"
+                >
+                    {{ label('pb_health_rescan', 'Re-scan') }}
+                </button>
+            </div>
+            <p class="mt-1 text-[11px] text-slate-500">
+                {{ label('pb_hotkey_hint', 'Shortcut: Ctrl/Cmd + S to sync changes quickly.') }}
+            </p>
+            <p v-if="lastSyncedAt" class="mt-1 text-[11px] text-slate-500">
+                {{ label('pb_editor_last_synced', 'Last synced at') }}: {{ lastSyncedAt }}
             </p>
             <p v-if="activeTheme" class="mt-1 text-[11px] text-indigo-600">
                 {{ label('pb_using_active_theme', 'Canvas is loaded with active theme styles:') }} {{ activeTheme }}
             </p>
+
+            <div class="mt-2">
+                <label class="sr-only" for="pb-block-search">{{ label('pb_block_search_placeholder', 'Search blocks...') }}</label>
+                <input
+                    id="pb-block-search"
+                    v-model="blockSearchTerm"
+                    type="search"
+                    class="pf-input !py-1.5 text-sm"
+                    :placeholder="label('pb_block_search_placeholder', 'Search blocks...')"
+                >
+                <p
+                    v-if="blockSearchTerm.trim() !== '' && filteredBlockCount === 0"
+                    class="mt-1 text-[11px] text-amber-700"
+                >
+                    {{ label('pb_no_blocks_match_search', 'No blocks match your search.') }}
+                </p>
+            </div>
+
+            <div
+                v-if="showEditorGuide"
+                class="mt-3 rounded border border-indigo-200 bg-indigo-50 px-3 py-2 text-[11px] text-indigo-800"
+            >
+                <div class="flex items-start justify-between gap-2">
+                    <p class="font-semibold">{{ label('pb_editor_quick_guide_title', 'Quick start guide') }}</p>
+                    <button
+                        type="button"
+                        class="inline-flex items-center rounded border border-indigo-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-indigo-700 hover:bg-indigo-100"
+                        @click="dismissEditorGuide"
+                    >
+                        {{ label('pb_editor_quick_guide_dismiss', 'Got it') }}
+                    </button>
+                </div>
+                <ol class="mt-1 list-decimal space-y-0.5 pl-4">
+                    <li>{{ label('pb_editor_quick_guide_step_1', 'Pick a block from Theme/Quick blocks on the right panel.') }}</li>
+                    <li>{{ label('pb_editor_quick_guide_step_2', 'Drop it into the highlighted content area.') }}</li>
+                    <li>{{ label('pb_editor_quick_guide_step_3', 'Use Save changes when sync status turns green.') }}</li>
+                </ol>
+            </div>
         </div>
 
         <div v-if="isEditorLoading" class="rounded border border-slate-200 bg-white p-3 text-sm text-slate-600">
