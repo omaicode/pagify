@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "description": "Default theme for Pagify.",
   "author": "Pagify",
+  "render": {
+    "engine": "twig"
+  },
   "requires": {
     "php": ">=8.2",
     "laravel": "^12.0"

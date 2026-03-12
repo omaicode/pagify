@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use Pagify\Core\Events\EntryCreated;
 use Pagify\Core\Events\EntryPublished;
 use Pagify\Core\Contracts\CoreHookSubscriber;
+use Pagify\Core\Console\Commands\ClearThemeTwigCacheCommand;
 use Pagify\Core\Console\Commands\CleanupAuditLogsCommand;
 use Pagify\Core\Console\Commands\MakePluginCommand;
 use Pagify\Core\Console\Commands\MakeThemeCommand;
@@ -216,6 +217,7 @@ class CoreServiceProvider extends ServiceProvider
 
 		if ($this->app->runningInConsole()) {
 			$this->commands([
+				ClearThemeTwigCacheCommand::class,
 				CleanupAuditLogsCommand::class,
 				MakePluginCommand::class,
 				MakeThemeCommand::class,

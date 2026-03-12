@@ -26,9 +26,11 @@
         "omaicode/pagify-content": "*",
         "omaicode/pagify-core": "*",
         "omaicode/pagify-media": "*",
-        "omaicode/pagify-updater": "*",
         "omaicode/pagify-page-builder": "*",
-        "spatie/laravel-permission": "^6.10"
+        "omaicode/pagify-updater": "*",
+        "spatie/laravel-permission": "^6.10",
+        "twig/string-extra": "^3.10",
+        "twig/twig": "^3.10"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.6",

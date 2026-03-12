@@ -24,39 +24,48 @@ class PageBuilderThemeRenderTest extends TestCase
         config()->set('core.frontend_ui.fallback_theme', 'default');
 
         File::deleteDirectory(base_path('storage/testing/themes/main'));
-        File::ensureDirectoryExists(base_path('storage/testing/themes/main/default/resources/views/layouts'));
-        File::ensureDirectoryExists(base_path('storage/testing/themes/main/default/resources/views/pages'));
+        File::ensureDirectoryExists(base_path('storage/testing/themes/main/default/layouts'));
+        File::ensureDirectoryExists(base_path('storage/testing/themes/main/default/pages'));
 
         File::put(base_path('storage/testing/themes/main/default/theme.json'), json_encode([
             'slug' => 'default',
             'name' => 'Default Main Theme',
             'version' => '1.0.0',
+            'render' => [
+                'engine' => 'twig',
+            ],
         ], JSON_PRETTY_PRINT));
 
-        File::put(base_path('storage/testing/themes/main/default/resources/views/layouts/app.blade.php'), "<!doctype html><html><head>@yield('head')</head><body><div data-theme=\"default\">@yield('content')</div></body></html>");
-        File::put(base_path('storage/testing/themes/main/default/resources/views/pages/page.blade.php'), "@extends('layouts.app')\n@section('head'){!! \$head ?? '' !!}@endsection\n@section('content'){!! \$content ?? '' !!}@endsection\n");
+        File::put(base_path('storage/testing/themes/main/default/layouts/app.twig'), "<!doctype html><html><head>{{ head|raw }}</head><body><div data-theme=\"default\">{{ content|raw }}</div><a data-asset=\"{{ asset_url('robots.txt') }}\"></a><span data-locale=\"{{ locale }}\"></span></body></html>");
+        File::put(base_path('storage/testing/themes/main/default/pages/page.twig'), "{% extends 'layouts/app.twig' %}\n");
 
-        File::ensureDirectoryExists(base_path('storage/testing/themes/main/ocean/resources/views/layouts'));
-        File::ensureDirectoryExists(base_path('storage/testing/themes/main/ocean/resources/views/pages'));
+        File::ensureDirectoryExists(base_path('storage/testing/themes/main/ocean/layouts'));
+        File::ensureDirectoryExists(base_path('storage/testing/themes/main/ocean/pages'));
 
         File::put(base_path('storage/testing/themes/main/ocean/theme.json'), json_encode([
             'slug' => 'ocean',
             'name' => 'Ocean',
             'version' => '1.0.0',
+            'render' => [
+                'engine' => 'twig',
+            ],
         ], JSON_PRETTY_PRINT));
 
-        File::put(base_path('storage/testing/themes/main/ocean/resources/views/layouts/app.blade.php'), "<!doctype html><html><head>@yield('head')</head><body><div data-theme=\"ocean\">@yield('content')</div></body></html>");
-        File::put(base_path('storage/testing/themes/main/ocean/resources/views/pages/page.blade.php'), "@extends('layouts.app')\n@section('head'){!! \$head ?? '' !!}@endsection\n@section('content'){!! \$content ?? '' !!}@endsection\n");
+        File::put(base_path('storage/testing/themes/main/ocean/layouts/app.twig'), "<!doctype html><html><head>{{ head|raw }}</head><body><div data-theme=\"ocean\">{{ content|raw }}</div><span data-site-url=\"{{ helpers.url.site('hello') }}\"></span></body></html>");
+        File::put(base_path('storage/testing/themes/main/ocean/pages/page.twig'), "{% extends 'layouts/app.twig' %}\n");
 
-        File::ensureDirectoryExists(base_path('storage/testing/themes/main/broken/resources/views/layouts'));
-        File::ensureDirectoryExists(base_path('storage/testing/themes/main/broken/resources/views/pages'));
+        File::ensureDirectoryExists(base_path('storage/testing/themes/main/broken/layouts'));
+        File::ensureDirectoryExists(base_path('storage/testing/themes/main/broken/pages'));
         File::put(base_path('storage/testing/themes/main/broken/theme.json'), json_encode([
             'slug' => 'wrong-slug',
             'name' => 'Broken',
             'version' => '1.0.0',
+            'render' => [
+                'engine' => 'twig',
+            ],
         ], JSON_PRETTY_PRINT));
-        File::put(base_path('storage/testing/themes/main/broken/resources/views/layouts/app.blade.php'), "<!doctype html><html><head>@yield('head')</head><body><div data-theme=\"broken\">@yield('content')</div></body></html>");
-        File::put(base_path('storage/testing/themes/main/broken/resources/views/pages/page.blade.php'), "@extends('layouts.app')\n@section('head'){!! \$head ?? '' !!}@endsection\n@section('content'){!! \$content ?? '' !!}@endsection\n");
+        File::put(base_path('storage/testing/themes/main/broken/layouts/app.twig'), "<!doctype html><html><head>{{ head|raw }}</head><body><div data-theme=\"broken\">{{ content|raw }}</div></body></html>");
+        File::put(base_path('storage/testing/themes/main/broken/pages/page.twig'), "{% extends 'layouts/app.twig' %}\n");
     }
 
     protected function tearDown(): void
@@ -95,6 +104,7 @@ class PageBuilderThemeRenderTest extends TestCase
         $response->assertOk();
         $response->assertSee('data-theme="ocean"', false);
         $response->assertSee('<main id="demo-body">Hello Theme</main>', false);
+        $response->assertSee('data-site-url="http://localhost/hello"', false);
     }
 
     public function test_fallback_uses_configured_fallback_when_active_theme_is_invalid(): void
@@ -137,6 +147,9 @@ class PageBuilderThemeRenderTest extends TestCase
             'slug' => 'ocean-broken',
             'name' => 'Ocean Broken',
             'version' => '1.0.0',
+            'render' => [
+                'engine' => 'twig',
+            ],
         ], JSON_PRETTY_PRINT));
 
         $site = Site::factory()->create([

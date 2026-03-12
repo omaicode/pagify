@@ -251,7 +251,7 @@ class FrontendThemeManagerService
                 continue;
             }
 
-            $path = $this->themePath($slug).'/resources/views';
+            $path = $this->themePath($slug);
 
             if ($this->files->isDirectory($path)) {
                 $paths[] = $path;
@@ -359,6 +359,20 @@ class FrontendThemeManagerService
         }
 
         if ($parsed['errors'] !== []) {
+            return false;
+        }
+
+        $manifest = $parsed['manifest'];
+
+        if (! is_array($manifest) || (string) (($manifest['render']['engine'] ?? '')) !== 'twig') {
+            return false;
+        }
+
+        if (! $this->files->exists($themePath.'/layouts/app.twig')) {
+            return false;
+        }
+
+        if (! $this->files->exists($themePath.'/pages/page.twig')) {
             return false;
         }
 

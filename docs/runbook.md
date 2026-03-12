@@ -116,8 +116,8 @@ composer dev
 - Active frontend theme root (runtime default): `${FRONTEND_THEMES_BASE_PATH}/${FRONTEND_THEME}`
 - Frontend fallback theme root: `${FRONTEND_THEMES_BASE_PATH}/${FRONTEND_THEME_FALLBACK}`
 - Frontend manifest: `${FRONTEND_THEMES_BASE_PATH}/{THEME_NAME}/theme.json`
-- Frontend page view entry: `${FRONTEND_THEMES_BASE_PATH}/{THEME_NAME}/resources/views/pages/page.blade.php`
-- Frontend layout view: `${FRONTEND_THEMES_BASE_PATH}/{THEME_NAME}/resources/views/layouts/app.blade.php`
+- Frontend page view entry: `${FRONTEND_THEMES_BASE_PATH}/{THEME_NAME}/pages/page.twig`
+- Frontend layout view: `${FRONTEND_THEMES_BASE_PATH}/{THEME_NAME}/layouts/app.twig`
 
 ## Troubleshooting
 
@@ -149,6 +149,12 @@ php artisan db:seed --class="Pagify\\Content\\Database\\Seeders\\ContentDatabase
 
 ```bash
 php artisan optimize:clear
+```
+
+- For frontend Twig template cache (recommended after theme deploy):
+
+```bash
+php artisan cms:theme:clear-cache
 ```
 
 - If plugin APIs return "Plugin state storage is not initialized yet", run migrations first:

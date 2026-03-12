@@ -30,6 +30,9 @@ class CoreThemeManagementTest extends TestCase
             'slug' => 'default',
             'name' => 'Default Main Theme',
             'version' => '1.0.0',
+            'render' => [
+                'engine' => 'twig',
+            ],
         ], JSON_PRETTY_PRINT));
     }
 
@@ -159,6 +162,9 @@ class CoreThemeManagementTest extends TestCase
             'slug' => $slug,
             'name' => ucfirst($slug),
             'version' => '1.0.0',
+            'render' => [
+                'engine' => 'twig',
+            ],
             'description' => '',
             'author' => '',
         ], $overrides);

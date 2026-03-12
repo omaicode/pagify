@@ -14,6 +14,7 @@ use Pagify\Core\Http\Controllers\Admin\PermissionPageController;
 use Pagify\Core\Http\Controllers\Admin\ProfilePageController;
 use Pagify\Core\Http\Controllers\Admin\SettingsPageController;
 use Pagify\Core\Http\Controllers\Admin\ThemePageController;
+use Pagify\Core\Http\Controllers\FrontendThemeAssetController;
 use Pagify\Core\Http\Controllers\Api\AdminGroupController;
 use Pagify\Core\Http\Controllers\Api\AdminManagerController;
 use Pagify\Core\Http\Controllers\Api\AdminPermissionController;
@@ -33,6 +34,11 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
     Route::get('/', function () {
         return view('core::index');
     })->name('core.index');
+
+    Route::get('/theme-assets/{theme}/{path}', FrontendThemeAssetController::class)
+        ->where('theme', '[a-z0-9]+(?:-[a-z0-9]+)*')
+        ->where('path', '.*')
+        ->name('core.frontend.themes.assets');
 
     Route::prefix(config('app.admin_url_prefix'))->name('core.admin.')->group(function (): void {
         Route::middleware('guest:web')->group(function (): void {

@@ -44,6 +44,8 @@ class FrontendThemeManifestService
             'author' => ['nullable', 'string', 'max:255'],
             'requires' => ['nullable', 'array'],
             'supports' => ['nullable', 'array'],
+            'render' => ['required', 'array'],
+            'render.engine' => ['required', 'string', 'in:twig'],
         ]);
 
         if ($validator->fails()) {

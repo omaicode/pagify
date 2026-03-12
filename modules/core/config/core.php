@@ -11,6 +11,53 @@ return [
         'themes_base_path' => env('FRONTEND_THEMES_BASE_PATH', 'themes/main'),
         'theme' => env('FRONTEND_THEME', 'unified'),
         'fallback_theme' => env('FRONTEND_THEME_FALLBACK', 'unified'),
+        'assets' => [
+            'cache_busting' => [
+                'strategy' => env('FRONTEND_THEME_ASSET_CACHE_BUSTING', 'mtime'),
+                'hash_length' => env('FRONTEND_THEME_ASSET_HASH_LENGTH', 12),
+            ],
+        ],
+        'render' => [
+            'engine' => env('FRONTEND_THEME_ENGINE', 'twig'),
+            'strict_variables' => env('FRONTEND_THEME_STRICT_VARIABLES', true),
+            'cache' => [
+                'enabled' => env('FRONTEND_THEME_CACHE_ENABLED', true),
+                'path' => env('FRONTEND_THEME_CACHE_PATH', storage_path('framework/cache/twig')),
+            ],
+            'sandbox' => [
+                'enabled' => env('FRONTEND_THEME_SANDBOX_ENABLED', true),
+                'allowed_tags' => [
+                    'if',
+                    'for',
+                    'set',
+                    'block',
+                    'extends',
+                    'include',
+                    'with',
+                    'apply',
+                ],
+                'allowed_filters' => [
+                    'default',
+                    'escape',
+                    'e',
+                    'raw',
+                    'upper',
+                    'lower',
+                    'title',
+                    'capitalize',
+                    'length',
+                    'join',
+                    'trim',
+                    'replace',
+                    'slice',
+                    'nl2br',
+                    'striptags',
+                    'date',
+                    'u',
+                ],
+                'allowed_functions' => [],
+            ],
+        ],
     ],
 
     'locales' => [

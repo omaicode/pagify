@@ -4,13 +4,19 @@ namespace Pagify\PageBuilder\Http\Controllers;
 
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Routing\Controller;
+use Pagify\Core\Services\FrontendThemeTwigEngine;
 use Pagify\Core\Services\FrontendThemeManagerService;
 use Pagify\PageBuilder\Models\Page;
 use Pagify\PageBuilder\Services\PageSnapshotService;
 
 class PublicPageController extends Controller
 {
-	public function __invoke(string $slug, PageSnapshotService $snapshotService, FrontendThemeManagerService $themes): HttpResponse
+	public function __invoke(
+		string $slug,
+		PageSnapshotService $snapshotService,
+		FrontendThemeManagerService $themes,
+		FrontendThemeTwigEngine $twigEngine,
+	): HttpResponse
 	{
 		$page = Page::query()
 			->where('slug', $slug)
@@ -47,17 +53,14 @@ class PublicPageController extends Controller
 		$combinedHead = trim(implode("\n", array_filter([$snapshotHead, $head])));
 		$content = $snapshotBody !== '' ? $snapshotBody : $html;
 
-		foreach (array_reverse($themes->viewPathsForCurrentSite()) as $path) {
-			view()->getFinder()->prependLocation($path);
-		}
+		$rendered = $twigEngine->render($themes->viewPathsForCurrentSite(), 'pages/page.twig', [
+			'page' => $page,
+			'head' => $combinedHead,
+			'content' => $content,
+			'locale' => app()->getLocale(),
+		]);
 
-		if (view()->exists('pages.page')) {
-			$rendered = view('pages.page', [
-				'page' => $page,
-				'head' => $combinedHead,
-				'content' => $content,
-			])->render();
-
+		if (is_string($rendered) && $rendered !== '') {
 			return response($rendered, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
 		}
 
