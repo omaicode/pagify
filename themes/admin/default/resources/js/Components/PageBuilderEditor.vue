@@ -944,8 +944,8 @@ watch(selectedThemeLayout, (next, previous) => {
         <div class="rounded border border-slate-200 bg-white p-3">
             <p class="text-xs text-slate-500">
                 {{ props.simpleMode
-                    ? label('pb_editor_drag_drop_hint', 'Drag blocks from the left panel and drop directly into the canvas. Primary blocks are prioritized for quick use.')
-                    : label('pb_editor_hint', 'GrapesJS canvas is active. Use the left block manager and top device switcher for responsive editing.') }}
+                    ? label('pb_editor_drag_drop_hint', 'Drag blocks from the right panel and drop directly into the canvas. Primary blocks are prioritized for quick use.')
+                    : label('pb_editor_hint', 'GrapesJS canvas is active. Use the right block manager and top device switcher for responsive editing.') }}
             </p>
             <p v-if="activeTheme" class="mt-1 text-[11px] text-indigo-600">
                 {{ label('pb_using_active_theme', 'Canvas is loaded with active theme styles:') }} {{ activeTheme }}
