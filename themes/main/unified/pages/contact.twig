@@ -11,7 +11,7 @@
             <ul class="mt-3 grid gap-2 text-sm text-[var(--text-soft)]">
                 <li>Email: support@pagify.local</li>
                 <li>Docs: {{ site_url('docs') }}</li>
-                <li>Admin: {{ site_url(config('app.admin_url_prefix')) }}</li>
+                <li>Admin: {{ site_url(admin_prefix|default('admin')) }}</li>
             </ul>
         </article>
         <form class="rounded-2xl border border-[var(--line-soft)] bg-white p-5" method="post" action="#" aria-label="Contact form">

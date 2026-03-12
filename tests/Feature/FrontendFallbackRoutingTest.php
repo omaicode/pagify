@@ -94,4 +94,20 @@ TWIG
         $response->assertOk();
         $response->assertSee('data-source="page-builder"', false);
     }
+
+    public function test_contact_template_renders_without_twig_sandbox_failure(): void
+    {
+        File::put(base_path('storage/testing/themes/main/unified/pages/contact.twig'), <<<'TWIG'
+{% extends 'layouts/app.twig' %}
+{% block body %}
+<main data-source="theme-contact">Admin link: {{ site_url(admin_prefix|default('admin')) }}</main>
+{% endblock %}
+TWIG
+        );
+
+        $response = $this->get('/contact');
+
+        $response->assertOk();
+        $response->assertSee('data-source="theme-contact"', false);
+    }
 }

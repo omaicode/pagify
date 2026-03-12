@@ -240,11 +240,7 @@ class PageBuilderThemeRenderTest extends TestCase
             'snapshot_html' => '<!doctype html><html><head></head><body><main>Host request</main></body></html>',
         ]);
 
-        $response = $this->withServerVariables([
-            'HTTP_HOST' => 'demo.pagify.test',
-            'REQUEST_SCHEME' => 'https',
-            'HTTPS' => 'on',
-        ])->get('/pages/host-request-test');
+        $response = $this->get('https://demo.pagify.test/pages/host-request-test');
 
         $response->assertOk();
         $response->assertSee('data-site-url="https://demo.pagify.test/hello"', false);

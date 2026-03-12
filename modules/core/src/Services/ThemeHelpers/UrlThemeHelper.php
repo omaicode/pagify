@@ -28,8 +28,8 @@ class UrlThemeHelper
         $normalized = ltrim($path, '/');
         $appBase = rtrim((string) config('app.url', url('/')), '/');
         $appHost = parse_url($appBase, PHP_URL_HOST);
-        $requestHost = request()->getHost();
-        $requestScheme = request()->getScheme() ?: (parse_url($appBase, PHP_URL_SCHEME) ?: 'https');
+        $requestHost = $this->requestHost();
+        $requestScheme = $this->requestScheme($appBase);
 
         if ($site !== null && (string) ($site->domain ?? '') !== '') {
             $host = (string) $site->domain;
@@ -74,5 +74,58 @@ class UrlThemeHelper
         }
 
         return in_array($normalized, ['localhost', '127.0.0.1', '::1'], true);
+    }
+
+    private function requestHost(): string
+    {
+        $request = request();
+        $candidates = [
+            $request->header('x-forwarded-host'),
+            $request->header('host'),
+            $request->server('HTTP_HOST'),
+            $_SERVER['HTTP_X_FORWARDED_HOST'] ?? null,
+            $_SERVER['HTTP_HOST'] ?? null,
+            $request->getHost(),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (! is_string($candidate) || trim($candidate) === '') {
+                continue;
+            }
+
+            return trim(explode(':', $candidate)[0]);
+        }
+
+        return '';
+    }
+
+    private function requestScheme(string $appBase): string
+    {
+        $request = request();
+
+        if ($request->isSecure()) {
+            return 'https';
+        }
+
+        $candidates = [
+            $request->header('x-forwarded-proto'),
+            $request->server('REQUEST_SCHEME'),
+            $request->server('HTTP_X_FORWARDED_PROTO'),
+            $_SERVER['REQUEST_SCHEME'] ?? null,
+            $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? null,
+            $request->getScheme(),
+            parse_url($appBase, PHP_URL_SCHEME),
+            'https',
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (! is_string($candidate) || trim($candidate) === '') {
+                continue;
+            }
+
+            return strtolower(trim(explode(',', $candidate)[0]));
+        }
+
+        return 'https';
     }
 }
