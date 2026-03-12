@@ -58,6 +58,8 @@ class PublicPageController extends Controller
 			'head' => $combinedHead,
 			'content' => $content,
 			'locale' => app()->getLocale(),
+			'request_path' => $slug,
+			'admin_prefix' => trim((string) config('app.admin_url_prefix', 'admin'), '/'),
 		]);
 
 		if (is_string($rendered) && $rendered !== '') {

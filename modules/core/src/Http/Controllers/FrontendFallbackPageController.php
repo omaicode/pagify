@@ -88,11 +88,12 @@ class FrontendFallbackPageController extends Controller
         $combinedHead = trim(implode("\n", array_filter([$snapshotHead, $head])));
         $content = $snapshotBody !== '' ? $snapshotBody : $html;
 
-        $rendered = $twigEngine->render($viewPaths, 'pages/page.twig', [
+        $rendered = $twigEngine->render($viewPaths, 'pages/home.twig', [
             'page' => $page,
             'head' => $combinedHead,
             'content' => $content,
             'locale' => app()->getLocale(),
+            'request_path' => $slug,
             'admin_prefix' => trim((string) config('app.admin_url_prefix', 'admin'), '/'),
         ]);
 
