@@ -1,0 +1,25 @@
+{
+  "name": "omaicode/pagify-installer",
+  "description": "First-run installation wizard for Pagify",
+  "type": "library",
+  "version": "1.0.0",
+  "license": "MIT",
+  "require": {
+    "php": "^8.2",
+    "omaicode/pagify-core": "*",
+    "omaicode/pagify-updater": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Pagify\\Installer\\": "src/"
+    }
+  },
+  "minimum-stability": "stable",
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Pagify\\Installer\\Providers\\InstallerServiceProvider"
+      ]
+    }
+  }
+}

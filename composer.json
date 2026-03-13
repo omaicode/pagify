@@ -44,7 +44,7 @@
     },
     "autoload": {
         "psr-4": {
-            "App\\": "app/",
+            "Pagify\\Installer\\": "bootstrap/installer/src/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         }
@@ -61,7 +61,9 @@
             "@php artisan key:generate",
             "@php artisan migrate --force",
             "cd themes/admin/${ADMIN_THEME:-default} && npm install",
-            "cd themes/admin/${ADMIN_THEME:-default} && npm run build"
+            "cd themes/admin/${ADMIN_THEME:-default} && npm run build",
+            "cd bootstrap/installer/frontend && npm install",
+            "cd bootstrap/installer/frontend && npm run build"
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",

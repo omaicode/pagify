@@ -11,6 +11,7 @@ return [
     | this array to grant expanded functionality to your applications.
     |
     */
+    Pagify\Installer\Providers\InstallerServiceProvider::class,
     Pagify\Core\Providers\CoreServiceProvider::class,
     Pagify\Updater\Providers\UpdaterServiceProvider::class,
     Pagify\Content\Providers\ContentServiceProvider::class,

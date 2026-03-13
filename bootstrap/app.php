@@ -5,13 +5,23 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Pagify\Core\Services\PluginManagerService;
+use Pagify\Installer\Http\Middleware\EnsureInstallerCompleted;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->redirectGuestsTo(static fn () => route('core.admin.login'));
+        $middleware->prepend(EnsureInstallerCompleted::class);
+        $middleware->redirectGuestsTo(static function (Request $request): ?string {
+            $adminPrefix = trim((string) config('app.admin_url_prefix', 'admin'), '/');
+
+            if ($adminPrefix !== '' && $request->is($adminPrefix, $adminPrefix.'/*')) {
+                return route('core.admin.login');
+            }
+
+            return null;
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (\Throwable $throwable, Request $request) {
