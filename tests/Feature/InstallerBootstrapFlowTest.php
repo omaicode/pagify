@@ -49,6 +49,16 @@ class InstallerBootstrapFlowTest extends TestCase
             ->assertSee('Pagify Installer');
     }
 
+    public function test_install_page_is_accessible_with_database_backed_session_and_cache_before_install(): void
+    {
+        config()->set('session.driver', 'database');
+        config()->set('cache.default', 'database');
+
+        $this->get('/install')
+            ->assertOk()
+            ->assertSee('Pagify Installer');
+    }
+
     public function test_non_installer_api_request_is_blocked_until_installed(): void
     {
         $this->getJson('/api/v1/health')

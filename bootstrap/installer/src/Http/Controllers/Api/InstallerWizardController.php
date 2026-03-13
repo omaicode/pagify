@@ -384,6 +384,7 @@ class InstallerWizardController extends InstallerApiController
 
             $result = $state->withLock(function () use ($state, $payload, $themeManager): array {
                 Artisan::call('migrate', ['--force' => true]);
+                Artisan::call('db:seed', ['--module' => 'core']);
 
                 $currentState = $state->state();
                 $configuration = (array) Arr::get($currentState, 'configuration', []);

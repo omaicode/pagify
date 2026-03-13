@@ -17,6 +17,9 @@ class InstallerServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../../config/installer.php', 'installer');
         $this->mergeConfigFrom(__DIR__.'/../../config/module.php', 'installer.module');
 
+        $this->forceSafeSessionDriverDuringInstallation();
+        $this->forceSafeCacheStoreDuringInstallation();
+
         $this->app->singleton(InstallerStateService::class);
         $this->app->singleton(SystemCheckService::class);
         $this->app->singleton(ConnectivityService::class);
@@ -35,5 +38,50 @@ class InstallerServiceProvider extends ServiceProvider
             __DIR__.'/../../config/installer.php' => config_path('installer.php'),
             __DIR__.'/../../config/module.php' => config_path('installer-module.php'),
         ], 'installer-config');
+    }
+
+    private function forceSafeSessionDriverDuringInstallation(): void
+    {
+        if ($this->isInstallationCompleted()) {
+            return;
+        }
+
+        $driver = (string) config('session.driver', env('SESSION_DRIVER', 'database'));
+
+        if ($driver === '' || $driver === 'database') {
+            config(['session.driver' => 'file']);
+        }
+    }
+
+    private function forceSafeCacheStoreDuringInstallation(): void
+    {
+        if ($this->isInstallationCompleted()) {
+            return;
+        }
+
+        $store = (string) config('cache.default', env('CACHE_STORE', 'database'));
+
+        if ($store === '' || $store === 'database') {
+            config(['cache.default' => 'file']);
+        }
+    }
+
+    private function isInstallationCompleted(): bool
+    {
+        $installedFile = (string) config('installer.state.installed_file', storage_path('app/installer/installed.lock'));
+
+        if (is_file($installedFile)) {
+            return true;
+        }
+
+        $stateFile = (string) config('installer.state.state_file', storage_path('app/installer/state.json'));
+
+        if (! is_file($stateFile)) {
+            return false;
+        }
+
+        $decoded = json_decode((string) file_get_contents($stateFile), true);
+
+        return is_array($decoded) && (bool) ($decoded['installed'] ?? false);
     }
 }

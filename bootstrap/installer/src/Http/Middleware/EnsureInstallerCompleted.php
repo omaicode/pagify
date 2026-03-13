@@ -40,6 +40,8 @@ class EnsureInstallerCompleted
             return $next($request);
         }
 
+        $this->forceSafeRuntimePersistenceDrivers();
+
         foreach ((array) config('installer.guard.except', []) as $pattern) {
             if (is_string($pattern) && $pattern !== '' && $request->is($pattern)) {
                 return $next($request);
@@ -55,5 +57,18 @@ class EnsureInstallerCompleted
         }
 
         return redirect('/install');
+    }
+
+    private function forceSafeRuntimePersistenceDrivers(): void
+    {
+        $sessionDriver = (string) config('session.driver', env('SESSION_DRIVER', 'database'));
+        if ($sessionDriver === '' || $sessionDriver === 'database') {
+            config(['session.driver' => 'file']);
+        }
+
+        $cacheStore = (string) config('cache.default', env('CACHE_STORE', 'database'));
+        if ($cacheStore === '' || $cacheStore === 'database') {
+            config(['cache.default' => 'file']);
+        }
     }
 }
