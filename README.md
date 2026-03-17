@@ -4,11 +4,17 @@
 <a href="https://packagist.org/packages/omaicode/pagify"><img src="https://img.shields.io/packagist/dt/omaicode/pagify" alt="Total Downloads"></a>
 <a href="https://packagist.org/packages/omaicode/pagify"><img src="https://img.shields.io/packagist/v/omaicode/pagify" alt="Latest Stable Version"></a>
 <a href="https://packagist.org/packages/omaicode/pagify"><img src="https://img.shields.io/packagist/l/omaicode/pagify" alt="License"></a>
+<a href="https://omaicode.github.io/pagify/"><img src="https://img.shields.io/badge/docs-online-6b48e8" alt="Documentation"></a>
 </p>
 
 ## About Pagify
 
 Pagify is a open-source content management system (CMS) built with Laravel. It provides a simple and flexible platform for creating and managing websites, blogs, and other types of content-driven applications.
+
+## Documentation
+
+- Official documentation site: https://omaicode.github.io/pagify/
+- Repository docs source: [docs/](docs/)
 
 ## Prequisites
 
