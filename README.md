@@ -39,10 +39,19 @@ composer create pagify/pagify your-project-name
 
 ## Development workflow
 
-Project commands are standardized in the runbook:
+Project commands are standardized in the documentation site:
 
-- [docs/runbook.md](docs/runbook.md)
-- [docs/theme-development.md](docs/theme-development.md)
+- [docs/docs/operations/runbook.md](docs/docs/operations/runbook.md)
+- [docs/docs/themes/theme-development-contract.md](docs/docs/themes/theme-development-contract.md)
+- [docs/docs/admin/admin-ui-primitives.md](docs/docs/admin/admin-ui-primitives.md)
+
+Run docs locally:
+
+```bash
+cd docs
+npm install
+npm run start
+```
 
 Quick commands:
 
