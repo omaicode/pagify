@@ -1,3 +1,8 @@
+---
+sidebar_position: 2
+title: Runbook
+---
+
 # Pagify runbook
 
 Last updated: 2026-03-04

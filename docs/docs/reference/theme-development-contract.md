@@ -1,3 +1,8 @@
+---
+sidebar_position: 3
+title: Theme Development Contract
+---
+
 # Development Contract
 
 Last updated: 2026-03-12

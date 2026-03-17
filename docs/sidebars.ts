@@ -52,10 +52,13 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Advanced Guides',
+      label: 'Extensibility',
       items: [
+        'admin/admin-ui-primitives',
         'guides/advanced/admin-ui-extension',
+        'guides/advanced/theme-development',
         'guides/advanced/theme-customization',
+        'guides/advanced/plugin-development',
       ],
     },
     {
@@ -72,8 +75,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'reference/api-surface',
         'reference/artisan-commands',
-        'admin/admin-ui-primitives',
-        'themes/theme-development-contract',
+        'reference/theme-development-contract',
       ],
     },
   ],

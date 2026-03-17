@@ -1,3 +1,8 @@
+---
+sidebar_position: 1
+title: Admin UI Primitives
+---
+
 # UI Primitives - Team Conventions
 
 **Last Updated:** March 2026  

@@ -25,11 +25,20 @@ Goal: you can ship admin pages with consistent UX and maintainable components.
 
 ## Track 3: Frontend Theme Delivery
 
-1. Read [Theme Development Contract](../themes/theme-development-contract.md)
-2. Read [Theme Customization](../guides/advanced/theme-customization.md)
-3. Build or customize a theme with safe fallback behavior
+1. Read [Theme Development](../guides/advanced/theme-development.md)
+2. Read [Theme Development Contract](../themes/theme-development-contract.md)
+3. Read [Theme Customization](../guides/advanced/theme-customization.md)
+4. Build or customize a theme with safe fallback behavior
 
 Goal: you can deliver production-safe theme changes and troubleshoot rendering issues.
+
+## Track 4: Platform Extensibility (Plugin)
+
+1. Read [Plugin Development](../guides/advanced/plugin-development.md)
+2. Review plugin-related commands in [Artisan Commands](../reference/artisan-commands.md)
+3. Create a sample plugin with `cms:make-plugin` and validate lifecycle in Admin > Modules
+
+Goal: you can scaffold, integrate, and operate plugins with predictable behavior.
 
 ## Suggested 7-Day Plan
 
@@ -37,8 +46,8 @@ Goal: you can deliver production-safe theme changes and troubleshoot rendering i
 - Day 2: Runbook commands and troubleshooting drills
 - Day 3: Admin UI primitives and conventions
 - Day 4: Implement one admin page improvement
-- Day 5: Theme contract and manifest validation
-- Day 6: Create one theme customization safely
+- Day 5: Theme development baseline + contract validation
+- Day 6: Create one theme or plugin customization safely
 - Day 7: End-to-end verification and documentation updates
 
 ## Definition of Done for New Contributors

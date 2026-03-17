@@ -43,10 +43,11 @@ If you are new to the project:
 
 - Practical guides for content teams and platform operators
 
-### Advanced Guides
+### Extensibility
 
-- How to extend the Admin UI safely and consistently
-- How to customize frontend themes with a production-ready workflow
+- Admin UI primitives and extension conventions
+- Theme development and customization workflow
+- Plugin development lifecycle and packaging notes
 
 ### Operations
 
@@ -58,7 +59,6 @@ If you are new to the project:
 - Module-organized API reference for classes and public methods (standalone API Reference section)
 - API surface summary by module
 - Pagify-specific Artisan command reference
-- Admin UI: component conventions and frontend migration rules
 - Themes: manifest contract and runtime behavior for theme delivery
 
 ## Getting Started
