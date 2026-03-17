@@ -26,16 +26,6 @@ class SettingsPageController extends Controller
                     'label_key' => 'settings_group_system',
                     'items' => array_values(array_filter([
                         $this->makeItem(
-                            label: 'Content',
-                            labelKey: 'settings_item_content',
-                            description: 'Manage content types, schema builder, and entries.',
-                            descriptionKey: 'settings_item_content_description',
-                            href: Route::has('content.admin.dashboard') ? route('content.admin.dashboard') : '#',
-                            allowed: $modules->enabled('content')
-                                && Route::has('content.admin.dashboard')
-                                && ($admin?->can('content.type.viewAny') === true),
-                        ),
-                        $this->makeItem(
                             label: 'Modules',
                             labelKey: 'settings_item_modules',
                             description: 'Enable or disable installed modules.',

@@ -5,7 +5,7 @@ title: Media Module
 
 # Media Module
 
-The Media module manages asset ingestion, organization, and retrieval for content and page workflows.
+The Media module manages asset ingestion, organization, and retrieval for admin and page workflows.
 
 ## Responsibilities
 
@@ -35,4 +35,4 @@ The Media module manages asset ingestion, organization, and retrieval for conten
 ## Testing coverage highlights
 
 - media module bootstrap
-- media usage indexing integration with content
+- media upload and lifecycle operations

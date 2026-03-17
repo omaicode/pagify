@@ -13,7 +13,6 @@ This guide helps operators and admins manage day-to-day Pagify operations.
 2. Review audit logs for unexpected mutations.
 3. Check plugin and module health states.
 4. Confirm theme activation per site.
-5. Validate scheduled content publication jobs.
 
 ## Admin areas to monitor
 

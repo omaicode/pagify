@@ -52,8 +52,7 @@ php artisan view:cache
 ## Post-deployment checks
 
 - admin login and dashboard accessible
-- public content endpoints return expected payloads
-- scheduled publication processing is healthy
+- page rendering and scheduled publication processing are healthy
 - media upload and preview functions are available
 - theme rendering and asset URLs are valid
 

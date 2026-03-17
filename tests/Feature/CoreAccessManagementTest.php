@@ -64,28 +64,28 @@ class CoreAccessManagementTest extends TestCase
     {
         $admin = $this->makeAdminWithPermissions(['core.admin.group.manage', 'core.permission.manage']);
 
-        Permission::findOrCreate('content.type.viewAny', 'web');
+        Permission::findOrCreate('core.site.viewAny', 'web');
 
         $createResponse = $this->actingAs($admin, 'web')
             ->postJson('/api/v1/admin/admin-groups', [
-                'name' => 'content-reviewer',
-                'permissions' => ['content.type.viewAny'],
+                'name' => 'site-reviewer',
+                'permissions' => ['core.site.viewAny'],
             ]);
 
         $createResponse
             ->assertStatus(201)
             ->assertJsonPath('success', true)
-            ->assertJsonPath('data.name', 'content-reviewer');
+            ->assertJsonPath('data.name', 'site-reviewer');
 
         $groupId = (int) $createResponse->json('data.id');
 
         $this->actingAs($admin, 'web')
             ->patchJson('/api/v1/admin/admin-groups/'.$groupId, [
-                'name' => 'content-manager',
-                'permissions' => ['content.type.viewAny'],
+                'name' => 'site-manager',
+                'permissions' => ['core.site.viewAny'],
             ])
             ->assertOk()
-            ->assertJsonPath('data.name', 'content-manager');
+            ->assertJsonPath('data.name', 'site-manager');
 
         $this->actingAs($admin, 'web')
             ->deleteJson('/api/v1/admin/admin-groups/'.$groupId)

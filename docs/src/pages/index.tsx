@@ -7,11 +7,11 @@ import Heading from '@theme/Heading';
 import styles from './index.module.css';
 
 const currentCapabilities = [
-  'Modular architecture with Core, Content, Media, Page Builder, and Updater domains',
+  'Modular architecture with Core, Media, Page Builder, and Updater domains',
   'Admin authentication and password reset workflow',
   'Role, permission, admin-group, and API token management',
-  'Structured content schema builder with revision and publishing workflow',
   'Media library with upload sessions, preview, and download flow',
+  'Page Builder workflow with draft, publish, schedule, and revision support',
   'Theme management, Twig sandbox, and frontend fallback rendering',
   'Plugin lifecycle operations and extension-point discovery',
   'Updater execution flow with dry-run, update, and rollback support',
@@ -30,7 +30,7 @@ const quickLinks = [
   },
   {
     title: 'Module Guides',
-    description: 'Core, Content, Media, Page Builder, and Updater documentation.',
+    description: 'Core, Media, Page Builder, and Updater documentation.',
     to: '/docs/modules/core-module',
   },
 ];
@@ -114,9 +114,9 @@ function ProjectDescriptionSection() {
           <article className={styles.card}>
             <h3>Purpose</h3>
             <p>
-              Deliver a reliable content platform for admin teams, developers,
-              and operators with a predictable workflow from modeling to
-              publishing.
+              Deliver a reliable CMS platform for admin teams, developers, and
+              operators with predictable workflows for page delivery and module
+              operations.
             </p>
           </article>
           <article className={styles.card}>

@@ -12,7 +12,6 @@ This page describes how Pagify is structured and how feature domains interact.
 Pagify is organized into Laravel modules:
 
 - Core: auth, access control, plugin/theme manager, admin shell
-- Content: content model, schema builder, entries, revisions, delivery
 - Media: media asset ingestion and retrieval
 - Page Builder: page composition and revision workflow
 - Updater: package/module update orchestration
@@ -36,8 +35,8 @@ Pagify is organized into Laravel modules:
 
 ## Data and state model
 
-- Content and page entities maintain revision history.
-- Publish state supports draft/live/scheduled transitions.
+- Page entities maintain revision history.
+- Publish state supports draft/live/scheduled transitions for managed pages.
 - Theme activation is scoped per site with fallback logic.
 - Module/plugin state is centrally managed for safe operations.
 

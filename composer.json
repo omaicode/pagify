@@ -23,7 +23,6 @@
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
-        "omaicode/pagify-content": "*",
         "omaicode/pagify-core": "*",
         "omaicode/pagify-media": "*",
         "omaicode/pagify-page-builder": "*",
@@ -95,7 +94,6 @@
         "laravel": {
             "dont-discover": [
                 "omaicode/pagify-core",
-                "omaicode/pagify-content",
                 "omaicode/pagify-media",
                 "omaicode/pagify-updater",
                 "omaicode/pagify-page-builder"

@@ -6,8 +6,6 @@ Pagify là CMS mã nguồn mở xây trên Laravel 12 + PHP 8.2, dùng kiến tr
 (`internachi/modular`) với các module chính:
 
 - `core`: nền tảng auth, permissions, audit, locale, module runtime, event bus/hooks
-- `content`: content type modeler, entries engine, revisions, publish workflow,
-  relations, content API, visual schema builder
 - `media`: media domain (độc lập module)
 - `updater`: update/lifecycle module
 
@@ -25,8 +23,8 @@ Pagify là CMS mã nguồn mở xây trên Laravel 12 + PHP 8.2, dùng kiến tr
 
 ### Security + authorization
 
-- Permission model granular theo capability (vd: `content.type.create`,
-  `content.entry.publish`, `content.api.read`).
+- Permission model granular theo capability (vd: `core.admin.manage`,
+  `media.asset.create`, `page-builder.page.publish`).
 - Controllers/admin routes yêu cầu permission rõ ràng và có test matrix
   permission denied.
 

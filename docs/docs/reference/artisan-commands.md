@@ -13,10 +13,6 @@ This page lists the most relevant Pagify-specific commands for daily operations.
 - `cms:make-theme`
 - `cms:theme:clear-cache`
 
-## Content operations
-
-- `content:publication:process`
-
 ## Core operations
 
 - `core:audit:cleanup`

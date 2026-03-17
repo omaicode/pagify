@@ -36,7 +36,6 @@ const sidebars: SidebarsConfig = {
       label: 'Module Guides',
       items: [
         'modules/core-module',
-        'modules/content-module',
         'modules/media-module',
         'modules/page-builder-module',
         'modules/updater-module',
@@ -46,7 +45,6 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'User Guides',
       items: [
-        'guides/content-authoring-guide',
         'guides/admin-operations-guide',
       ],
     },

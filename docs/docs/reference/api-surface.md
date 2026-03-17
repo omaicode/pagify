@@ -15,12 +15,6 @@ Looking for class and method level references? Open [API Reference](/api-referen
 
 - `GET /api/v1/health`
 
-### Content delivery
-
-- `GET /api/v1/content/health`
-- `GET /api/v1/content/{contentTypeSlug}`
-- `GET /api/v1/content/{contentTypeSlug}/{entrySlug}`
-
 ## Admin APIs
 
 All admin APIs are prefixed by:
@@ -37,11 +31,6 @@ All admin APIs are prefixed by:
 - `/modules`
 - `/plugins`
 - `/themes`
-
-## Content admin APIs
-
-- `/content/health`
-- `/content/{contentTypeSlug}/relations/picker`
 
 ## Media admin APIs
 

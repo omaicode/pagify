@@ -24,7 +24,6 @@ return [
             '/admin/admin-groups',
             '/admin/admins',
             '/admin/audit-logs',
-            '/admin/content',
             '/admin/updater'
         ],
     ],

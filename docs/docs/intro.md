@@ -37,11 +37,11 @@ If you are new to the project:
 
 ### Module Guides
 
-- Core, Content, Media, Page Builder, and Updater deep-dive pages
+- Core, Media, Page Builder, and Updater deep-dive pages
 
 ### User Guides
 
-- Practical guides for content teams and platform operators
+- Practical guides for platform operators
 
 ### Extensibility
 

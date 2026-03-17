@@ -22,7 +22,6 @@ return [
 
     'module_package_map' => [
         'core' => 'omaicode/pagify-core',
-        'content' => 'omaicode/pagify-content',
         'media' => 'omaicode/pagify-media',
         'updater' => 'omaicode/updater',
     ],

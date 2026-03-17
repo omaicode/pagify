@@ -5,7 +5,7 @@ const projectRoot = path.resolve(process.cwd(), '..');
 const modulesRoot = path.join(projectRoot, 'modules');
 const outputPath = path.join(process.cwd(), 'static', 'api-reference', 'index.json');
 
-const targetModules = ['core', 'content', 'media', 'page-builder', 'updater'];
+const targetModules = ['core', 'media', 'page-builder', 'updater'];
 
 async function walkPhpFiles(dirPath) {
   const entries = await fs.readdir(dirPath, {withFileTypes: true});

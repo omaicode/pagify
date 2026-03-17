@@ -66,7 +66,7 @@ class ModuleRegistryTest extends TestCase
             'core' => [
                 'enabled' => true,
             ],
-            'content' => [
+            'media' => [
                 'enabled' => true,
             ],
         ], moduleMenus: [
@@ -78,10 +78,10 @@ class ModuleRegistryTest extends TestCase
                     'order' => 40,
                 ],
             ],
-            'content' => [
+            'media' => [
                 [
-                    'label' => 'Content',
-                    'route' => 'content.admin.dashboard',
+                    'label' => 'Media',
+                    'route' => 'media.admin.assets.index',
                     'permission' => null,
                     'order' => 10,
                 ],
@@ -91,7 +91,7 @@ class ModuleRegistryTest extends TestCase
         $menu = $registry->adminMenu();
 
         $this->assertCount(2, $menu);
-        $this->assertSame('Content', $menu[0]['label']);
+        $this->assertSame('Media', $menu[0]['label']);
         $this->assertSame('Modules', $menu[1]['label']);
     }
 
@@ -101,7 +101,7 @@ class ModuleRegistryTest extends TestCase
             'core' => [
                 'enabled' => true,
             ],
-            'content' => [
+            'media' => [
                 'enabled' => true,
             ],
         ], moduleMenus: [
@@ -114,12 +114,12 @@ class ModuleRegistryTest extends TestCase
                     'order' => 40,
                 ],
             ],
-            'content' => [
+            'media' => [
                 [
-                    'label' => 'Content',
-                    'route' => 'content.admin.dashboard',
+                    'label' => 'Media',
+                    'route' => 'media.admin.assets.index',
                     'permission' => null,
-                    'group' => 'Content',
+                    'group' => 'Media',
                     'order' => 100,
                 ],
             ],
@@ -129,6 +129,6 @@ class ModuleRegistryTest extends TestCase
 
         $this->assertCount(2, $menu);
         $this->assertSame('Modules', $menu[0]['label']);
-        $this->assertSame('Content', $menu[1]['label']);
+        $this->assertSame('Media', $menu[1]['label']);
     }
 }

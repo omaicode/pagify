@@ -27,8 +27,8 @@ Before installing Pagify, make sure you have the following prerequisites:
 
 ## Features
 
-- User-friendly interface for content creation and management
-- Support for multiple content types (pages, posts, etc.)
+- User-friendly interface for page creation and management
+- Modular architecture for admin, media, page builder, and updater workflows
 - Customizable themes and templates
 - Built-in SEO tools
 - Role-based access control for users
@@ -48,7 +48,7 @@ composer create pagify/pagify your-project-name
 Project commands are standardized in the documentation site:
 
 - [docs/docs/operations/runbook.md](docs/docs/operations/runbook.md)
-- [docs/docs/themes/theme-development-contract.md](docs/docs/themes/theme-development-contract.md)
+- [docs/docs/reference/theme-development-contract.md](docs/docs/reference/theme-development-contract.md)
 - [docs/docs/admin/admin-ui-primitives.md](docs/docs/admin/admin-ui-primitives.md)
 
 Run docs locally:
