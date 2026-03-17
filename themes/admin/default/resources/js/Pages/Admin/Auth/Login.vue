@@ -1,6 +1,7 @@
 <script setup>
 import { Head, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import  LogoIcon from '@img/pagify_icon.png';
 import UiCard from '@admin-theme/Components/UI/UiCard.vue';
 import UiButton from '@admin-theme/Components/UI/UiButton.vue';
 import UiInput from '@admin-theme/Components/UI/UiInput.vue';
@@ -24,8 +25,10 @@ const errors = computed(() => page.props.errors ?? {});
 
     <main class="pf-page flex min-h-screen items-center justify-center px-4 py-10">
         <UiCard tag="section" class="w-full max-w-md rounded-2xl p-6 shadow-lg">
-            <div class="mb-5 flex items-center gap-3">
-                <div class="h-10 w-10 rounded-xl" style="background-image: var(--pagify-gradient)" />
+            <div class="mb-5 flex items-center gap-2">
+                <div class="h-12 w-12">
+                    <img :src="LogoIcon" alt="Pagify Logo" class="h-full w-full object-contain">
+                </div>
                 <div>
                     <h1 class="text-2xl font-semibold text-[#1e1b4b]">{{ t.login_title ?? 'Admin Login' }}</h1>
                     <p class="text-sm text-[#6b7280]">{{ t.login_subtitle ?? 'Sign in to continue.' }}</p>
