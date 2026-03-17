@@ -9,7 +9,7 @@ This guide is the practical entry point for building and maintaining frontend th
 
 For strict schema and runtime rules, see the contract:
 
-- [Theme Development Contract](../../themes/theme-development-contract.md)
+- [Theme Development Contract](../../reference/theme-development-contract.md)
 
 ## Theme location and baseline
 
@@ -128,7 +128,7 @@ Themes can consume platform helpers and plugin-injected helpers.
 
 For helper-hook contract and subscriber example:
 
-- [Theme Development Contract](../../themes/theme-development-contract.md)
+- [Theme Development Contract](../../reference/theme-development-contract.md)
 - [Plugin Development](./plugin-development.md)
 
 ## QA and release checklist
@@ -167,5 +167,5 @@ Asset file changes not visible:
 ## Related references
 
 - [Theme Customization](./theme-customization.md)
-- [Theme Development Contract](../../themes/theme-development-contract.md)
+- [Theme Development Contract](../../reference/theme-development-contract.md)
 - [Runbook](../../operations/runbook.md)

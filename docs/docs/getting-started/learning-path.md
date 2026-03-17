@@ -26,7 +26,7 @@ Goal: you can ship admin pages with consistent UX and maintainable components.
 ## Track 3: Frontend Theme Delivery
 
 1. Read [Theme Development](../guides/advanced/theme-development.md)
-2. Read [Theme Development Contract](../themes/theme-development-contract.md)
+2. Read [Theme Development Contract](../reference/theme-development-contract.md)
 3. Read [Theme Customization](../guides/advanced/theme-customization.md)
 4. Build or customize a theme with safe fallback behavior
 

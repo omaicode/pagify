@@ -103,7 +103,7 @@ Plugins can subscribe to platform hooks and extend behaviors, including theme he
 
 See related guide for hook return contract and subscriber example:
 
-- [Theme Development Contract](../../themes/theme-development-contract.md)
+- [Theme Development Contract](../../reference/theme-development-contract.md)
 
 ## Database and migrations
 

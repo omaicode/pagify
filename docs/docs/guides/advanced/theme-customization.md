@@ -9,7 +9,7 @@ This guide covers production-safe customization for Pagify frontend themes.
 
 ## Before you start
 
-Read the [Theme Development Contract](../../themes/theme-development-contract.md) first.
+Read the [Theme Development Contract](../../reference/theme-development-contract.md) first.
 
 A valid theme must include:
 
