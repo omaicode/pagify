@@ -18,8 +18,6 @@ use Pagify\Core\Services\ThemeHelpers\AssetThemeHelper;
 use Pagify\PageBuilder\Http\Requests\Admin\StorePageRequest;
 use Pagify\PageBuilder\Http\Requests\Admin\UpdatePageRequest;
 use Pagify\PageBuilder\Models\Page;
-use Pagify\PageBuilder\Models\PageTemplate;
-use Pagify\PageBuilder\Models\SectionTemplate;
 use Pagify\PageBuilder\Services\BlockRegistryService;
 use Pagify\PageBuilder\Services\EditorAccessTokenService;
 use Pagify\PageBuilder\Services\PageService;
@@ -74,22 +72,14 @@ class PageController extends Controller
 	{
 		$this->authorize('create', Page::class);
 
-		$templateSlug = $request->query('template');
-		$templateLayout = is_string($templateSlug) ? $this->pageService->resolveTemplate($templateSlug) : null;
-
 		return Inertia::render('PageBuilder/Pages/Create', [
 			'editor' => $this->editorPayload($request),
 			'startup' => [
-				'template_slug' => $templateSlug,
-				'layout' => $templateLayout,
+				'layout' => null,
 			],
-			'templates' => $this->templatePayload(),
-			'sections' => $this->sectionPayload(),
 			'routes' => [
 				'store' => route('page-builder.admin.pages.store'),
 				'index' => route('page-builder.admin.pages.index'),
-				'storeSectionTemplate' => route('page-builder.admin.library.sections.store'),
-				'storePageTemplate' => route('page-builder.admin.library.templates.store'),
 			],
 		]);
 	}
@@ -131,15 +121,11 @@ class PageController extends Controller
 				'published_at' => $page->published_at?->toDateTimeString(),
 			],
 			'editor' => $this->editorPayload($request, $page),
-			'templates' => $this->templatePayload(),
-			'sections' => $this->sectionPayload(),
 			'routes' => [
 				'update' => route('page-builder.admin.pages.update', $page),
 				'destroy' => route('page-builder.admin.pages.destroy', $page),
 				'publish' => route('page-builder.admin.pages.publish', $page),
 				'index' => route('page-builder.admin.pages.index'),
-				'storeSectionTemplate' => route('page-builder.admin.library.sections.store'),
-				'storePageTemplate' => route('page-builder.admin.library.templates.store'),
 			],
 		]);
 	}
@@ -868,50 +854,4 @@ class PageController extends Controller
 		return redirect()->route('page-builder.admin.pages.index')->with('status', __('page-builder::messages.page_deleted'));
 	}
 
-	/**
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function templatePayload(): array
-	{
-		$defaultTemplates = collect((array) config('page-builder.default_page_templates', []))
-			->filter(static fn (mixed $item): bool => is_array($item))
-			->map(static fn (array $item): array => [
-				'id' => 'default:' . ($item['slug'] ?? ''),
-				'slug' => (string) ($item['slug'] ?? ''),
-				'name' => (string) ($item['name'] ?? ($item['slug'] ?? 'Template')),
-				'category' => (string) ($item['category'] ?? 'general'),
-				'description' => (string) ($item['description'] ?? ''),
-				'schema' => (array) ($item['schema_json'] ?? []),
-				'source' => 'default',
-			]);
-
-		$dbTemplates = PageTemplate::query()->where('is_active', true)->latest('id')->get()
-			->map(static fn (PageTemplate $template): array => [
-				'id' => $template->id,
-				'slug' => $template->slug,
-				'name' => $template->name,
-				'category' => $template->category,
-				'description' => $template->description,
-				'schema' => (array) ($template->schema_json ?? []),
-				'source' => 'site',
-			]);
-
-		return $defaultTemplates->concat($dbTemplates)->values()->all();
-	}
-
-	/**
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function sectionPayload(): array
-	{
-		return SectionTemplate::query()->where('is_active', true)->latest('id')->get()
-			->map(static fn (SectionTemplate $template): array => [
-				'id' => $template->id,
-				'slug' => $template->slug,
-				'name' => $template->name,
-				'schema' => (array) ($template->schema_json ?? []),
-			])
-			->values()
-			->all();
-	}
 }

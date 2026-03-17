@@ -18,7 +18,6 @@ import { toast } from 'vue3-toastify';
 const props = defineProps({
     page: { type: Object, required: true },
     editor: { type: Object, default: () => ({}) },
-    templates: { type: Array, default: () => [] },
     routes: { type: Object, default: () => ({}) },
 });
 

@@ -24,8 +24,6 @@ The Page Builder module provides admin tooling for composing and publishing page
 ## Key API groups
 
 - `api/v1/{admin_prefix}/page-builder/registry`
-- `api/v1/{admin_prefix}/page-builder/templates`
-- `api/v1/{admin_prefix}/page-builder/sections`
 - `api/v1/{admin_prefix}/page-builder/editor/access-token`
 - `api/v1/{admin_prefix}/page-builder/editor/verify-token`
 - `api/v1/{admin_prefix}/page-builder/editor/contract`
@@ -78,7 +76,7 @@ Source of truth in admin codebase:
 ## Lifecycle
 
 1. Create page draft.
-2. Compose with sections/templates.
+2. Compose content in Webstudio editor.
 3. Preview in admin.
 4. Publish page.
 

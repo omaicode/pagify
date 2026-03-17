@@ -17,7 +17,6 @@ import { toast } from 'vue3-toastify';
 const props = defineProps({
     editor: { type: Object, default: () => ({}) },
     startup: { type: Object, default: () => ({}) },
-    templates: { type: Array, default: () => [] },
     routes: { type: Object, default: () => ({}) },
 });
 
@@ -25,7 +24,6 @@ const form = useForm({
     title: '',
     slug: '',
     status: 'draft',
-    template_slug: props.startup.template_slug ?? '',
     layout: {
         ...(props.startup.layout ?? {}),
         type: props.startup.layout?.type ?? 'webstudio',

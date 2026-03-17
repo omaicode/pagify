@@ -5,9 +5,6 @@ namespace Pagify\PageBuilder\Providers;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Pagify\PageBuilder\Models\Page;
-use Pagify\PageBuilder\Models\PageTemplate;
-use Pagify\PageBuilder\Models\SectionTemplate;
-use Pagify\PageBuilder\Policies\PageBuilderLibraryPolicy;
 use Pagify\PageBuilder\Policies\PagePolicy;
 
 class PageBuilderServiceProvider extends ServiceProvider
@@ -33,7 +30,5 @@ class PageBuilderServiceProvider extends ServiceProvider
 		], 'page-builder-config');
 
 		Gate::policy(Page::class, PagePolicy::class);
-		Gate::policy(PageTemplate::class, PageBuilderLibraryPolicy::class);
-		Gate::policy(SectionTemplate::class, PageBuilderLibraryPolicy::class);
 	}
 }

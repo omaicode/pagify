@@ -8,7 +8,6 @@ use Pagify\Core\Http\Middleware\RecordAuditLog;
 use Pagify\Core\Http\Middleware\ResolveSite;
 use Pagify\Core\Http\Middleware\SetLocaleFromSite;
 use Pagify\PageBuilder\Http\Controllers\Admin\PageController;
-use Pagify\PageBuilder\Http\Controllers\Admin\PageLibraryController;
 use Pagify\PageBuilder\Http\Controllers\Api\AdminPageBuilderEditorTokenController;
 use Pagify\PageBuilder\Http\Controllers\Api\AdminPageBuilderEditorContractController;
 use Pagify\PageBuilder\Http\Controllers\Api\AdminPageBuilderEditorTokenVerifyController;
@@ -27,8 +26,6 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
 			Route::put('/pages/{page}', [PageController::class, 'update'])->name('pages.update');
 			Route::post('/pages/{page}/publish', [PageController::class, 'publish'])->name('pages.publish');
 			Route::delete('/pages/{page}', [PageController::class, 'destroy'])->name('pages.destroy');
-			Route::post('/library/sections', [PageLibraryController::class, 'storeSection'])->name('library.sections.store');
-			Route::post('/library/templates', [PageLibraryController::class, 'storePageTemplate'])->name('library.templates.store');
 		});
 });
 
@@ -37,8 +34,6 @@ Route::prefix('api/v1/'.config('app.admin_url_prefix').'/page-builder')
 	->name('page-builder.api.v1.admin.')
 	->group(function (): void {
 		Route::get('/registry', [AdminPageBuilderRegistryController::class, 'registry'])->name('registry');
-		Route::get('/templates', [AdminPageBuilderRegistryController::class, 'templates'])->name('templates');
-		Route::get('/sections', [AdminPageBuilderRegistryController::class, 'sections'])->name('sections');
 		Route::post('/editor/access-token', AdminPageBuilderEditorTokenController::class)->name('editor.access-token');
 	});
 

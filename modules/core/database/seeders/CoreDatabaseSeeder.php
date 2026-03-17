@@ -54,7 +54,6 @@ class CoreDatabaseSeeder extends Seeder
             'page-builder.page.publish',
             'page-builder.page.revision.view',
             'page-builder.page.revision.rollback',
-            'page-builder.library.manage',
             'media.asset.viewAny',
             'media.asset.view',
             'media.asset.create',

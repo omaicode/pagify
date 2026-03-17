@@ -6,7 +6,6 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Pagify\PageBuilder\Models\Page;
-use Pagify\PageBuilder\Models\PageTemplate;
 
 class PageService
 {
@@ -93,36 +92,6 @@ class PageService
 		});
 	}
 
-	public function resolveTemplate(?string $templateSlug): ?array
-	{
-		if ($templateSlug === null || trim($templateSlug) === '') {
-			return null;
-		}
-
-		$template = PageTemplate::query()
-			->where('slug', $templateSlug)
-			->where('is_active', true)
-			->first();
-
-		if ($template !== null) {
-			return (array) ($template->schema_json ?? []);
-		}
-
-		foreach ((array) config('page-builder.default_page_templates', []) as $defaultTemplate) {
-			if (! is_array($defaultTemplate)) {
-				continue;
-			}
-
-			if ((string) ($defaultTemplate['slug'] ?? '') !== $templateSlug) {
-				continue;
-			}
-
-			return (array) ($defaultTemplate['schema_json'] ?? []);
-		}
-
-		return null;
-	}
-
 	private function ensureSlugIsUnique(string $slug, ?int $ignorePageId = null): void
 	{
 		$query = Page::query()->where('slug', $slug);
@@ -149,13 +118,6 @@ class PageService
 
 		if (is_array($layout)) {
 			return $this->normalizeWebstudioLayout($layout);
-		}
-
-		$templateSlug = Arr::get($payload, 'template_slug');
-		$templateLayout = $this->resolveTemplate(is_string($templateSlug) ? $templateSlug : null);
-
-		if (is_array($templateLayout)) {
-			return $this->normalizeWebstudioLayout($templateLayout);
 		}
 
 		return is_array($fallback) ? $this->normalizeWebstudioLayout($fallback) : [];
