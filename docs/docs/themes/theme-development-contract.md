@@ -1,4 +1,4 @@
-# Pagify Theme Development Contract
+# Development Contract
 
 Last updated: 2026-03-12
 

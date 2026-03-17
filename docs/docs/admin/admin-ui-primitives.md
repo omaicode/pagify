@@ -1,4 +1,4 @@
-# Pagify Admin UI Primitives - Team Conventions
+# UI Primitives - Team Conventions
 
 **Last Updated:** March 2026  
 **Status:** ✅ Canonical naming conventions locked and migrated

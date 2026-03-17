@@ -59,10 +59,10 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'Pagify Docs',
+      title: 'Pagify',
       logo: {
         alt: 'Pagify Logo',
-        src: 'img/logo.svg',
+        src: 'img/pagify_icon.png',
       },
       items: [
         {
@@ -70,6 +70,11 @@ const config: Config = {
           sidebarId: 'docsSidebar',
           position: 'left',
           label: 'Documentation',
+        },
+        {
+          to: '/api-reference',
+          label: 'API Reference',
+          position: 'left',
         },
         {
           href: 'https://github.com/omaicode/pagify',
@@ -88,6 +93,31 @@ const config: Config = {
               label: 'Introduction',
               to: '/docs/',
             },
+            {
+                label: 'Getting Started',
+                to: '/docs/getting-started/quickstart',
+            },
+            {
+              label: 'Architecture',
+              to: '/docs/architecture/system-overview',
+            },
+          ],
+        },
+        {
+          title: 'Quick Links',
+          items: [
+            {
+              label: 'Runbook',
+              to: '/docs/operations/runbook',
+            },
+            {
+              label: 'API Reference',
+              to: '/api-reference',
+            },
+            {
+              label: 'Module Guides',
+              to: '/docs/modules/core-module',
+            },
           ],
         },
         {
@@ -100,7 +130,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Pagify. Built with Docusaurus.`,
+      copyright: `Build with ❤️ by Omaicode © ${new Date().getFullYear()}`,
     },
     prism: {
       theme: prismThemes.github,

@@ -17,18 +17,64 @@ const sidebars: SidebarsConfig = {
     'intro',
     {
       type: 'category',
+      label: 'Getting Started',
+      items: [
+        'getting-started/quickstart',
+        'getting-started/learning-path',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Overview',
+      items: [
+        'overview/features-capabilities',
+        'architecture/system-overview',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Module Guides',
+      items: [
+        'modules/core-module',
+        'modules/content-module',
+        'modules/media-module',
+        'modules/page-builder-module',
+        'modules/updater-module',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'User Guides',
+      items: [
+        'guides/content-authoring-guide',
+        'guides/admin-operations-guide',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Advanced Guides',
+      items: [
+        'guides/advanced/admin-ui-extension',
+        'guides/advanced/theme-customization',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Operations',
-      items: ['operations/runbook'],
+      items: [
+        'operations/installation-and-deployment',
+        'operations/runbook',
+      ],
     },
     {
       type: 'category',
-      label: 'Admin UI',
-      items: ['admin/admin-ui-primitives'],
-    },
-    {
-      type: 'category',
-      label: 'Themes',
-      items: ['themes/theme-development-contract'],
+      label: 'Reference',
+      items: [
+        'reference/api-surface',
+        'reference/artisan-commands',
+        'admin/admin-ui-primitives',
+        'themes/theme-development-contract',
+      ],
     },
   ],
 };
