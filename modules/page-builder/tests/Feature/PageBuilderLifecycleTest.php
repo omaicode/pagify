@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Pagify\PageBuilder\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Pagify\Core\Models\Admin;

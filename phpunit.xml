@@ -7,9 +7,15 @@
     <testsuites>
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
+            <directory>modules/core/tests/Unit</directory>
         </testsuite>
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
+            <directory>modules/core/tests/Feature</directory>
+            <directory>modules/media/tests/Feature</directory>
+            <directory>modules/page-builder/tests/Feature</directory>
+            <directory>modules/updater/tests/Feature</directory>
+            <directory>bootstrap/installer/tests/Feature</directory>
         </testsuite>
     </testsuites>
     <source>

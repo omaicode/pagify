@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Pagify\Installer\Tests\Feature;
 
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;

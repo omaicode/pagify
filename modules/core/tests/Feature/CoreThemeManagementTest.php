@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Pagify\Core\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
@@ -32,6 +32,9 @@ class CoreThemeManagementTest extends TestCase
             'version' => '1.0.0',
             'render' => [
                 'engine' => 'twig',
+            ],
+            'layouts' => [
+                ['file' => 'layouts/app.twig', 'label' => 'Default layout'],
             ],
         ], JSON_PRETTY_PRINT));
     }
@@ -164,6 +167,9 @@ class CoreThemeManagementTest extends TestCase
             'version' => '1.0.0',
             'render' => [
                 'engine' => 'twig',
+            ],
+            'layouts' => [
+                ['file' => 'layouts/app.twig', 'label' => 'Main layout'],
             ],
             'description' => '',
             'author' => '',

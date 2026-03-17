@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Pagify\Updater\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Pagify\Updater\Services\ComposerCommandRunner;

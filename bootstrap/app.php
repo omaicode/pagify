@@ -16,7 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo(static function (Request $request): ?string {
             $adminPrefix = trim((string) config('app.admin_url_prefix', 'admin'), '/');
 
-            if ($adminPrefix !== '' && $request->is($adminPrefix, $adminPrefix.'/*')) {
+            if ($adminPrefix !== '' && (
+                $request->is($adminPrefix, $adminPrefix.'/*')
+                || $request->is('api/v1/'.$adminPrefix, 'api/v1/'.$adminPrefix.'/*')
+            )) {
                 return route('core.admin.login');
             }
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Pagify\PageBuilder\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
@@ -34,6 +34,9 @@ class PageBuilderThemeRenderTest extends TestCase
             'render' => [
                 'engine' => 'twig',
             ],
+            'layouts' => [
+                ['file' => 'layouts/app.twig', 'label' => 'Default layout'],
+            ],
         ], JSON_PRETTY_PRINT));
 
         File::put(base_path('storage/testing/themes/main/default/layouts/app.twig'), "<!doctype html><html><head>{{ head|raw }}</head><body><div data-theme=\"default\">{{ content|raw }}</div><a data-asset=\"{{ asset_url('robots.txt') }}\"></a><span data-locale=\"{{ locale }}\"></span></body></html>");
@@ -49,6 +52,9 @@ class PageBuilderThemeRenderTest extends TestCase
             'render' => [
                 'engine' => 'twig',
             ],
+            'layouts' => [
+                ['file' => 'layouts/app.twig', 'label' => 'Ocean layout'],
+            ],
         ], JSON_PRETTY_PRINT));
 
         File::put(base_path('storage/testing/themes/main/ocean/layouts/app.twig'), "<!doctype html><html><head>{{ head|raw }}</head><body><div data-theme=\"ocean\">{{ content|raw }}</div><span data-site-url=\"{{ helpers.url.site('hello') }}\"></span></body></html>");
@@ -62,6 +68,9 @@ class PageBuilderThemeRenderTest extends TestCase
             'version' => '1.0.0',
             'render' => [
                 'engine' => 'twig',
+            ],
+            'layouts' => [
+                ['file' => 'layouts/app.twig', 'label' => 'Broken layout'],
             ],
         ], JSON_PRETTY_PRINT));
         File::put(base_path('storage/testing/themes/main/broken/layouts/app.twig'), "<!doctype html><html><head>{{ head|raw }}</head><body><div data-theme=\"broken\">{{ content|raw }}</div></body></html>");
@@ -99,7 +108,7 @@ class PageBuilderThemeRenderTest extends TestCase
             'snapshot_html' => '<!doctype html><html><head><style>.demo{color:red;}</style></head><body><main id="demo-body">Hello Theme</main></body></html>',
         ]);
 
-        $response = $this->get('/pages/landing');
+        $response = $this->get('/landing');
 
         $response->assertOk();
         $response->assertSee('data-theme="ocean"', false);
@@ -134,7 +143,7 @@ class PageBuilderThemeRenderTest extends TestCase
             'snapshot_html' => '<!doctype html><html><head></head><body><main>Fallback chain</main></body></html>',
         ]);
 
-        $response = $this->get('/pages/pricing');
+        $response = $this->get('/pricing');
 
         $response->assertOk();
         $response->assertSee('data-theme="ocean"', false);
@@ -150,6 +159,9 @@ class PageBuilderThemeRenderTest extends TestCase
             'version' => '1.0.0',
             'render' => [
                 'engine' => 'twig',
+            ],
+            'layouts' => [
+                ['file' => 'layouts/app.twig', 'label' => 'Broken ocean layout'],
             ],
         ], JSON_PRETTY_PRINT));
 
@@ -175,7 +187,7 @@ class PageBuilderThemeRenderTest extends TestCase
             'snapshot_html' => '<!doctype html><html><head></head><body><main>Default fallback</main></body></html>',
         ]);
 
-        $response = $this->get('/pages/about');
+        $response = $this->get('/about');
 
         $response->assertOk();
         $response->assertSee('data-theme="default"', false);
@@ -208,7 +220,7 @@ class PageBuilderThemeRenderTest extends TestCase
             'snapshot_html' => '<!doctype html><html><head></head><body><main>Host</main></body></html>',
         ]);
 
-        $response = $this->get('/pages/host-test');
+        $response = $this->get('/host-test');
 
         $response->assertOk();
         $response->assertSee('data-site-url="https://cms.pagify.test/hello"', false);
@@ -240,7 +252,7 @@ class PageBuilderThemeRenderTest extends TestCase
             'snapshot_html' => '<!doctype html><html><head></head><body><main>Host request</main></body></html>',
         ]);
 
-        $response = $this->get('https://demo.pagify.test/pages/host-request-test');
+        $response = $this->get('https://demo.pagify.test/host-request-test');
 
         $response->assertOk();
         $response->assertSee('data-site-url="https://demo.pagify.test/hello"', false);

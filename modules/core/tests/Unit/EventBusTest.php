@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit;
+namespace Pagify\Core\Tests\Unit;
 
 use Illuminate\Container\Container;
 use Illuminate\Events\Dispatcher;

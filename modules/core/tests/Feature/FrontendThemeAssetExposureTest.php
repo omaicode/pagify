@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Pagify\Core\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
@@ -24,6 +24,8 @@ class FrontendThemeAssetExposureTest extends TestCase
 
         File::deleteDirectory(base_path('storage/testing/themes/main'));
         File::ensureDirectoryExists($this->themeRoot.'/assets/css');
+        File::ensureDirectoryExists($this->themeRoot.'/layouts');
+        File::ensureDirectoryExists($this->themeRoot.'/pages');
 
         File::put($this->themeRoot.'/theme.json', json_encode([
             'slug' => 'unified-assets',
@@ -32,8 +34,13 @@ class FrontendThemeAssetExposureTest extends TestCase
             'render' => [
                 'engine' => 'twig',
             ],
+            'layouts' => [
+                ['file' => 'layouts/app.twig', 'label' => 'Main layout'],
+            ],
         ], JSON_PRETTY_PRINT));
 
+        File::put($this->themeRoot.'/layouts/app.twig', '<!doctype html><html><body>{{ content|raw }}</body></html>');
+        File::put($this->themeRoot.'/pages/home.twig', '{% extends "layouts/app.twig" %}');
         File::put($this->themeRoot.'/assets/css/site.css', 'body{color:#111;}');
     }
 

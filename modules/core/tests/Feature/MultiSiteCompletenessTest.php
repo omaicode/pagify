@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Pagify\Core\Tests\Feature;
 
 use Illuminate\Http\Request;
 use Pagify\Core\Http\Middleware\ResolveSite;

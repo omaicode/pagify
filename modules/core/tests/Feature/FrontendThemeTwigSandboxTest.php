@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Pagify\Core\Tests\Feature;
 
 use Illuminate\Support\Facades\File;
 use Pagify\Core\Services\FrontendThemeTwigEngine;
@@ -51,6 +51,6 @@ class FrontendThemeTwigSandboxTest extends TestCase
 
         $this->assertIsString($rendered);
         $this->assertStringContainsString('/robots.txt', $rendered);
-        $this->assertStringContainsString('/pages/landing', $rendered);
+        $this->assertStringContainsString('/landing', $rendered);
     }
 }

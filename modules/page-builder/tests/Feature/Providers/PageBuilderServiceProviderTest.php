@@ -1,6 +1,6 @@
 <?php
 
-namespace Pagify\PageBuilder\Tests;
+namespace Pagify\PageBuilder\Tests\Feature\Providers;
 
 use PHPUnit\Framework\TestCase;
 

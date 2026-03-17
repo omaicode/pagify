@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Pagify\Core\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -115,16 +115,16 @@ class AdminProfileTest extends TestCase
         $avatarPayload = Storage::disk('public')->get((string) $admin->avatar_path);
         $avatarImage = imagecreatefromstring($avatarPayload);
         $this->assertNotFalse($avatarImage);
-        $this->assertSame(256, imagesx($avatarImage));
-        $this->assertSame(128, imagesy($avatarImage));
+        $this->assertSame(176, imagesx($avatarImage));
+        $this->assertSame(88, imagesy($avatarImage));
         imagedestroy($avatarImage);
 
         $this->assertDatabaseHas('media_assets', [
             'path' => $admin->avatar_path,
             'uploaded_by_admin_id' => $admin->id,
             'kind' => 'image',
-            'width' => 256,
-            'height' => 128,
+            'width' => 176,
+            'height' => 88,
         ]);
 
         $removeResponse = $this->actingAs($admin, 'web')

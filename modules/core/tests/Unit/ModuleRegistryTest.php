@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit;
+namespace Pagify\Core\Tests\Unit;
 
 use Pagify\Core\Services\ModuleRegistry;
 use PHPUnit\Framework\TestCase;
