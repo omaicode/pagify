@@ -7,13 +7,11 @@ use Illuminate\Routing\Controller;
 use Pagify\Core\Services\FrontendThemeTwigEngine;
 use Pagify\Core\Services\FrontendThemeManagerService;
 use Pagify\PageBuilder\Models\Page;
-use Pagify\PageBuilder\Services\PageSnapshotService;
 
 class PublicPageController extends Controller
 {
 	public function __invoke(
 		string $slug,
-		PageSnapshotService $snapshotService,
 		FrontendThemeManagerService $themes,
 		FrontendThemeTwigEngine $twigEngine,
 	): HttpResponse
@@ -23,12 +21,17 @@ class PublicPageController extends Controller
 			->where('status', 'published')
 			->firstOrFail();
 
-		if (! is_string($page->snapshot_html) || trim($page->snapshot_html) === '') {
-			$snapshotService->refresh($page);
-			$page->refresh();
+		$layout = (array) ($page->layout_json ?? []);
+		$editorMarkup = $this->resolveEditorMarkupFromLayout($layout);
+		$editorHtml = $editorMarkup['html'];
+		$editorCss = $editorMarkup['css'];
+		$slotContent = $this->extractContentSlotHtml($editorHtml);
+		$content = $slotContent !== '' ? $slotContent : trim($editorHtml);
+
+		if ($content === '') {
+			$content = '<section class="pbx-section"><h2 class="pbx-subheading">Content is empty</h2></section>';
 		}
 
-		$html = (string) ($page->snapshot_html ?? '');
 		$seo = (array) ($page->seo_meta_json ?? []);
 
 		$title = e((string) ($seo['title'] ?? $page->title));
@@ -43,20 +46,15 @@ class PublicPageController extends Controller
 			$description !== '' ? "<meta name=\"description\" content=\"{$description}\">" : '',
 			$canonical !== '' ? "<link rel=\"canonical\" href=\"{$canonical}\">" : '',
 			$ogImage !== '' ? "<meta property=\"og:image\" content=\"{$ogImage}\">" : '',
+			$editorCss !== '' ? '<style>' . $editorCss . '</style>' : '',
 			is_string($jsonLdString) ? '<script type="application/ld+json">' . $jsonLdString . '</script>' : '',
 		];
 
 		$head = implode("\n", array_filter($headParts));
 
-		$snapshotHead = $this->extractHeadContent($html);
-		$snapshotBody = $this->extractBodyContent($html);
-		$combinedHead = trim(implode("\n", array_filter([$snapshotHead, $head])));
-		$slotContent = $this->extractContentSlotHtml($snapshotBody !== '' ? $snapshotBody : $html);
-		$content = $slotContent !== '' ? $slotContent : ($snapshotBody !== '' ? $snapshotBody : $html);
-
 		$rendered = $twigEngine->render($themes->viewPathsForCurrentSite(), 'pages/home.twig', [
 			'page' => $page,
-			'head' => $combinedHead,
+			'head' => $head,
 			'content' => $content,
 			'locale' => app()->getLocale(),
 			'request_path' => $slug,
@@ -67,25 +65,37 @@ class PublicPageController extends Controller
 			return response($rendered, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
 		}
 
-		return response($html, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
+		return response($content, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
 	}
 
-	private function extractHeadContent(string $html): string
+	/**
+	 * @param array<string, mixed> $layout
+	 * @return array{html: string, css: string}
+	 */
+	private function resolveEditorMarkupFromLayout(array $layout): array
 	{
-		if (preg_match('/<head[^>]*>(.*?)<\/head>/is', $html, $matches) !== 1) {
-			return '';
+		$type = strtolower(trim((string) ($layout['type'] ?? '')));
+		$webstudio = (array) ($layout['webstudio'] ?? []);
+
+		if ($type !== 'webstudio' && $webstudio === []) {
+			return ['html' => '', 'css' => ''];
 		}
 
-		return trim((string) ($matches[1] ?? ''));
-	}
+		$document = (array) ($webstudio['document'] ?? []);
+		$html = is_string($webstudio['html'] ?? null)
+			? (string) $webstudio['html']
+			: (is_string($document['html'] ?? null) ? (string) $document['html'] : '');
+		$css = is_string($webstudio['css'] ?? null)
+			? trim((string) $webstudio['css'])
+			: '';
 
-	private function extractBodyContent(string $html): string
-	{
-		if (preg_match('/<body[^>]*>(.*?)<\/body>/is', $html, $matches) !== 1) {
-			return '';
+		if ($css === '' && is_array($webstudio['styles'] ?? null)) {
+			$styles = (array) $webstudio['styles'];
+			$inlineCss = array_filter(array_map(static fn (mixed $item): string => is_string($item) ? trim($item) : '', $styles));
+			$css = implode("\n", $inlineCss);
 		}
 
-		return trim((string) ($matches[1] ?? ''));
+		return ['html' => $html, 'css' => $css];
 	}
 
 	private function extractContentSlotHtml(string $html): string

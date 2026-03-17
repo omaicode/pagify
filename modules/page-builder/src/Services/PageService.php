@@ -11,8 +11,7 @@ use Pagify\PageBuilder\Models\PageTemplate;
 class PageService
 {
 	public function __construct(
-		private readonly PageRevisionService $revisionService,
-		private readonly PageSnapshotService $snapshotService,
+		private readonly PageMediaUsageSyncService $pageMediaUsageSync,
 	) {
 	}
 
@@ -36,11 +35,7 @@ class PageService
 				'updated_by_admin_id' => $adminId,
 			]);
 
-			$this->revisionService->snapshot($page, 'created', $adminId);
-
-			if ($page->status === 'published') {
-				$this->snapshotService->refresh($page);
-			}
+			$this->pageMediaUsageSync->syncForPage($page);
 
 			return $page->refresh();
 		});
@@ -52,8 +47,6 @@ class PageService
 	public function update(Page $page, array $payload, ?int $adminId = null): Page
 	{
 		return DB::transaction(function () use ($page, $payload, $adminId): Page {
-			$beforeSnapshot = $this->revisionService->snapshotFromPage($page);
-
 			$nextSlug = (string) ($payload['slug'] ?? $page->slug);
 			$this->ensureSlugIsUnique($nextSlug, $page->id);
 
@@ -73,11 +66,7 @@ class PageService
 			$page->save();
 
 			$updated = $page->refresh();
-			$this->revisionService->snapshot($updated, 'updated', $adminId, $beforeSnapshot);
-
-			if ($updated->status === 'published') {
-				$this->snapshotService->refresh($updated);
-			}
+			$this->pageMediaUsageSync->syncForPage($updated);
 
 			return $updated;
 		});
@@ -86,25 +75,20 @@ class PageService
 	public function publish(Page $page, ?int $adminId = null): Page
 	{
 		return DB::transaction(function () use ($page, $adminId): Page {
-			$beforeSnapshot = $this->revisionService->snapshotFromPage($page);
-
 			$page->forceFill([
 				'status' => 'published',
 				'published_at' => now(),
 				'updated_by_admin_id' => $adminId,
 			])->save();
 
-			$published = $page->refresh();
-			$this->snapshotService->refresh($published);
-			$this->revisionService->snapshot($published, 'published', $adminId, $beforeSnapshot);
-
-			return $published;
+			return $page->refresh();
 		});
 	}
 
 	public function delete(Page $page): void
 	{
-		DB::transaction(static function () use ($page): void {
+		DB::transaction(function () use ($page): void {
+			$this->pageMediaUsageSync->clearForPage($page);
 			$page->forceDelete();
 		});
 	}
@@ -164,16 +148,77 @@ class PageService
 		$layout = Arr::get($payload, 'layout');
 
 		if (is_array($layout)) {
-			return $layout;
+			return $this->normalizeWebstudioLayout($layout);
 		}
 
 		$templateSlug = Arr::get($payload, 'template_slug');
 		$templateLayout = $this->resolveTemplate(is_string($templateSlug) ? $templateSlug : null);
 
 		if (is_array($templateLayout)) {
-			return $templateLayout;
+			return $this->normalizeWebstudioLayout($templateLayout);
 		}
 
-		return $fallback;
+		return is_array($fallback) ? $this->normalizeWebstudioLayout($fallback) : [];
+	}
+
+	/**
+	 * @param array<string, mixed> $layout
+	 * @return array<string, mixed>
+	 */
+	private function normalizeWebstudioLayout(array $layout): array
+	{
+		if (array_key_exists('grapes', $layout)) {
+			throw ValidationException::withMessages([
+				'layout' => __('Legacy GrapesJS payload is no longer supported. Please reload editor and save again using Webstudio format.'),
+			]);
+		}
+
+		$type = strtolower(trim((string) ($layout['type'] ?? 'webstudio')));
+
+		if ($type !== 'webstudio') {
+			throw ValidationException::withMessages([
+				'layout.type' => __('Only webstudio layout type is supported.'),
+			]);
+		}
+
+		$webstudio = (array) ($layout['webstudio'] ?? []);
+		$document = (array) ($webstudio['document'] ?? []);
+
+		$html = is_string($webstudio['html'] ?? null)
+			? trim((string) $webstudio['html'])
+			: (is_string($document['html'] ?? null) ? trim((string) $document['html']) : '');
+
+		$css = is_string($webstudio['css'] ?? null)
+			? (string) $webstudio['css']
+			: '';
+
+		if ($css === '' && is_array($webstudio['styles'] ?? null)) {
+			$css = implode("\n", array_filter(array_map(static fn (mixed $item): string => is_string($item) ? trim($item) : '', (array) $webstudio['styles'])));
+		}
+
+		$styles = is_array($webstudio['styles'] ?? null)
+			? array_values(array_filter(array_map(static fn (mixed $item): string => is_string($item) ? $item : '', (array) $webstudio['styles']), static fn (string $item): bool => trim($item) !== ''))
+			: ($css !== '' ? [$css] : []);
+
+		$assets = is_array($webstudio['assets'] ?? null) ? (array) $webstudio['assets'] : [];
+		$meta = is_array($webstudio['meta'] ?? null) ? (array) $webstudio['meta'] : [];
+
+		$normalized = [
+			'type' => 'webstudio',
+			'theme_layout' => is_string($layout['theme_layout'] ?? null) ? (string) $layout['theme_layout'] : '',
+			'webstudio' => [
+				'html' => $html,
+				'css' => $css,
+				'document' => [
+					'html' => $html,
+				],
+				'styles' => $styles,
+				'assets' => $assets,
+				'meta' => $meta,
+				'updated_at' => is_string($webstudio['updated_at'] ?? null) ? (string) $webstudio['updated_at'] : now()->toIso8601String(),
+			],
+		];
+
+		return $normalized;
 	}
 }

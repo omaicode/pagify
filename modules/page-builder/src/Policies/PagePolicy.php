@@ -36,14 +36,4 @@ class PagePolicy
 	{
 		return $admin->can('page-builder.page.publish');
 	}
-
-	public function viewRevisions(Admin $admin, Page $page): bool
-	{
-		return $admin->can('page-builder.page.revision.view') || $admin->can('page-builder.page.update');
-	}
-
-	public function rollbackRevision(Admin $admin, Page $page): bool
-	{
-		return $admin->can('page-builder.page.revision.rollback') || $admin->can('page-builder.page.update');
-	}
 }

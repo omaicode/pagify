@@ -9,7 +9,9 @@ use Pagify\Core\Http\Middleware\ResolveSite;
 use Pagify\Core\Http\Middleware\SetLocaleFromSite;
 use Pagify\PageBuilder\Http\Controllers\Admin\PageController;
 use Pagify\PageBuilder\Http\Controllers\Admin\PageLibraryController;
-use Pagify\PageBuilder\Http\Controllers\Admin\PageRevisionController;
+use Pagify\PageBuilder\Http\Controllers\Api\AdminPageBuilderEditorTokenController;
+use Pagify\PageBuilder\Http\Controllers\Api\AdminPageBuilderEditorContractController;
+use Pagify\PageBuilder\Http\Controllers\Api\AdminPageBuilderEditorTokenVerifyController;
 use Pagify\PageBuilder\Http\Controllers\Api\AdminPageBuilderRegistryController;
 
 Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(function (): void {
@@ -27,9 +29,6 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
 			Route::delete('/pages/{page}', [PageController::class, 'destroy'])->name('pages.destroy');
 			Route::post('/library/sections', [PageLibraryController::class, 'storeSection'])->name('library.sections.store');
 			Route::post('/library/templates', [PageLibraryController::class, 'storePageTemplate'])->name('library.templates.store');
-
-			Route::get('/pages/{page}/revisions', [PageRevisionController::class, 'index'])->name('pages.revisions.index');
-			Route::post('/pages/{page}/revisions/{revision}/rollback', [PageRevisionController::class, 'rollback'])->name('pages.revisions.rollback');
 		});
 });
 
@@ -40,5 +39,14 @@ Route::prefix('api/v1/'.config('app.admin_url_prefix').'/page-builder')
 		Route::get('/registry', [AdminPageBuilderRegistryController::class, 'registry'])->name('registry');
 		Route::get('/templates', [AdminPageBuilderRegistryController::class, 'templates'])->name('templates');
 		Route::get('/sections', [AdminPageBuilderRegistryController::class, 'sections'])->name('sections');
+		Route::post('/editor/access-token', AdminPageBuilderEditorTokenController::class)->name('editor.access-token');
+	});
+
+Route::prefix('api/v1/'.config('app.admin_url_prefix').'/page-builder')
+	->middleware(['api', EnsureApiErrorEnvelope::class, ResolveSite::class, SetLocaleFromSite::class, EnsureModuleEnabled::class . ':page-builder', 'throttle:60,1'])
+	->name('page-builder.api.v1.admin.')
+	->group(function (): void {
+		Route::get('/editor/contract', AdminPageBuilderEditorContractController::class)->name('editor.contract');
+		Route::post('/editor/verify-token', AdminPageBuilderEditorTokenVerifyController::class)->name('editor.verify-token');
 	});
 

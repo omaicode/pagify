@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Inertia\Inertia;
 use Inertia\Response;
+use Pagify\Core\Support\SiteContext;
 use Pagify\Core\Services\AuditLogger;
 use Pagify\Core\Services\FrontendThemeManagerService;
 use Pagify\Core\Services\FrontendThemeTwigEngine;
@@ -20,6 +21,7 @@ use Pagify\PageBuilder\Models\Page;
 use Pagify\PageBuilder\Models\PageTemplate;
 use Pagify\PageBuilder\Models\SectionTemplate;
 use Pagify\PageBuilder\Services\BlockRegistryService;
+use Pagify\PageBuilder\Services\EditorAccessTokenService;
 use Pagify\PageBuilder\Services\PageService;
 
 class PageController extends Controller
@@ -30,9 +32,11 @@ class PageController extends Controller
 		private readonly PageService $pageService,
 		private readonly BlockRegistryService $blockRegistry,
 		private readonly AuditLogger $auditLogger,
+		private readonly SiteContext $siteContext,
 		private readonly FrontendThemeManagerService $themes,
 		private readonly FrontendThemeTwigEngine $twigEngine,
 		private readonly AssetThemeHelper $assetTheme,
+		private readonly EditorAccessTokenService $editorAccessToken,
 		private readonly Filesystem $files,
 	) {
 	}
@@ -74,7 +78,7 @@ class PageController extends Controller
 		$templateLayout = is_string($templateSlug) ? $this->pageService->resolveTemplate($templateSlug) : null;
 
 		return Inertia::render('PageBuilder/Pages/Create', [
-			'editor' => $this->editorPayload(),
+			'editor' => $this->editorPayload($request),
 			'startup' => [
 				'template_slug' => $templateSlug,
 				'layout' => $templateLayout,
@@ -114,6 +118,7 @@ class PageController extends Controller
 	public function edit(Page $page): Response
 	{
 		$this->authorize('update', $page);
+		$request = request();
 
 		return Inertia::render('PageBuilder/Pages/Edit', [
 			'page' => [
@@ -125,7 +130,7 @@ class PageController extends Controller
 				'seo_meta' => (array) ($page->seo_meta_json ?? []),
 				'published_at' => $page->published_at?->toDateTimeString(),
 			],
-			'editor' => $this->editorPayload($page),
+			'editor' => $this->editorPayload($request, $page),
 			'templates' => $this->templatePayload(),
 			'sections' => $this->sectionPayload(),
 			'routes' => [
@@ -142,7 +147,7 @@ class PageController extends Controller
 	/**
 	 * @return array<string, mixed>
 	 */
-	private function editorPayload(?Page $page = null): array
+	private function editorPayload(Request $request, ?Page $page = null): array
 	{
 		$allBlocks = $this->blockRegistry->all();
 		$editorConfig = (array) config('page-builder.editor', []);
@@ -175,6 +180,85 @@ class PageController extends Controller
 			'active_theme' => $activeThemeSlug,
 			'canvas_styles' => $canvasStyles,
 			'preview_url' => $previewUrl,
+			'iframe' => $this->iframeEditorPayload($request, $activeThemeSlug, $page),
+		];
+	}
+
+	/**
+	 * @return array{enabled: bool, url: string, origin: string, access_token: string, token_expires_at: ?string, token_refresh_url: string, token_verify_url: string, contract_url: string, message_namespace: string}
+	 */
+	private function iframeEditorPayload(Request $request, string $activeThemeSlug, ?Page $page = null): array
+	{
+		$config = (array) config('page-builder.webstudio_iframe', []);
+		$enabled = (bool) ($config['enabled'] ?? false);
+		$editorUrl = trim((string) ($config['url'] ?? ''));
+
+		if (! $enabled || $editorUrl === '') {
+			return [
+				'enabled' => false,
+				'url' => '',
+				'origin' => '',
+				'access_token' => '',
+				'token_expires_at' => null,
+				'token_refresh_url' => '',
+				'token_verify_url' => '',
+				'contract_url' => '',
+				'message_namespace' => 'pagify:editor',
+			];
+		}
+
+		$origin = trim((string) ($config['origin'] ?? ''));
+		if ($origin === '') {
+			$parsedScheme = (string) parse_url($editorUrl, PHP_URL_SCHEME);
+			$parsedHost = (string) parse_url($editorUrl, PHP_URL_HOST);
+			$parsedPort = parse_url($editorUrl, PHP_URL_PORT);
+
+			if ($parsedScheme !== '' && $parsedHost !== '') {
+				$origin = $parsedScheme . '://' . $parsedHost . ($parsedPort !== null ? ':' . $parsedPort : '');
+			}
+		}
+
+		/** @var \Pagify\Core\Models\Admin|null $admin */
+		$admin = $request->user('web');
+		$site = $this->siteContext->site();
+
+		$issuedToken = $this->editorAccessToken->issue([
+			'admin_id' => $admin?->id,
+			'page_id' => $page?->id,
+			'page_slug' => $page?->slug,
+			'site_id' => $site?->id,
+			'site_slug' => $site?->slug,
+			'theme' => $activeThemeSlug,
+			'scopes' => ['page:read', 'page:write', 'page:publish', 'media:read', 'media:write'],
+		]);
+
+		$query = [
+			'mode' => 'page-builder',
+			'theme' => $activeThemeSlug,
+			'accessToken' => $issuedToken['token'],
+		];
+
+		if ($page !== null) {
+			$query['pageId'] = (string) $page->id;
+		}
+
+		if ($site?->id !== null) {
+			$query['siteId'] = (string) $site->id;
+		}
+
+		$separator = str_contains($editorUrl, '?') ? '&' : '?';
+		$iframeUrl = $editorUrl . $separator . http_build_query($query);
+
+		return [
+			'enabled' => true,
+			'url' => $iframeUrl,
+			'origin' => $origin,
+			'access_token' => $issuedToken['token'],
+			'token_expires_at' => $issuedToken['expires_at'],
+			'token_refresh_url' => route('page-builder.api.v1.admin.editor.access-token'),
+			'token_verify_url' => route('page-builder.api.v1.admin.editor.verify-token'),
+			'contract_url' => route('page-builder.api.v1.admin.editor.contract'),
+			'message_namespace' => 'pagify:editor',
 		];
 	}
 
@@ -183,22 +267,14 @@ class PageController extends Controller
 		$this->authorize('view', $page);
 
 		$layout = (array) ($page->layout_json ?? []);
-		$grapes = (array) ($layout['grapes'] ?? []);
-		$grapesHtml = is_string($grapes['html'] ?? null) ? (string) $grapes['html'] : '';
-		$grapesCss = is_string($grapes['css'] ?? null) ? trim((string) $grapes['css']) : '';
+		$editorMarkup = $this->resolveEditorMarkupFromLayout($layout);
+		$editorHtml = $editorMarkup['html'];
+		$editorCss = $editorMarkup['css'];
 
-		$content = $this->extractContentSlotHtml($grapesHtml);
+		$content = $this->extractContentSlotHtml($editorHtml);
 
 		if ($content === '') {
-			$content = trim($grapesHtml);
-		}
-
-		if ($content === '' && is_string($page->snapshot_html) && trim($page->snapshot_html) !== '') {
-			$snapshotBody = $this->extractBodyFromHtml((string) $page->snapshot_html);
-			$snapshotSource = $snapshotBody !== '' ? $snapshotBody : (string) $page->snapshot_html;
-			$slotContent = $this->extractContentSlotHtml($snapshotSource);
-
-			$content = $slotContent !== '' ? $slotContent : trim($snapshotSource);
+			$content = trim($editorHtml);
 		}
 
 		if ($content === '') {
@@ -219,7 +295,7 @@ class PageController extends Controller
 			$canonical !== '' ? "<link rel=\"canonical\" href=\"{$canonical}\">" : '',
 			$ogImage !== '' ? "<meta property=\"og:image\" content=\"{$ogImage}\">" : '',
 			is_string($jsonLdString) ? '<script type="application/ld+json">' . $jsonLdString . '</script>' : '',
-			$grapesCss !== '' ? '<style>' . $grapesCss . '</style>' : '',
+			$editorCss !== '' ? '<style>' . $editorCss . '</style>' : '',
 			'<meta name="robots" content="noindex,nofollow">',
 		];
 
@@ -239,6 +315,36 @@ class PageController extends Controller
 		}
 
 		return response($content, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
+	}
+
+	/**
+	 * @param array<string, mixed> $layout
+	 * @return array{html: string, css: string}
+	 */
+	private function resolveEditorMarkupFromLayout(array $layout): array
+	{
+		$type = strtolower(trim((string) ($layout['type'] ?? '')));
+		$webstudio = (array) ($layout['webstudio'] ?? []);
+
+		if ($type !== 'webstudio' && $webstudio === []) {
+			return ['html' => '', 'css' => ''];
+		}
+
+		$document = (array) ($webstudio['document'] ?? []);
+		$html = is_string($webstudio['html'] ?? null)
+			? (string) $webstudio['html']
+			: (is_string($document['html'] ?? null) ? (string) $document['html'] : '');
+		$css = is_string($webstudio['css'] ?? null)
+			? trim((string) $webstudio['css'])
+			: '';
+
+		if ($css === '' && is_array($webstudio['styles'] ?? null)) {
+			$styles = (array) $webstudio['styles'];
+			$inlineCss = array_filter(array_map(static fn (mixed $item): string => is_string($item) ? trim($item) : '', $styles));
+			$css = implode("\n", $inlineCss);
+		}
+
+		return ['html' => $html, 'css' => $css];
 	}
 
 	/**

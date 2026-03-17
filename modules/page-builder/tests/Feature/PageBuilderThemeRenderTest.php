@@ -103,9 +103,14 @@ class PageBuilderThemeRenderTest extends TestCase
             'title' => 'Landing',
             'slug' => 'landing',
             'status' => 'published',
-            'layout_json' => ['sections' => []],
+            'layout_json' => [
+                'type' => 'webstudio',
+                'webstudio' => [
+                    'html' => '<main id="demo-body">Hello Theme</main>',
+                    'css' => '.demo{color:red;}',
+                ],
+            ],
             'seo_meta_json' => ['title' => 'Landing SEO'],
-            'snapshot_html' => '<!doctype html><html><head><style>.demo{color:red;}</style></head><body><main id="demo-body">Hello Theme</main></body></html>',
         ]);
 
         $response = $this->get('/landing');
@@ -138,9 +143,13 @@ class PageBuilderThemeRenderTest extends TestCase
             'title' => 'Pricing',
             'slug' => 'pricing',
             'status' => 'published',
-            'layout_json' => ['sections' => []],
+            'layout_json' => [
+                'type' => 'webstudio',
+                'webstudio' => [
+                    'html' => '<main>Fallback chain</main>',
+                ],
+            ],
             'seo_meta_json' => ['title' => 'Pricing SEO'],
-            'snapshot_html' => '<!doctype html><html><head></head><body><main>Fallback chain</main></body></html>',
         ]);
 
         $response = $this->get('/pricing');
@@ -182,9 +191,13 @@ class PageBuilderThemeRenderTest extends TestCase
             'title' => 'About',
             'slug' => 'about',
             'status' => 'published',
-            'layout_json' => ['sections' => []],
+            'layout_json' => [
+                'type' => 'webstudio',
+                'webstudio' => [
+                    'html' => '<main>Default fallback</main>',
+                ],
+            ],
             'seo_meta_json' => ['title' => 'About SEO'],
-            'snapshot_html' => '<!doctype html><html><head></head><body><main>Default fallback</main></body></html>',
         ]);
 
         $response = $this->get('/about');
@@ -215,9 +228,13 @@ class PageBuilderThemeRenderTest extends TestCase
             'title' => 'Host test',
             'slug' => 'host-test',
             'status' => 'published',
-            'layout_json' => ['sections' => []],
+            'layout_json' => [
+                'type' => 'webstudio',
+                'webstudio' => [
+                    'html' => '<main>Host</main>',
+                ],
+            ],
             'seo_meta_json' => ['title' => 'Host test'],
-            'snapshot_html' => '<!doctype html><html><head></head><body><main>Host</main></body></html>',
         ]);
 
         $response = $this->get('/host-test');
@@ -247,9 +264,13 @@ class PageBuilderThemeRenderTest extends TestCase
             'title' => 'Host request test',
             'slug' => 'host-request-test',
             'status' => 'published',
-            'layout_json' => ['sections' => []],
+            'layout_json' => [
+                'type' => 'webstudio',
+                'webstudio' => [
+                    'html' => '<main>Host request</main>',
+                ],
+            ],
             'seo_meta_json' => ['title' => 'Host request test'],
-            'snapshot_html' => '<!doctype html><html><head></head><body><main>Host request</main></body></html>',
         ]);
 
         $response = $this->get('https://demo.pagify.test/host-request-test');

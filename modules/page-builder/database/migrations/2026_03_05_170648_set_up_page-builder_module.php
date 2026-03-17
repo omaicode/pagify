@@ -28,21 +28,6 @@ return new class extends Migration
 			$table->index(['status', 'published_at']);
 		});
 
-		Schema::create('pb_page_revisions', function (Blueprint $table): void {
-			$table->id();
-			$table->foreignId('page_id')->constrained('pb_pages')->cascadeOnDelete();
-			$table->unsignedInteger('revision_no');
-			$table->string('action', 60);
-			$table->json('snapshot_json');
-			$table->json('diff_json')->nullable();
-			$table->foreignId('created_by_admin_id')->nullable()->constrained('admins')->nullOnDelete();
-			$table->json('metadata_json')->nullable();
-			$table->timestamps();
-
-			$table->unique(['page_id', 'revision_no'], 'pb_page_revision_unique');
-			$table->index(['page_id', 'created_at'], 'pb_page_created_at_idx');
-		});
-
 		Schema::create('pb_section_templates', function (Blueprint $table): void {
 			$table->id();
 			$table->foreignId('site_id')->nullable()->constrained('sites')->nullOnDelete();
@@ -78,7 +63,6 @@ return new class extends Migration
 	{
 		Schema::dropIfExists('pb_page_templates');
 		Schema::dropIfExists('pb_section_templates');
-		Schema::dropIfExists('pb_page_revisions');
 		Schema::dropIfExists('pb_pages');
 	}
 };

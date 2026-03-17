@@ -3,7 +3,7 @@ import { useForm } from '@inertiajs/vue3';
 import { computed, onMounted, ref, watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import AdminLayout from '@admin-theme/Layouts/AdminLayout.vue';
-import PageBuilderEditor from '@admin-theme/Components/PageBuilderEditor.vue';
+import PageBuilderIframeEditor from '@admin-theme/Components/PageBuilderIframeEditor.vue';
 import UiAlert from '@admin-theme/Components/UI/UiAlert.vue';
 import UiButton from '@admin-theme/Components/UI/UiButton.vue';
 import UiCard from '@admin-theme/Components/UI/UiCard.vue';
@@ -11,6 +11,7 @@ import UiField from '@admin-theme/Components/UI/UiField.vue';
 import UiInput from '@admin-theme/Components/UI/UiInput.vue';
 import UiPageHeader from '@admin-theme/Components/UI/UiPageHeader.vue';
 import UiSwitch from '@admin-theme/Components/UI/UiSwitch.vue';
+import { PAGE_BUILDER_HOST_EVENTS } from '@admin-theme/PageBuilder/iframeMessageContract';
 import Swal from 'sweetalert2';
 import { toast } from 'vue3-toastify';
 
@@ -27,6 +28,7 @@ const form = useForm({
     status: props.page.status,
     layout: {
         ...(props.page.layout ?? {}),
+        type: props.page.layout?.type ?? 'webstudio',
         theme_layout: props.page.layout?.theme_layout ?? props.editor.default_layout ?? '',
     },
     seo_meta: {
@@ -115,7 +117,7 @@ const handleEditorStateChange = (payload) => {
 };
 
 const pushEditorSearch = () => {
-    window.dispatchEvent(new CustomEvent('pbx-editor-search:set', {
+    window.dispatchEvent(new CustomEvent(PAGE_BUILDER_HOST_EVENTS.SEARCH_REQUEST, {
         detail: {
             term: editorSearchTerm.value,
         },
@@ -171,7 +173,7 @@ const clearLocalLayoutDraft = () => {
 };
 
 const submit = () => {
-    window.dispatchEvent(new CustomEvent('pbx-editor-flush'));
+    window.dispatchEvent(new CustomEvent(PAGE_BUILDER_HOST_EVENTS.FLUSH_REQUEST));
 
     window.setTimeout(() => {
         form.put(props.routes.update, {
@@ -314,16 +316,15 @@ watch(() => form.layout, (nextLayout) => {
             </UiAlert>
 
             <div>
-                <PageBuilderEditor
+                <PageBuilderIframeEditor
                     v-model="form.layout"
+                    :iframe="editor.iframe ?? {}"
+                    :page-id="page.id"
                     :blocks="editor.blocks ?? []"
                     :breakpoints="editor.breakpoints ?? []"
-                    :simple-mode="editor.simple_mode ?? true"
-                    :primary-block-keys="editor.primary_block_keys ?? []"
                     :canvas-styles="editor.canvas_styles ?? []"
                     :active-theme="editor.active_theme ?? ''"
                     :layouts="editor.layouts ?? []"
-                    :block-search-config="editor.block_search_config ?? {}"
                     :compact-header="true"
                     @editor-state-change="handleEditorStateChange"
                 />

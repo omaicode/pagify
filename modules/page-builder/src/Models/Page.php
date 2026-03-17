@@ -5,7 +5,6 @@ namespace Pagify\PageBuilder\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Pagify\Core\Models\Admin;
 use Pagify\Core\Traits\BelongsToSite;
@@ -25,8 +24,6 @@ class Page extends Model
 		'status',
 		'layout_json',
 		'seo_meta_json',
-		'snapshot_html',
-		'snapshot_generated_at',
 		'published_at',
 		'created_by_admin_id',
 		'updated_by_admin_id',
@@ -35,14 +32,8 @@ class Page extends Model
 	protected $casts = [
 		'layout_json' => 'array',
 		'seo_meta_json' => 'array',
-		'snapshot_generated_at' => 'datetime',
 		'published_at' => 'datetime',
 	];
-
-	public function revisions(): HasMany
-	{
-		return $this->hasMany(PageRevision::class, 'page_id')->orderByDesc('revision_no');
-	}
 
 	public function creator(): BelongsTo
 	{

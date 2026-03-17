@@ -70,8 +70,12 @@ TWIG
             'title' => 'About PB',
             'slug' => 'about',
             'status' => 'published',
-            'layout_json' => ['sections' => []],
-            'snapshot_html' => '<!doctype html><html><head></head><body><main data-source="page-builder">About from page builder</main></body></html>',
+            'layout_json' => [
+                'type' => 'webstudio',
+                'webstudio' => [
+                    'html' => '<main data-source="page-builder">About from page builder</main>',
+                ],
+            ],
         ]);
 
         $response = $this->get('/about');
@@ -88,8 +92,12 @@ TWIG
             'title' => 'Features PB',
             'slug' => 'features',
             'status' => 'published',
-            'layout_json' => ['sections' => []],
-            'snapshot_html' => '<!doctype html><html><head></head><body><main data-source="page-builder">Features from page builder</main></body></html>',
+            'layout_json' => [
+                'type' => 'webstudio',
+                'webstudio' => [
+                    'html' => '<main data-source="page-builder">Features from page builder</main>',
+                ],
+            ],
         ]);
 
         $response = $this->get('/features');
