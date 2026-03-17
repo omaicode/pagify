@@ -7,9 +7,12 @@ use Pagify\Core\Http\Middleware\HandleInertiaRequests;
 use Pagify\Core\Http\Middleware\RecordAuditLog;
 use Pagify\Core\Http\Middleware\ResolveSite;
 use Pagify\Core\Http\Middleware\SetLocaleFromSite;
+use Pagify\PageBuilder\Http\Controllers\Admin\EditorHostController;
 use Pagify\PageBuilder\Http\Controllers\Admin\PageController;
 use Pagify\PageBuilder\Http\Controllers\Api\AdminPageBuilderEditorTokenController;
 use Pagify\PageBuilder\Http\Controllers\Api\AdminPageBuilderEditorContractController;
+use Pagify\PageBuilder\Http\Controllers\Api\AdminPageBuilderEditorBuilderDataController;
+use Pagify\PageBuilder\Http\Controllers\Api\AdminPageBuilderEditorMediaController;
 use Pagify\PageBuilder\Http\Controllers\Api\AdminPageBuilderEditorTokenVerifyController;
 use Pagify\PageBuilder\Http\Controllers\Api\AdminPageBuilderRegistryController;
 
@@ -18,6 +21,7 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
 		->name('page-builder.admin.')
 		->middleware([EnsureModuleEnabled::class . ':page-builder', 'auth:web', HandleInertiaRequests::class, RecordAuditLog::class])
 		->group(function (): void {
+			Route::get('/editor-host', EditorHostController::class)->name('editor.host');
 			Route::get('/pages', [PageController::class, 'index'])->name('pages.index');
 			Route::get('/pages/create', [PageController::class, 'create'])->name('pages.create');
 			Route::post('/pages', [PageController::class, 'store'])->name('pages.store');
@@ -43,5 +47,8 @@ Route::prefix('api/v1/'.config('app.admin_url_prefix').'/page-builder')
 	->group(function (): void {
 		Route::get('/editor/contract', AdminPageBuilderEditorContractController::class)->name('editor.contract');
 		Route::post('/editor/verify-token', AdminPageBuilderEditorTokenVerifyController::class)->name('editor.verify-token');
+		Route::post('/editor/builder-data', AdminPageBuilderEditorBuilderDataController::class)->name('editor.builder-data');
+		Route::post('/editor/media/assets', [AdminPageBuilderEditorMediaController::class, 'index'])->name('editor.media.assets');
+		Route::post('/editor/media/assets/upload', [AdminPageBuilderEditorMediaController::class, 'upload'])->name('editor.media.assets.upload');
 	});
 

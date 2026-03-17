@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title inertia>{{ config('app.name', 'Pagify') }}</title>
 
-    @vite(['resources/css/app.css', 'resources/js/admin.js'])
+    @vite(['resources/css/app.css', 'resources/js/admin.js'], 'build/admin')
     @inertiaHead
 </head>
 <body class="bg-white text-slate-900 antialiased">

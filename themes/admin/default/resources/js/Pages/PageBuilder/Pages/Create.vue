@@ -1,6 +1,6 @@
 <script setup>
 import { useForm } from '@inertiajs/vue3';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import AdminLayout from '@admin-theme/Layouts/AdminLayout.vue';
 import PageBuilderIframeEditor from '@admin-theme/Components/PageBuilderIframeEditor.vue';
@@ -44,9 +44,6 @@ const label = (key, fallback) => t.value?.[key] ?? fallback;
 const activeTab = ref('basic');
 const slugManuallyEdited = ref(false);
 const editorSearchTerm = ref('');
-const editorState = ref('synced');
-const editorLastSyncedAt = ref('');
-const LOCAL_LAYOUT_DRAFT_KEY = 'pagify:page-builder:create:layout-draft';
 const publishEnabled = computed({
     get: () => form.status === 'published',
     set: (value) => {
@@ -81,39 +78,6 @@ const handleSlugInput = () => {
 
 watch(() => form.title, syncSlugFromTitle);
 
-const editorStateLabel = computed(() => {
-    if (editorState.value === 'syncing') {
-        return label('pb_editor_state_syncing', 'Syncing changes...');
-    }
-
-    if (editorState.value === 'dirty') {
-        return label('pb_editor_state_unsaved', 'Unsaved changes');
-    }
-
-    if (editorLastSyncedAt.value !== '') {
-        return `${label('pb_editor_state_synced', 'Changes synced')} · ${editorLastSyncedAt.value}`;
-    }
-
-    return label('pb_editor_state_synced', 'Changes synced');
-});
-
-const editorStateClass = computed(() => {
-    if (editorState.value === 'syncing') {
-        return 'border-amber-200 bg-amber-50 text-amber-700';
-    }
-
-    if (editorState.value === 'dirty') {
-        return 'border-sky-200 bg-sky-50 text-sky-700';
-    }
-
-    return 'border-emerald-200 bg-emerald-50 text-emerald-700';
-});
-
-const handleEditorStateChange = (payload) => {
-    editorState.value = payload?.state ?? 'synced';
-    editorLastSyncedAt.value = payload?.syncedAt ?? '';
-};
-
 const pushEditorSearch = () => {
     window.dispatchEvent(new CustomEvent(PAGE_BUILDER_HOST_EVENTS.SEARCH_REQUEST, {
         detail: {
@@ -122,61 +86,12 @@ const pushEditorSearch = () => {
     }));
 };
 
-const restoreLocalLayoutDraft = () => {
-    if (typeof window === 'undefined') {
-        return;
-    }
-
-    try {
-        const raw = window.localStorage.getItem(LOCAL_LAYOUT_DRAFT_KEY);
-
-        if (!raw) {
-            return;
-        }
-
-        const parsed = JSON.parse(raw);
-
-        if (!parsed || typeof parsed !== 'object') {
-            return;
-        }
-
-        form.layout = {
-            ...form.layout,
-            ...parsed,
-            theme_layout: parsed.theme_layout ?? form.layout.theme_layout,
-        };
-    } catch (_) {
-        // No-op: keep the initial payload if local draft is malformed.
-    }
-};
-
-const persistLocalLayoutDraft = (layoutValue) => {
-    if (typeof window === 'undefined') {
-        return;
-    }
-
-    try {
-        window.localStorage.setItem(LOCAL_LAYOUT_DRAFT_KEY, JSON.stringify(layoutValue ?? {}));
-    } catch (_) {
-        // No-op: localStorage may be unavailable in restricted browser contexts.
-    }
-};
-
-const clearLocalLayoutDraft = () => {
-    if (typeof window === 'undefined') {
-        return;
-    }
-
-    window.localStorage.removeItem(LOCAL_LAYOUT_DRAFT_KEY);
-};
-
 const submit = () => {
     window.dispatchEvent(new CustomEvent(PAGE_BUILDER_HOST_EVENTS.FLUSH_REQUEST));
 
     window.setTimeout(() => {
         form.post(props.routes.store, {
             onSuccess: () => {
-                clearLocalLayoutDraft();
                 toast.success(label('pb_page_created', 'Page created.'));
             },
             onError: () => {
@@ -185,14 +100,6 @@ const submit = () => {
         });
     }, 0);
 };
-
-onMounted(() => {
-    restoreLocalLayoutDraft();
-});
-
-watch(() => form.layout, (nextLayout) => {
-    persistLocalLayoutDraft(nextLayout);
-}, { deep: true });
 </script>
 
 <template>
@@ -292,15 +199,11 @@ watch(() => form.layout, (nextLayout) => {
                     :active-theme="editor.active_theme ?? ''"
                     :layouts="editor.layouts ?? []"
                     :compact-header="true"
-                    @editor-state-change="handleEditorStateChange"
                 />
             </div>
 
             <UiCard class="sticky bottom-3 z-30 border border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
                 <div class="flex flex-wrap gap-2">
-                    <span class="inline-flex items-center rounded-full border px-2 py-1 text-xs font-medium" :class="editorStateClass">
-                        {{ editorStateLabel }}
-                    </span>
                     <UiButton type="button" tone="primary" radius="lg" :disabled="form.processing" @click="submit">{{ label('pb_create_page', 'Create page') }}</UiButton>
                     <UiButton tag="a" :href="routes.index" tone="outline" radius="lg">{{ label('pb_back_to_pages', 'Back to pages') }}</UiButton>
                 </div>

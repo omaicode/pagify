@@ -22,9 +22,9 @@ return [
 	],
 
 	'webstudio_iframe' => [
-		'enabled' => (bool) env('PAGE_BUILDER_IFRAME_EDITOR_ENABLED', false),
-		'url' => (string) env('PAGE_BUILDER_IFRAME_EDITOR_URL', ''),
 		'origin' => (string) env('PAGE_BUILDER_IFRAME_EDITOR_ORIGIN', ''),
+		'runtime_mode' => (string) env('PAGE_BUILDER_IFRAME_EDITOR_RUNTIME_MODE', 'upstream-embedded'),
+		'upstream_url' => (string) env('PAGE_BUILDER_IFRAME_EDITOR_UPSTREAM_URL', 'https://app.webstudio.is'),
 		'token_ttl_seconds' => (int) env('PAGE_BUILDER_IFRAME_EDITOR_TOKEN_TTL', 300),
 		'token_issuer' => (string) env('PAGE_BUILDER_IFRAME_EDITOR_TOKEN_ISSUER', (string) env('APP_URL', 'pagify')),
 		'token_audience' => (string) env('PAGE_BUILDER_IFRAME_EDITOR_TOKEN_AUDIENCE', 'webstudio-editor'),

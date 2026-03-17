@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, toRaw, watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import {
     PAGE_BUILDER_HOST_EVENTS,
@@ -93,6 +93,20 @@ const setState = (state) => {
     });
 };
 
+const toSerializableMessageValue = (value) => {
+    const raw = toRaw(value);
+
+    try {
+        return structuredClone(raw);
+    } catch (_) {
+        try {
+            return JSON.parse(JSON.stringify(raw));
+        } catch (_) {
+            return {};
+        }
+    }
+};
+
 const postToIframe = (type, payload = {}) => {
     const frame = iframeRef.value;
 
@@ -101,11 +115,12 @@ const postToIframe = (type, payload = {}) => {
     }
 
     const targetOrigin = iframeOrigin.value || '*';
+    const serializablePayload = toSerializableMessageValue(payload);
 
     frame.contentWindow.postMessage({
         type,
         namespace: messageNamespace.value,
-        payload,
+        payload: serializablePayload,
     }, targetOrigin);
 };
 
@@ -313,7 +328,7 @@ onBeforeUnmount(() => {
         </div>
 
         <div v-if="!iframeEnabled || iframeSrc === ''" class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            {{ label('pb_editor_iframe_not_configured', 'Iframe editor is not configured. Set PAGE_BUILDER_IFRAME_EDITOR_ENABLED and PAGE_BUILDER_IFRAME_EDITOR_URL.') }}
+            {{ label('pb_editor_iframe_not_configured', 'Iframe editor is currently unavailable.') }}
         </div>
 
         <iframe

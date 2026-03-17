@@ -32,6 +32,10 @@ The Page Builder module provides admin tooling for composing and publishing page
 
 Admin UI embeds the editor in an iframe and exchanges state via `postMessage`.
 
+- Host route is module-owned: `/{admin_prefix}/page-builder/editor-host`.
+- Iframe URL is derived from module route payload and signed token metadata.
+- There is no enable/url env toggle for iframe host selection.
+
 ### Token endpoints
 
 - `POST api/v1/{admin_prefix}/page-builder/editor/access-token`
@@ -69,6 +73,8 @@ Source of truth in admin codebase:
 ### Security notes
 
 - Restrict iframe origins with `PAGE_BUILDER_IFRAME_EDITOR_ORIGIN`.
+- Runtime mode is controlled by `PAGE_BUILDER_IFRAME_EDITOR_RUNTIME_MODE` (`upstream-embedded` default).
+- Direct upstream UI embed target is controlled by `PAGE_BUILDER_IFRAME_EDITOR_UPSTREAM_URL`.
 - Keep `PAGE_BUILDER_IFRAME_EDITOR_TOKEN_TTL` short.
 - Rotate `PAGE_BUILDER_IFRAME_EDITOR_TOKEN_SECRET` periodically.
 - Reject tokens failing `iss`, `aud`, signature, or `exp` validation.

@@ -78,9 +78,7 @@ let registeredBlocks = [];
 let activeDraggedBlockKey = null;
 let blockSearchIndex = null;
 
-const RECENT_BLOCK_STORAGE_KEY = 'pagify:page-builder:recent-blocks';
 const RECENT_BLOCK_LIMIT = 6;
-const EDITOR_PREFS_STORAGE_KEY = 'pagify:page-builder:editor-prefs';
 const DEFAULT_BLOCK_SEARCH_OPTIONS = {
     includeScore: false,
     threshold: 0.34,
@@ -174,35 +172,8 @@ const applyEditorCanvasHeight = () => {
 };
 
 const loadEditorPreferences = () => {
-    if (typeof window === 'undefined') {
-        return;
-    }
-
-    try {
-        const raw = window.localStorage.getItem(EDITOR_PREFS_STORAGE_KEY);
-        const parsed = raw ? JSON.parse(raw) : {};
-
-        isFocusMode.value = Boolean(parsed?.focusMode);
-        showEditorGuide.value = parsed?.guideDismissed ? false : true;
-    } catch (_) {
-        isFocusMode.value = false;
-        showEditorGuide.value = true;
-    }
-};
-
-const persistEditorPreferences = () => {
-    if (typeof window === 'undefined') {
-        return;
-    }
-
-    try {
-        window.localStorage.setItem(EDITOR_PREFS_STORAGE_KEY, JSON.stringify({
-            focusMode: isFocusMode.value,
-            guideDismissed: !showEditorGuide.value,
-        }));
-    } catch (_) {
-        // No-op: localStorage might be unavailable in restricted browser contexts.
-    }
+    isFocusMode.value = false;
+    showEditorGuide.value = true;
 };
 
 const clearBlockSearch = () => {
@@ -211,14 +182,12 @@ const clearBlockSearch = () => {
 
 const clearRecentBlocks = () => {
     recentBlockKeys.value = [];
-    persistRecentBlockKeys();
     renderBlockManager(registeredBlocks, blockSearchTerm.value);
     toast.info(label('pb_recent_blocks_cleared', 'Quick blocks cleared.'));
 };
 
 const dismissEditorGuide = () => {
     showEditorGuide.value = false;
-    persistEditorPreferences();
 };
 
 const emitLayoutSnapshot = () => {
@@ -474,30 +443,7 @@ const sanitizeRecentBlockKeys = (keys, availableBlockKeys) => {
 };
 
 const loadRecentBlockKeys = (availableBlockKeys) => {
-    if (typeof window === 'undefined') {
-        recentBlockKeys.value = [];
-        return;
-    }
-
-    try {
-        const raw = window.localStorage.getItem(RECENT_BLOCK_STORAGE_KEY);
-        const parsed = raw ? JSON.parse(raw) : [];
-        recentBlockKeys.value = sanitizeRecentBlockKeys(parsed, availableBlockKeys);
-    } catch (_) {
-        recentBlockKeys.value = [];
-    }
-};
-
-const persistRecentBlockKeys = () => {
-    if (typeof window === 'undefined') {
-        return;
-    }
-
-    try {
-        window.localStorage.setItem(RECENT_BLOCK_STORAGE_KEY, JSON.stringify(recentBlockKeys.value));
-    } catch (_) {
-        // No-op: localStorage might be unavailable in restricted browser contexts.
-    }
+    recentBlockKeys.value = sanitizeRecentBlockKeys(recentBlockKeys.value, availableBlockKeys);
 };
 
 const resolveBlockKeyFromBlockId = (blockId) => {
@@ -524,7 +470,6 @@ const markBlockAsRecentlyUsed = (blockKey) => {
     }
 
     recentBlockKeys.value = sanitizeRecentBlockKeys([normalized, ...recentBlockKeys.value], availableKeys);
-    persistRecentBlockKeys();
 
     if (editor) {
         renderBlockManager(registeredBlocks, blockSearchTerm.value);
@@ -1417,7 +1362,6 @@ watch(resolvedBlockSearchOptions, () => {
 
 watch(isFocusMode, () => {
     applyEditorCanvasHeight();
-    persistEditorPreferences();
 });
 </script>
 

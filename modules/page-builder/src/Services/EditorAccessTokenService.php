@@ -120,6 +120,11 @@ class EditorAccessTokenService
 	private function resolveSecret(): string
 	{
 		$configuredSecret = trim((string) config('page-builder.webstudio_iframe.token_secret', ''));
+		$isProduction = (string) config('app.env', 'production') === 'production';
+
+		if ($isProduction && $configuredSecret === '') {
+			throw new InvalidArgumentException('PAGE_BUILDER_IFRAME_EDITOR_TOKEN_SECRET must be configured in production.');
+		}
 
 		if ($configuredSecret !== '') {
 			return $configuredSecret;

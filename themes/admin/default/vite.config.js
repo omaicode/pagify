@@ -10,7 +10,7 @@ export default defineConfig({
             input: ['resources/css/app.css', 'resources/js/admin.js'],
             publicDirectory: '../../../public',
             hotFile: '../../../public/hot',
-            buildDirectory: 'build',
+            buildDirectory: 'build/admin',
             refresh: true,
         }),
         vue(),

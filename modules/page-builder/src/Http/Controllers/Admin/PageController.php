@@ -176,22 +176,7 @@ class PageController extends Controller
 	private function iframeEditorPayload(Request $request, string $activeThemeSlug, ?Page $page = null): array
 	{
 		$config = (array) config('page-builder.webstudio_iframe', []);
-		$enabled = (bool) ($config['enabled'] ?? false);
-		$editorUrl = trim((string) ($config['url'] ?? ''));
-
-		if (! $enabled || $editorUrl === '') {
-			return [
-				'enabled' => false,
-				'url' => '',
-				'origin' => '',
-				'access_token' => '',
-				'token_expires_at' => null,
-				'token_refresh_url' => '',
-				'token_verify_url' => '',
-				'contract_url' => '',
-				'message_namespace' => 'pagify:editor',
-			];
-		}
+		$editorUrl = route('page-builder.admin.editor.host');
 
 		$origin = trim((string) ($config['origin'] ?? ''));
 		if ($origin === '') {
@@ -222,6 +207,7 @@ class PageController extends Controller
 			'mode' => 'page-builder',
 			'theme' => $activeThemeSlug,
 			'accessToken' => $issuedToken['token'],
+			'parentOrigin' => $request->getSchemeAndHttpHost(),
 		];
 
 		if ($page !== null) {
