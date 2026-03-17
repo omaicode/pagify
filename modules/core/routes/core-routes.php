@@ -45,6 +45,18 @@ Route::middleware(['web', ResolveSite::class, SetLocaleFromSite::class])->group(
                 ->middleware(HandleInertiaRequests::class)
                 ->name('login');
             Route::post('/login', [AuthController::class, 'store'])->name('login.store');
+
+            Route::get('/forgot-password', [AuthController::class, 'forgotPassword'])
+                ->middleware(HandleInertiaRequests::class)
+                ->name('password.request');
+            Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])
+                ->name('password.email');
+
+            Route::get('/reset-password/{token}', [AuthController::class, 'resetPassword'])
+                ->middleware(HandleInertiaRequests::class)
+                ->name('password.reset');
+            Route::post('/reset-password', [AuthController::class, 'updatePassword'])
+                ->name('password.update');
         });
 
         Route::post('/logout', [AuthController::class, 'destroy'])

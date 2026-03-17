@@ -3,6 +3,24 @@
 return [
     'dashboard_active' => 'Core admin shell is active.',
 
+    'auth' => [
+        'password_reset' => [
+            'subject' => 'Reset your administrator password',
+            'greeting' => 'Hello,',
+            'intro' => 'We received a request to reset the password for your administrator account.',
+            'action' => 'Reset Password',
+            'expiry' => 'This reset link will expire in :count minutes.',
+            'ignore' => 'If you did not request this change, you can safely ignore this email.',
+        ],
+    ],
+
+    'mail' => [
+        'transactional' => [
+            'signature_note' => 'This is an automated transactional message. Please do not reply to this email.',
+            'contact' => 'Need help? Contact us at :email',
+        ],
+    ],
+
     'api' => [
         'authentication_required' => 'Authentication required.',
         'validation_failed' => 'Validation failed.',

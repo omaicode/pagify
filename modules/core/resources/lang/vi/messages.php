@@ -3,6 +3,24 @@
 return [
     'dashboard_active' => 'Bảng điều khiển quản trị Core đã sẵn sàng.',
 
+    'auth' => [
+        'password_reset' => [
+            'subject' => 'Đặt lại mật khẩu quản trị',
+            'greeting' => 'Xin chào,',
+            'intro' => 'Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản quản trị của bạn.',
+            'action' => 'Đặt lại mật khẩu',
+            'expiry' => 'Liên kết này sẽ hết hạn sau :count phút.',
+            'ignore' => 'Nếu bạn không yêu cầu thao tác này, bạn có thể bỏ qua email.',
+        ],
+    ],
+
+    'mail' => [
+        'transactional' => [
+            'signature_note' => 'Đây là email giao dịch tự động. Vui lòng không trả lời email này.',
+            'contact' => 'Cần hỗ trợ? Liên hệ: :email',
+        ],
+    ],
+
     'api' => [
         'authentication_required' => 'Yêu cầu đăng nhập.',
         'validation_failed' => 'Dữ liệu không hợp lệ.',

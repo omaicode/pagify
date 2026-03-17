@@ -13,6 +13,14 @@ const props = defineProps({
         type: String,
         required: true,
     },
+    forgotPasswordUrl: {
+        type: String,
+        required: true,
+    },
+    statusMessage: {
+        type: String,
+        default: null,
+    },
 });
 
 const page = usePage();
@@ -39,6 +47,10 @@ const errors = computed(() => page.props.errors ?? {});
                 {{ errors.username }}
             </UiAlert>
 
+            <UiAlert v-if="props.statusMessage" tone="success" class="mb-4">
+                {{ props.statusMessage }}
+            </UiAlert>
+
             <form :action="props.loginAction" method="POST" class="space-y-4">
                 <input type="hidden" name="_token" :value="page.props.csrf_token">
 
@@ -61,10 +73,18 @@ const errors = computed(() => page.props.errors ?? {});
                     />
                 </UiField>
 
-                <label class="flex items-center gap-2 text-sm text-slate-700">
-                    <input name="remember" type="checkbox" value="1" class="rounded border-slate-300">
-                    {{ t.remember_me ?? 'Remember me' }}
-                </label>
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center gap-2 text-sm text-slate-700">
+                        <input name="remember" type="checkbox" value="1" class="rounded border-slate-300">
+                        {{ t.remember_me ?? 'Remember me' }}
+                    </label>
+
+                    <div class="text-sm">
+                        <a :href="props.forgotPasswordUrl" class="text-[#4338ca] hover:underline">
+                            {{ t.forgot_password ?? 'Forgot password?' }}
+                        </a>
+                    </div>
+                </div>
 
                 <UiButton type="submit" radius="lg" full-width size="lg">
                     {{ t.sign_in ?? 'Sign in' }}

@@ -40,6 +40,7 @@ class CoreServiceProvider extends ServiceProvider
 	public function register(): void
 	{
 		$this->mergeConfigFrom(__DIR__ . '/../../config/core.php', 'core');
+		$this->mergeConfigFrom(__DIR__ . '/../../config/mail-ui.php', 'core_mail_ui');
 		$this->mergeConfigFrom(__DIR__ . '/../../config/menu.php', 'core.menu');
 		$this->mergeConfigFrom(__DIR__ . '/../../config/module.php', 'core.module');
 		$this->mergeConfigFrom(__DIR__ . '/../../config/plugins.php', 'plugins');
@@ -203,6 +204,7 @@ class CoreServiceProvider extends ServiceProvider
 
 		$this->publishes([
 			__DIR__ . '/../../config/core.php' => config_path('core.php'),
+			__DIR__ . '/../../config/mail-ui.php' => config_path('core-mail-ui.php'),
 			__DIR__ . '/../../config/module.php' => config_path('core-module.php'),
 			__DIR__ . '/../../config/menu.php' => config_path('core-menu.php'),
 		], 'core-config');
