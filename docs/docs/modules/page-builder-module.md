@@ -5,89 +5,127 @@ title: Page Builder Module
 
 # Page Builder Module
 
-The Page Builder module provides admin tooling for composing and publishing pages.
+The Page Builder module provides admin tooling for composing, saving, and publishing pages with an embedded Webstudio client.
 
 ## Responsibilities
 
-- Page CRUD in admin interface
-- Page preview and publish actions
-- Section and template library persistence
-- Registry endpoints for builder capabilities
+- Page CRUD in the admin interface
+- Embedded editor shell for page composition
+- Persisted page-builder UI state per page
+- Media asset upload and deletion from the editor
+- Publish and draft state management per page
+- Registry, contract, and compatibility endpoints required by Webstudio
+
+## Current integration model
+
+The current integration no longer uses an external iframe host as the primary editor runtime.
+
+- Laravel serves a module-owned SPA shell at `/{admin_prefix}/page-builder/editor-spa/{path?}`.
+- The shell view is `modules/page-builder/resources/views/editor-spa.blade.php`.
+- The shell loads the built Webstudio client through Laravel Vite:
+  - `@vite('resources/js/webstudio-vite-entry.js', 'build/page-builder')`
+- The Webstudio client is built inside the module and copied to Laravel public assets.
+- Admin `Pages` opens this SPA route, and Webstudio bootstraps from `window.__pagifyWebstudioBootstrap`.
 
 ## Key admin routes
 
 - `/{admin_prefix}/page-builder/pages`
-- `/{admin_prefix}/page-builder/pages/create`
-- `/{admin_prefix}/page-builder/pages/{page}/edit`
 - `/{admin_prefix}/page-builder/pages/{page}/preview`
+- `/{admin_prefix}/page-builder/editor-spa/{path?}`
 
 ## Key API groups
+
+Primary admin APIs:
 
 - `api/v1/{admin_prefix}/page-builder/registry`
 - `api/v1/{admin_prefix}/page-builder/editor/access-token`
 - `api/v1/{admin_prefix}/page-builder/editor/verify-token`
 - `api/v1/{admin_prefix}/page-builder/editor/contract`
+- `api/v1/{admin_prefix}/page-builder/pages`
+- `api/v1/{admin_prefix}/page-builder/pages/{page}`
+- `api/v1/{admin_prefix}/page-builder/pages/{page}/publish`
 
-## Iframe editor integration
+Webstudio compatibility APIs:
 
-Admin UI embeds the editor in an iframe and exchanges state via `postMessage`.
+- `GET api/v1/{admin_prefix}/page-builder/data/{projectId}`
+- `POST api/v1/{admin_prefix}/page-builder/patch`
+- `POST api/v1/{admin_prefix}/page-builder/resources-loader`
+- `GET|POST api/v1/{admin_prefix}/page-builder/assets`
+- `POST api/v1/{admin_prefix}/page-builder/assets/{name}`
+- `DELETE api/v1/{admin_prefix}/page-builder/assets/{assetId}`
+- `GET|POST api/v1/{admin_prefix}/page-builder/trpc/{path?}`
+- `POST api/v1/{admin_prefix}/page-builder/dashboard-logout`
 
-- Host route is module-owned: `/{admin_prefix}/page-builder/editor-host`.
-- Iframe URL is derived from module route payload and signed token metadata.
-- There is no enable/url env toggle for iframe host selection.
+Webstudio asset proxy endpoints:
 
-### Token endpoints
+- `GET /cgi/image/{path?}`
+- `GET /cgi/asset/{path?}`
 
-- `POST api/v1/{admin_prefix}/page-builder/editor/access-token`
-	- Requires authenticated admin session.
-	- Used by admin UI to mint short-lived editor token.
-	- Optional payload: `page_id`, `theme`.
-- `POST api/v1/{admin_prefix}/page-builder/editor/verify-token`
-	- No admin session required.
-	- Used by external editor host to validate signature/claims/expiry.
-	- Payload: `token`.
-- `GET api/v1/{admin_prefix}/page-builder/editor/contract`
-	- No admin session required.
-	- Used by external editor host to fetch runtime protocol contract and token endpoint URLs.
+## Data model notes
 
-### Message contract (namespace: `pagify:editor`)
+`projectId` in the compatibility layer maps to the current Pagify page id.
 
-Source of truth in admin codebase:
+- Each page has its own `PageBuilderState` row.
+- `PATCH` persistence is page-scoped, not global project-scoped.
+- `data_json` stores only persisted UI state required to rebuild the editor surface.
+- Dynamic data such as page tree metadata and current publish status should come from live server data, not from the persisted snapshot.
 
-- `themes/admin/default/resources/js/PageBuilder/iframeMessageContract.js`
-- `PAGE_BUILDER_IFRAME_PROTOCOL_VERSION = 1`
-- Runtime JSON: `GET api/v1/{admin_prefix}/page-builder/editor/contract`
+## `GET /data/{projectId}` behavior
 
-- Parent -> iframe
-	- `pagify:editor:init`
-	- `pagify:editor:set-layout`
-	- `pagify:editor:flush`
-	- `pagify:editor:search`
-	- `pagify:editor:token-refresh-result`
-- Iframe -> parent
-	- `pagify:editor:ready`
-	- `pagify:editor:layout-change`
-	- `pagify:editor:error`
-	- `pagify:editor:token-refresh-request`
+The compatibility data endpoint is the source of truth for bootstrapping Webstudio for a specific page.
 
-### Security notes
+- Returns `id`, `version`, and `projectId` for the selected page state.
+- Returns persisted design state such as `instances`, `props`, `styles`, `styleSources`, `styleSourceSelections`, `resources`, and `dataSources`.
+- Returns page tree metadata from the current database state so page title, slug, and publish state stay fresh when switching pages.
+- Returns media assets mapped from the Pagify media system.
 
-- Restrict iframe origins with `PAGE_BUILDER_IFRAME_EDITOR_ORIGIN`.
-- Runtime mode is controlled by `PAGE_BUILDER_IFRAME_EDITOR_RUNTIME_MODE` (`upstream-embedded` default).
-- Direct upstream UI embed target is controlled by `PAGE_BUILDER_IFRAME_EDITOR_UPSTREAM_URL`.
-- Build output syncs Webstudio client assets directly into `public/build/page-builder`.
-- Keep `PAGE_BUILDER_IFRAME_EDITOR_TOKEN_TTL` short.
-- Rotate `PAGE_BUILDER_IFRAME_EDITOR_TOKEN_SECRET` periodically.
-- Reject tokens failing `iss`, `aud`, signature, or `exp` validation.
+## `POST /patch` behavior
+
+The compatibility patch endpoint persists changes for the currently selected page.
+
+- Client sends transaction batch plus a reduced `state` snapshot.
+- Snapshot should include only persisted UI state required for editor reconstruction.
+- Frequently changing dynamic data should not be embedded into the snapshot if it already exists in server APIs.
+- Versioning is optimistic and checked per page state record.
+
+## Assets behavior
+
+The editor asset manager is backed by the Pagify media system.
+
+- Uploading an asset stores it in the media library and returns Webstudio-compatible asset payloads.
+- Deleting an asset from Webstudio also deletes the corresponding system asset.
+- Asset `name` is returned as a relative path so Webstudio image URLs resolve cleanly through `/cgi/image/...`.
+- `/cgi/image/*` and `/cgi/asset/*` exist as compatibility proxies for Webstudio loaders.
+
+## Publish behavior
+
+Publish state is controlled per page.
+
+- The Publish switch must reflect the currently selected page.
+- Switching pages should reload publish state for that page from live server data.
+- Persisted builder snapshots must not override live publish status from the database.
 
 ## Lifecycle
 
-1. Create page draft.
-2. Compose content in Webstudio editor.
-3. Preview in admin.
-4. Publish page.
+1. Open `Pages` in admin.
+2. Laravel serves the Webstudio SPA shell.
+3. Webstudio boots with page-scoped compatibility data from `/data/{projectId}`.
+4. User edits the selected page.
+5. Webstudio saves page-scoped UI state through `/patch`.
+6. User toggles draft or publish state through page CRUD APIs.
+
+## Operational notes
+
+- Rebuild and publish the Webstudio client whenever the editor frontend changes.
+- Keep the Vite output namespace consistent with `build/page-builder`.
+- If the editor loads but stays at loading state, verify iframe embedding, canvas sync, and the compatibility `/data` response.
+- If thumbnails fail, inspect `/cgi/image/*` responses and returned asset `name` values.
+- If page edits save to the wrong record, verify the selected page id is also the `projectId` sent to `/patch`.
 
 ## Testing coverage highlights
 
 - page builder lifecycle
-- page builder theme render integration
+- embedded Webstudio shell bootstrap
+- page-scoped compatibility data
+- asset upload and delete compatibility
+- publish state hydration from live database state

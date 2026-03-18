@@ -25,8 +25,9 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Overview',
+      label: 'Architecture',
       items: [
+        'architecture/how-pagify-works',
         'overview/features-capabilities',
         'architecture/system-overview',
       ],
