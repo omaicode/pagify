@@ -77,20 +77,23 @@ export const createPubsub = <PublishMap>() => {
           keyof PublishMap
         >;
       }
-      console.error("Invalid payload", payload);
-      throw new Error("Invalid payload");
+      console.warn("Invalid message payload, expected an object with action and token");
+      return;
     }
 
     if (false === "token" in payload) {
-      throw new Error("Invalid payload, not wrapped");
+      console.warn("Invalid message payload, missing token", payload);
+      return;
     }
 
     if (payload.token !== token) {
-      throw new Error("Invalid token");
+      console.warn("Invalid message token, possible security risk, ignoring the message", payload);
+      return;
     }
 
     if (false === "action" in payload) {
-      throw new Error("Invalid payload, not wrapped");
+      console.warn("Invalid message payload, missing action", payload);
+      return;
     }
 
     // Hide the token from the subsequent subscribers
@@ -100,6 +103,9 @@ export const createPubsub = <PublishMap>() => {
 
   const handleMessage = (event: MessageEvent) => {
     const action = unwrapAction(event.data);
+    if (action === undefined) {
+      return;
+    }
     const type = action.type;
     // Execute all updates within a single batch to improve performance
     batchUpdate(() => {
@@ -162,11 +168,6 @@ export const createPubsub = <PublishMap>() => {
 
       const publish = useCallback(
         <Type extends keyof PublishMap>(action: Action<Type>) => {
-          invariant(
-            window.self === window.top,
-            "publish is not available in the Canvas environment"
-          );
-
           if (postMessageRef.current === undefined) {
             return;
           }

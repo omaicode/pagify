@@ -13,6 +13,7 @@ import {
 } from "~/builder/shared/nano-states";
 import { useWindowResizeDebounced } from "~/shared/dom-hooks";
 import { mergeRefs } from "@react-aria/utils";
+import { shouldUseCredentiallessCanvasIframe } from "~/shared/router-utils";
 
 const iframeStyle = css({
   border: "none",
@@ -80,6 +81,7 @@ const CanvasRectUpdater = ({
 export const CanvasIframe = forwardRef<HTMLIFrameElement, CanvasIframeProps>(
   (props, ref) => {
     const iframeRef = useRef<HTMLIFrameElement | null>(null);
+    const useCredentialless = shouldUseCredentiallessCanvasIframe();
 
     const merrgedRef = useMemo(() => mergeRefs(ref, iframeRef), [ref]);
 
@@ -94,7 +96,7 @@ export const CanvasIframe = forwardRef<HTMLIFrameElement, CanvasIframeProps>(
           {...props}
           ref={merrgedRef}
           className={iframeStyle()}
-          credentialless="true"
+          credentialless={useCredentialless ? "true" : undefined}
         />
         <CanvasRectUpdater iframeRef={iframeRef} />
       </>

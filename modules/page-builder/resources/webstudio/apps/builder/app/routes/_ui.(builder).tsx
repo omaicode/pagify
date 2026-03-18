@@ -4,7 +4,10 @@
  */
 
 import { lazy } from "react";
-import { useLoaderData } from "@remix-run/react";
+import {
+  useLoaderData,
+  type ClientLoaderFunctionArgs,
+} from "@remix-run/react";
 import type { MetaFunction, ShouldRevalidateFunction } from "@remix-run/react";
 import {
   json,
@@ -51,10 +54,55 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return metas;
 };
 
+const PAGIFY_LOCAL_PROJECT_ID = "pagify-local";
+
+const createPagifyLocalBuilderPayload = ({
+  projectId,
+  authToken,
+}: {
+  projectId: string;
+  authToken?: string;
+}) => {
+  return {
+    projectId,
+    authToken,
+    authTokenPermissions: {
+      canClone: true,
+      canCopy: true,
+      canPublish: true,
+    },
+    authPermit: "own",
+    userPlanFeatures: {
+      allowAdditionalPermissions: true,
+      allowDynamicData: true,
+      allowContentMode: true,
+      allowStagingPublish: true,
+      maxContactEmails: 10,
+      maxDomainsAllowedPerUser: Number.MAX_SAFE_INTEGER,
+      maxPublishesAllowedPerUser: Number.MAX_SAFE_INTEGER,
+      purchases: [{ planName: "pagify-spa" }],
+    },
+    stagingUsername: "",
+    stagingPassword: "",
+  } as const;
+};
+
 export const loader = async (loaderArgs: LoaderFunctionArgs) => {
   const { request } = loaderArgs;
   preventCrossOriginCookie(request);
-  allowedDestinations(request, ["document", "empty"]);
+  allowedDestinations(request, ["document", "iframe", "empty"]);
+
+  const url = new URL(request.url);
+  const { projectId } = parseBuilderUrl(request.url);
+  const queryProjectId =
+    url.searchParams.get("projectId") ?? url.searchParams.get("pageId");
+  const resolvedProjectId =
+    projectId ?? queryProjectId ?? PAGIFY_LOCAL_PROJECT_ID;
+  const authToken = url.searchParams.get("accessToken") ?? undefined;
+  const requestPathname = url.pathname.replace(/\/+$/, "");
+  const isPagifyEmbeddedBuilderPath =
+    requestPathname.endsWith("/page-builder/editor-spa") ||
+    requestPathname.endsWith("/page-builder/editor-spa/canvas");
 
   if (isDashboard(request)) {
     throw redirect(dashboardPath());
@@ -79,7 +127,13 @@ export const loader = async (loaderArgs: LoaderFunctionArgs) => {
     throw new AuthorizationError("Service calls are not allowed");
   }
 
-  if (context.authorization.type === "anonymous") {
+  const allowPagifyLocalAnonymousBootstrap =
+    isPagifyEmbeddedBuilderPath && authToken !== undefined;
+
+  if (
+    context.authorization.type === "anonymous" &&
+    allowPagifyLocalAnonymousBootstrap === false
+  ) {
     throw await authWsLoader(loaderArgs); // redirect("/auth/ws");
   }
 
@@ -103,18 +157,41 @@ export const loader = async (loaderArgs: LoaderFunctionArgs) => {
   }
 
   try {
-    const url = new URL(request.url);
+    if (isPagifyEmbeddedBuilderPath) {
+      const headers = new Headers();
 
-    const { projectId } = parseBuilderUrl(request.url);
+      if (context.authorization.type === "token") {
+        const builderSession = await builderSessionStorage.getSession(null);
+        headers.set(
+          "Set-Cookie",
+          await builderSessionStorage.commitSession(builderSession)
+        );
+      }
 
-    if (projectId === undefined) {
-      throw new Response("Project ID is not defined", {
-        status: 404,
-      });
+      const builderPath = requestPathname === "" ? "/" : requestPathname;
+      const canvasPath =
+        builderPath.endsWith("/canvas") === true
+          ? builderPath
+          : `${builderPath}/canvas`;
+
+      headers.set(
+        "Content-Security-Policy",
+        `frame-src ${url.origin}${builderPath} ${url.origin}${canvasPath} https://app.goentri.com/ https://help.webstudio.is/; worker-src 'none'`
+      );
+
+      return json(
+        createPagifyLocalBuilderPayload({
+          projectId: resolvedProjectId,
+          authToken,
+        }),
+        {
+          headers,
+        }
+      );
     }
 
     const start = Date.now();
-    const project = await projectApi.loadById(projectId, context);
+    const project = await projectApi.loadById(resolvedProjectId, context);
 
     if (project === null) {
       throw new Response(`Project "${projectId}" not found`, {
@@ -140,8 +217,6 @@ export const loader = async (loaderArgs: LoaderFunctionArgs) => {
     // we need to log timings to figure out how to speed up loading
 
     console.info(`Project ${project.id} is loaded in ${diff}ms`);
-
-    const authToken = url.searchParams.get("authToken") ?? undefined;
 
     const authTokenPermissions =
       authPermit !== "own" && authToken !== undefined
@@ -185,13 +260,20 @@ export const loader = async (loaderArgs: LoaderFunctionArgs) => {
       );
     }
 
+    const normalizedPath = url.pathname.replace(/\/+$/, "");
+    const builderPath = normalizedPath === "" ? "/" : normalizedPath;
+    const canvasPath =
+      builderPath.endsWith("/canvas") === true
+        ? builderPath
+        : `${builderPath}/canvas`;
+
     headers.set(
       // Disallowing iframes from loading any content except the canvas
       // Still possible create iframes on canvas itself (but we use credentialless attribute)
       // Still possible create iframe without src attribute
       // Disable workers on builder
       "Content-Security-Policy",
-      `frame-src ${url.origin}/canvas https://app.goentri.com/ https://help.webstudio.is/; worker-src 'none'`
+      `frame-src ${url.origin}${builderPath} ${url.origin}${canvasPath} https://app.goentri.com/ https://help.webstudio.is/; worker-src 'none'`
     );
 
     return json(
@@ -217,6 +299,23 @@ export const loader = async (loaderArgs: LoaderFunctionArgs) => {
     throw error;
   }
 };
+
+export const clientLoader = async ({
+  request,
+}: ClientLoaderFunctionArgs) => {
+  const url = new URL(request.url);
+
+  const projectId =
+    url.searchParams.get("projectId") ??
+    url.searchParams.get("pageId") ??
+    PAGIFY_LOCAL_PROJECT_ID;
+
+  const authToken = url.searchParams.get("accessToken") ?? undefined;
+
+  return createPagifyLocalBuilderPayload({ projectId, authToken });
+};
+
+clientLoader.hydrate = true;
 
 /**
  * When doing changes in a project, then navigating to a dashboard then pressing the back button,

@@ -41,23 +41,28 @@ declare global {
   }
 }
 
-const isInTop = () => {
-  try {
-    return window.self === window.top;
-  } catch {
-    return true;
-  }
-};
+const getAncestorApi = () => {
+  let current: Window | null = window;
 
-const getTopApi = () => {
-  if (isInTop()) {
-    // Inside the iframe, use the local window.api
-    return _builderApi;
-  } else {
-    // Find first iframe with the API
-    invariant(window.top);
-    return window.top[apiWindowNamespace];
+  while (current) {
+    try {
+      const api = current[apiWindowNamespace];
+      if (api) {
+        return api;
+      }
+
+      if (current.parent === current) {
+        break;
+      }
+
+      current = current.parent;
+    } catch {
+      // Stop on cross-origin boundaries and use fallback behavior.
+      break;
+    }
   }
+
+  return;
 };
 
 const isKeyOf = <T>(key: unknown, obj: T): key is keyof T => {
@@ -70,18 +75,21 @@ const isKeyOf = <T>(key: unknown, obj: T): key is keyof T => {
  * Forwards the call from the builder to the iframe, invoking the original API in the iframe.
  */
 export const builderApi = createRecursiveProxy((options) => {
-  const api = getTopApi();
+  const api = getAncestorApi();
+  const methodPath = options.path.join(".");
 
   if (api == null) {
+    // These methods are polled very early during bootstrap, so return
+    // safe defaults until iframe API has finished initialization.
     if (
-      options.path.join(".") ===
-      ("isInitialized" satisfies keyof typeof _builderApi)
+      methodPath === ("isInitialized" satisfies keyof typeof _builderApi) ||
+      methodPath === ("isSafeMode" satisfies keyof typeof _builderApi)
     ) {
       return false;
     }
 
     console.warn(
-      `API not found in the iframe, skipping ${options.path.join(".")} call, iframe probably not loaded yet`
+      `API not found in the iframe, skipping ${methodPath} call, iframe probably not loaded yet`
     );
     return null;
   }
@@ -93,8 +101,10 @@ export const builderApi = createRecursiveProxy((options) => {
       isKeyOf(key, currentMethod),
       `API method ${options.path.join(".")} not found`
     );
-    invariant(typeof currentMethod === "object");
     invariant(currentMethod != null);
+    invariant(
+      typeof currentMethod === "object" || typeof currentMethod === "function"
+    );
 
     currentMethod = currentMethod[key];
   }
@@ -111,8 +121,6 @@ export const builderApi = createRecursiveProxy((options) => {
  * Initializes the builder API in the window. Must be called in the builder context.
  */
 export const initBuilderApi = () => {
-  if (isInTop()) {
-    window[apiWindowNamespace] = _builderApi;
-  }
+  window[apiWindowNamespace] = _builderApi;
   return () => {};
 };

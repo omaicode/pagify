@@ -12,7 +12,10 @@ import {
 } from "@webstudio-is/design-system";
 import type { AuthPermit } from "@webstudio-is/trpc-interface/index.server";
 import { initializeClientSync, getSyncClient } from "~/shared/sync/sync-client";
-import { usePreventUnload } from "~/shared/sync/project-queue";
+import {
+  syncProjectDetails,
+  usePreventUnload,
+} from "~/shared/sync/project-queue";
 import { usePublish, $publisher } from "~/shared/pubsub";
 import { Inspector } from "./inspector";
 import { Topbar } from "./shared/topbar";
@@ -38,20 +41,17 @@ import {
   $stagingPassword,
 } from "~/shared/nano-states";
 import { $settings, type Settings } from "./shared/client-settings";
-import { builderUrl, getCanvasUrl } from "~/shared/router-utils";
+import { getCanvasUrl } from "~/shared/router-utils";
 import { BlockingAlerts } from "./features/blocking-alerts";
 import { useSyncPageUrl } from "~/shared/pages";
 import { useMount, useUnmount } from "~/shared/hook-utils/use-mount";
 import { subscribeCommands } from "~/builder/shared/commands";
-import { ProjectSettings } from "~/shared/project-settings";
 import type { UserPlanFeatures } from "~/shared/db/user-plan-features.server";
 import {
   $activeSidebarPanel,
   $dataLoadingState,
-  $isCloneDialogOpen,
   $loadingState,
 } from "./shared/nano-states";
-import { CloneProjectDialog } from "~/shared/clone-project";
 import type { TokenPermissions } from "@webstudio-is/authorization-token";
 import { useToastErrors } from "~/shared/error/toast-error";
 import { initBuilderApi } from "~/shared/builder-api";
@@ -77,6 +77,7 @@ import { RemoteDialog } from "./features/help/remote-dialog";
 import type { SidebarPanelName } from "./sidebar-left/types";
 import { SidebarLeft } from "./sidebar-left/sidebar-left";
 import { useDisableContextMenu } from "./shared/use-disable-context-menu";
+import { $selectedPage } from "~/shared/awareness";
 
 const useSetWindowTitle = () => {
   const project = useStore($project);
@@ -241,6 +242,7 @@ export const Builder = ({
   stagingUsername,
   stagingPassword,
 }: BuilderProps) => {
+  const [bootError, setBootError] = useState<string | undefined>(undefined);
   useMount(initBuilderApi);
 
   useMount(() => {
@@ -261,6 +263,7 @@ export const Builder = ({
       authToken,
       signal: controller.signal,
       onReady() {
+        setBootError(undefined);
         updateWebstudioData((data) => {
           migrateWebstudioDataMutable(data);
         });
@@ -272,9 +275,23 @@ export const Builder = ({
 
         // @todo make needs error handling and error state? e.g. a toast
       },
+      onError(error) {
+        $dataLoadingState.set("idle");
+        setBootError(
+          error instanceof Error
+            ? error.message
+            : "Unable to load builder data."
+        );
+      },
     });
 
+    const syncClient = getSyncClient();
+    if (syncClient) {
+      window.__webstudioSharedSyncEmitter__ = syncClient.emitter;
+    }
+
     return () => {
+      delete window.__webstudioSharedSyncEmitter__;
       $dataLoadingState.set("idle");
       controller.abort("unmount");
     };
@@ -297,9 +314,9 @@ export const Builder = ({
   }, [publish]);
 
   const project = useStore($project);
+  const selectedPage = useStore($selectedPage);
 
   usePreventUnload();
-  const isCloneDialogOpen = useStore($isCloneDialogOpen);
   const isPreviewMode = useStore($isPreviewMode);
   const isDesignMode = useStore($isDesignMode);
   const isContentMode = useStore($isContentMode);
@@ -359,11 +376,78 @@ export const Builder = ({
     return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    if (
+      authPermit === "view" ||
+      dataLoadingState !== "loaded" ||
+      selectedPage === undefined ||
+      selectedPage.id === projectId
+    ) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    syncProjectDetails({
+      projectId: selectedPage.id,
+      authPermit,
+      authToken,
+      signal: controller.signal,
+    }).catch((error) => {
+      if (controller.signal.aborted) {
+        return;
+      }
+
+      console.error("Failed to sync page details for patch queue", {
+        pageId: selectedPage.id,
+        error,
+      });
+    });
+
+    return () => {
+      controller.abort("page-changed");
+    };
+  }, [authPermit, authToken, dataLoadingState, selectedPage?.id]);
+
   const canvasUrl = getCanvasUrl();
 
   const inertHandlers = useInertHandlers();
 
   // Show loading screen if project isn't ready yet
+  if (bootError !== undefined) {
+    return (
+      <TooltipProvider>
+        <Flex
+          direction="column"
+          align="center"
+          justify="center"
+          gap="3"
+          css={{ height: "100vh", textAlign: "center", px: "4" }}
+        >
+          <Box css={{ fontSize: "$4", fontWeight: 600 }}>
+            Unable to initialize editor
+          </Box>
+          <Box css={{ fontSize: "$2", color: "$slate11", maxWidth: "720px" }}>
+            {bootError}
+          </Box>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            style={{
+              border: "1px solid #cbd5e1",
+              borderRadius: 8,
+              background: "white",
+              padding: "8px 12px",
+              cursor: "pointer",
+            }}
+          >
+            Reload editor
+          </button>
+        </Flex>
+      </TooltipProvider>
+    );
+  }
+
   if (!project || dataLoadingState !== "loaded") {
     return (
       <TooltipProvider>
@@ -391,7 +475,6 @@ export const Builder = ({
               pointerEvents: "none",
             }}
           />
-          <ProjectSettings />
 
           {/* Main must be after left sidebar panels because in content mode the Plus button must be above the left sidebar, otherwise it won't be visible when content is full width */}
           <Main>
@@ -459,19 +542,6 @@ export const Builder = ({
             <TextToolbar />
           </Main>
           {isPreviewMode === false && <Footer />}
-          {project ? (
-            <CloneProjectDialog
-              isOpen={isCloneDialogOpen}
-              onOpenChange={$isCloneDialogOpen.set}
-              project={project}
-              onCreate={(projectId) => {
-                window.location.href = builderUrl({
-                  origin: window.origin,
-                  projectId: projectId,
-                });
-              }}
-            />
-          ) : null}
         </ChromeWrapper>
         <Loading state={loadingState} />
         <BlockingAlerts />

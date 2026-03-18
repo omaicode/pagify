@@ -1,5 +1,21 @@
 import { parseBuilderUrl } from "@webstudio-is/http-client";
 
+const getNormalizedPathname = (urlStr: string) => {
+  return new URL(urlStr).pathname.replace(/\/+$/, "");
+};
+
+const isPagifyEmbeddedBuilderPath = (pathname: string) => {
+  if (pathname.endsWith("/page-builder/editor-spa")) {
+    return true;
+  }
+
+  if (pathname.endsWith("/page-builder/editor-spa/canvas")) {
+    return true;
+  }
+
+  return false;
+};
+
 export const getRequestOrigin = (urlStr: string) => {
   const url = new URL(urlStr);
 
@@ -15,7 +31,13 @@ export const isCanvas = (urlStr: string): boolean => {
 
 export const isBuilderUrl = (urlStr: string): boolean => {
   const { projectId } = parseBuilderUrl(urlStr);
-  return projectId !== undefined;
+  if (projectId !== undefined) {
+    return true;
+  }
+
+  const pathname = getNormalizedPathname(urlStr);
+
+  return isPagifyEmbeddedBuilderPath(pathname);
 };
 
 export const getAuthorizationServerOrigin = (urlStr: string): string => {

@@ -5,12 +5,12 @@ import { resolve } from 'node:path';
 export default defineConfig({
   plugins: [vue()],
   build: {
-    outDir: resolve(__dirname, '../../../public/installer'),
+    outDir: resolve(__dirname, '../../../public/build/installer'),
     emptyOutDir: true,
     manifest: true,
     rollupOptions: {
       input: resolve(__dirname, 'src/main.js'),
     },
   },
-  base: '/installer/',
+  base: '/build/installer/',
 });

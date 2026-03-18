@@ -3,6 +3,47 @@ import { publicStaticEnv } from "~/env/env.static";
 import { getAuthorizationServerOrigin } from "./origins";
 import type { BuilderMode } from "../nano-states/misc";
 
+const apiBasePath = () => {
+  const globalApiBase = (window as typeof window & {
+    __pagifyWebstudioApiBase?: string;
+  }).__pagifyWebstudioApiBase;
+
+  if (typeof globalApiBase !== "string") {
+    return "";
+  }
+
+  return globalApiBase.replace(/\/$/, "");
+};
+
+const withApiBase = (path: string) => {
+  const base = apiBasePath();
+
+  if (base === "") {
+    return path;
+  }
+
+  return `${base}${path}`;
+};
+
+const pageBuilderApiPrefix = () => {
+  const pathname = window.location.pathname.replace(/\/+$/, "");
+  const marker = "/page-builder/editor-spa";
+
+  const markerIndex = pathname.indexOf(marker);
+
+  if (markerIndex < 0) {
+    return "/api/v1";
+  }
+
+  const adminBase = pathname.slice(0, markerIndex + "/page-builder".length);
+
+  return `/api/v1${adminBase}`;
+};
+
+const withPageBuilderApiPrefix = (path: string) => {
+  return withApiBase(`${pageBuilderApiPrefix()}${path}`);
+};
+
 const searchParams = (params: Record<string, string | undefined | null>) => {
   const searchParams = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
@@ -19,19 +60,28 @@ export const builderPath = ({
   authToken,
   pageHash,
   mode,
+  parentOrigin,
+  siteId,
+  theme,
   safemode = false,
 }: {
   pageId?: string;
   authToken?: string;
   pageHash?: string;
   mode?: "preview" | "content";
+  parentOrigin?: string;
+  siteId?: string;
+  theme?: string;
   safemode?: boolean;
 } = {}) => {
   return `/${searchParams({
     pageId,
-    authToken,
+    accessToken: authToken,
     pageHash,
     mode,
+    parentOrigin,
+    siteId,
+    theme,
     safemode: safemode ? "true" : undefined,
   })}`;
 };
@@ -106,7 +156,8 @@ export const loginPath = (params: {
 }) => `/login${searchParams(params)}`;
 
 export const logoutPath = () => "/logout";
-export const restLogoutPath = () => "/dashboard-logout";
+export const restLogoutPath = () =>
+  withPageBuilderApiPrefix(`/dashboard-logout`);
 
 export const userPlanSubscriptionPath = (subscriptionId?: string) => {
   const urlSearchParams = new URLSearchParams();
@@ -131,7 +182,11 @@ export const authPath = ({
 }) => `/auth/${provider}`;
 
 export const restAssetsPath = () => {
-  return `/rest/assets`;
+  return withPageBuilderApiPrefix(`/assets`);
+};
+
+export const restAssetDeletePath = (assetId: string) => {
+  return withPageBuilderApiPrefix(`/assets/${assetId}`);
 };
 
 export const restAssetsUploadPath = ({
@@ -152,10 +207,12 @@ export const restAssetsUploadPath = ({
   }
 
   if (urlSearchParams.size > 0) {
-    return `/rest/assets/${name}?${urlSearchParams.toString()}`;
+    return withPageBuilderApiPrefix(
+      `/assets/${name}?${urlSearchParams.toString()}`
+    );
   }
 
-  return `/rest/assets/${name}`;
+  return withPageBuilderApiPrefix(`/assets/${name}`);
 };
 
 export const restPatchPath = () => {
@@ -165,16 +222,48 @@ export const restPatchPath = () => {
 
   const urlSearchParamsString = urlSearchParams.toString();
 
-  return `/rest/patch${
+  return withPageBuilderApiPrefix(`/patch${
     urlSearchParamsString ? `?${urlSearchParamsString}` : ""
-  }`;
+  }`);
 };
 
 export const getCanvasUrl = () => {
-  return `/canvas`;
+  const currentUrl = new URL(window.location.href);
+  const params = new URLSearchParams(currentUrl.search);
+  const pathname = currentUrl.pathname.replace(/\/+$/, "");
+  const basePath = pathname.endsWith("/canvas")
+    ? pathname.slice(0, -"/canvas".length)
+    : pathname;
+
+  // pageHash changes often and should not force a full canvas iframe reload
+  // (which can trigger repeated /data requests and resource refreshes).
+  params.delete("pageHash");
+  params.delete("canvas");
+  // builder mode is UI state, not canvas identity. Keep it out of iframe src
+  // to avoid full canvas reload when toggling preview/design/content.
+  params.delete("mode");
+
+  const query = params.toString();
+  const canvasPath = `${basePath}/canvas`;
+
+  return query === "" ? canvasPath : `${canvasPath}?${query}`;
 };
 
-export const restResourcesLoader = () => `/rest/resources-loader`;
+export const restResourcesLoader = () =>
+  withPageBuilderApiPrefix(`/resources-loader`);
+
+export const restDataPath = (projectId: string) =>
+  withPageBuilderApiPrefix(`/data/${projectId}`);
+
+export const trpcPath = () => withPageBuilderApiPrefix(`/trpc`);
+
+export const adminPagesPath = () => withPageBuilderApiPrefix(`/pages`);
+
+export const adminPagePath = (pageId: string) =>
+  withPageBuilderApiPrefix(`/pages/${pageId}`);
+
+export const adminPagePublishPath = (pageId: string) =>
+  withPageBuilderApiPrefix(`/pages/${pageId}/publish`);
 
 export const marketplacePath = (method: string) =>
   `/builder/marketplace/${method}`;

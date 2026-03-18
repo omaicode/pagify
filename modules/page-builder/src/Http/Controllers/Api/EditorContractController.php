@@ -5,7 +5,7 @@ namespace Pagify\PageBuilder\Http\Controllers\Api;
 use Illuminate\Http\JsonResponse;
 use Pagify\Core\Http\Controllers\Api\ApiController;
 
-class AdminPageBuilderEditorContractController extends ApiController
+class EditorContractController extends ApiController
 {
 	public function __invoke(): JsonResponse
 	{

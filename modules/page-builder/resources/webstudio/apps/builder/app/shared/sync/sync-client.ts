@@ -5,6 +5,7 @@ import { registerContainers, createObjectPool } from "./sync-stores";
 import {
   ServerSyncStorage,
   enqueueProjectDetails,
+  getCachedProjectDetails,
   stopPolling,
 } from "./project-queue";
 import { loadBuilderData } from "~/shared/builder-data";
@@ -28,6 +29,39 @@ import {
 let client: SyncClient | undefined;
 let currentProjectId: string | undefined;
 
+const sleep = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
+
+const loadBuilderDataWithRetry = async ({
+  projectId,
+  signal,
+  retries = 1,
+}: {
+  projectId: Project["id"];
+  signal: AbortSignal;
+  retries?: number;
+}) => {
+  let attempt = 0;
+
+  while (true) {
+    try {
+      return await loadBuilderData({ projectId, signal });
+    } catch (error) {
+      if (signal.aborted || attempt >= retries) {
+        throw error;
+      }
+
+      attempt += 1;
+      console.warn("Retrying builder data load", {
+        projectId,
+        attempt,
+        retries,
+        error,
+      });
+      await sleep(300);
+    }
+  }
+};
+
 /**
  * Initialize the sync infrastructure and load project data.
  * Can be used from both the builder and dashboard contexts.
@@ -38,12 +72,14 @@ export const initializeClientSync = ({
   authToken,
   signal,
   onReady,
+  onError,
 }: {
   projectId: Project["id"];
   authPermit: AuthPermit;
   authToken?: string;
   signal: AbortSignal;
   onReady?: () => void;
+  onError?: (error: unknown) => void;
 }) => {
   // Note: "view" permit will skip transaction synchronization
 
@@ -72,7 +108,26 @@ export const initializeClientSync = ({
       const needsDataLoad =
         !$pages.get() || currentProjectInStore !== projectId;
 
-      loadBuilderData({ projectId, signal })
+      if (needsDataLoad === false) {
+        const cachedDetails = getCachedProjectDetails(projectId);
+
+        if (authPermit !== "view" && cachedDetails !== undefined) {
+          enqueueProjectDetails({
+            projectId,
+            buildId: cachedDetails.buildId,
+            version: cachedDetails.version,
+            authPermit,
+            authToken: cachedDetails.authToken ?? authToken,
+          });
+        }
+
+        if (authPermit === "view" || cachedDetails !== undefined) {
+          onReady?.();
+          return;
+        }
+      }
+
+      loadBuilderDataWithRetry({ projectId, signal, retries: 1 })
         .then((data) => {
           if (needsDataLoad) {
             // Set publisherHost from loaded data (needed for $publishedOrigin computed store)
@@ -109,6 +164,7 @@ export const initializeClientSync = ({
         .catch((error) => {
           if (error.name !== "AbortError") {
             console.error("Failed to load project data:", error);
+            onError?.(error);
           }
         });
     },

@@ -19,8 +19,23 @@ export const extractAuthFromRequest = async (request: Request) => {
   }
   const url = new URL(request.url);
 
+  const { projectId } = parseBuilderUrl(request.url);
+  const pathname = url.pathname.replace(/\/+$/, "");
+  const isPagifyEmbeddedBuilderPath =
+    pathname.endsWith("/page-builder/editor-spa") ||
+    pathname.endsWith("/page-builder/editor-spa/canvas");
+
+  // Pagify embedded builder uses accessToken for downstream compat APIs,
+  // not for upstream AuthorizationToken-based builder auth.
+  // If we treat this query token as upstream auth here, createContext can fail
+  // before the embedded builder loader returns any data.
+  const useQueryTokenForBuilderAuth =
+    projectId !== undefined || isPagifyEmbeddedBuilderPath === false;
+
   const authToken =
-    url.searchParams.get("authToken") ??
+    (useQueryTokenForBuilderAuth
+      ? url.searchParams.get("accessToken")
+      : null) ??
     request.headers.get("x-auth-token") ??
     undefined;
 

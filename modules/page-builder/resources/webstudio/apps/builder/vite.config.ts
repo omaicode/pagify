@@ -26,6 +26,8 @@ const conditions = hasPrivateFolders
   : ["webstudio"];
 
 export default defineConfig(({ mode }) => {
+  const isPagifyBuild = process.env.WEBSTUDIO_PAGIFY_BUILD === "1";
+
   if (mode === "development") {
     // Enable self-signed certificates for development service 2 service fetch calls.
     // This is particularly important for secure communication with the oauth.ws.token endpoint.
@@ -33,6 +35,7 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
+    base: isPagifyBuild ? "/build/page-builder/" : "/",
     plugins: [
       remix({
         presets: [vercelPreset()],

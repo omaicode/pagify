@@ -91,6 +91,11 @@ export const useSyncPageUrl = () => {
       ? searParamsModeRaw
       : undefined;
     const searchParamsSafemode = searchParams.get("safemode");
+    const searchParamsAccessToken = searchParams.get("accessToken") ?? undefined;
+    const searchParamsParentOrigin =
+      searchParams.get("parentOrigin") ?? undefined;
+    const searchParamsSiteId = searchParams.get("siteId") ?? undefined;
+    const searchParamsTheme = searchParams.get("theme") ?? undefined;
 
     // Do not navigate on popstate change or if params match
     if (
@@ -103,10 +108,15 @@ export const useSyncPageUrl = () => {
 
     navigate(
       builderPath({
-        pageId: page.id === pages.homePage.id ? undefined : page.id,
-        authToken: $authToken.get(),
+        // Always keep pageId in URL for embedded Pagify editor.
+        // Omitting home page id causes a second reload path that drops context.
+        pageId: page.id,
+        authToken: $authToken.get() ?? searchParamsAccessToken,
         pageHash: pageHash.hash === "" ? undefined : pageHash.hash,
         mode: builderMode === "design" ? undefined : builderMode,
+        parentOrigin: searchParamsParentOrigin,
+        siteId: searchParamsSiteId,
+        theme: searchParamsTheme,
         safemode: searchParamsSafemode === "true",
       })
     );

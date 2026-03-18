@@ -61,6 +61,7 @@ import { $canvasScrollbarSize } from "~/builder/shared/nano-states";
 import { $awareness, $temporaryInstances } from "../awareness";
 import { $systemDataByPage } from "../system";
 import { $resourcesCache } from "../resources";
+import { getSharedSyncEmitter } from "./shared-sync-emitter";
 
 enableMapSet();
 // safari structuredClone fix
@@ -169,9 +170,7 @@ declare global {
  * i.e., `globalThis.syncEmitter = () => console.log('INTERCEPTED');`,
  */
 const sharedSyncEmitter =
-  typeof window === "undefined"
-    ? undefined
-    : window.__webstudioSharedSyncEmitter__;
+  typeof window === "undefined" ? undefined : getSharedSyncEmitter(window);
 if (typeof window !== "undefined") {
   delete window.__webstudioSharedSyncEmitter__;
 }

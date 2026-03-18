@@ -32,8 +32,9 @@ import {
   $isDesignModeAllowed,
   isBuilderMode,
   setBuilderMode,
+  toggleBuilderMode,
 } from "~/shared/nano-states";
-import { emitCommand } from "~/builder/shared/commands";
+import { setActiveSidebarPanel } from "~/builder/shared/nano-states";
 
 export const BuilderModeDropDown = () => {
   const builderMode = useStore($builderMode);
@@ -83,7 +84,8 @@ export const BuilderModeDropDown = () => {
           type="single"
           value={builderMode}
           onValueChange={() => {
-            emitCommand("togglePreviewMode");
+            setActiveSidebarPanel("auto");
+            toggleBuilderMode("preview");
           }}
         >
           <ToolbarToggleItem variant="preview" value="preview">

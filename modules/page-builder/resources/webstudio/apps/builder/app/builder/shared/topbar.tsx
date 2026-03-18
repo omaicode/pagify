@@ -11,8 +11,7 @@ import type { Project } from "@webstudio-is/project";
 import { $pages } from "~/shared/sync/data-stores";
 import { $editingPageId } from "~/shared/nano-states";
 
-import { ShareButton } from "~/builder/features/share";
-import { PublishButton } from "~/builder/features/publish";
+import { PublishSwitch } from "~/builder/features/publish";
 import { SyncStatus } from "~/builder/features/sync-status";
 import { Menu } from "~/builder/features/menu";
 import { BreakpointsContainer } from "~/builder/features/breakpoints";
@@ -20,7 +19,6 @@ import { ViewMode } from "~/builder/features/view-mode";
 import { AddressBarPopover } from "~/builder/features/address-bar";
 import { toggleActiveSidebarPanel } from "~/builder/shared/nano-states";
 import type { ReactNode } from "react";
-import { CloneButton } from "~/builder/features/clone";
 import { $selectedPage } from "~/shared/awareness";
 import { BuilderModeDropDown } from "~/builder/features/builder-mode";
 import { SafeModeButton } from "~/builder/features/safe-mode";
@@ -85,9 +83,7 @@ export const Topbar = ({ project, css, loading }: TopbarProps) => {
           <ViewMode />
           <SyncStatus />
           <BuilderModeDropDown />
-          <ShareButton projectId={project.id} />
-          <PublishButton projectId={project.id} />
-          <CloneButton />
+          <PublishSwitch />
         </>
       }
       loading={loading}

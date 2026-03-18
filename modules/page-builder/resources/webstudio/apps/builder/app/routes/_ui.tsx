@@ -18,7 +18,6 @@ import {
 } from "@remix-run/server-runtime";
 import { ErrorBoundary as ErrorBoundaryComponent } from "~/shared/error/error-boundary";
 import { getCsrfTokenAndCookie } from "~/services/csrf-session.server";
-import invariant from "tiny-invariant";
 import {
   csrfToken as clientCsrfToken,
   updateCsrfToken,
@@ -77,11 +76,20 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export const clientLoader = async ({
   serverLoader,
 }: ClientLoaderFunctionArgs) => {
-  const serverData = await serverLoader<typeof loader>();
+  const remixContext = (window as typeof window & {
+    __remixContext?: {
+      isSpaMode?: boolean;
+    };
+  }).__remixContext;
 
-  if (clientCsrfToken === undefined) {
+  const isSpaMode = remixContext?.isSpaMode === true;
+
+  const serverData = isSpaMode
+    ? { csrfToken: "pagify-spa-csrf" }
+    : await serverLoader<typeof loader>();
+
+  if (clientCsrfToken === undefined && serverData.csrfToken !== "") {
     const { csrfToken } = serverData;
-    invariant(csrfToken !== "", "CSRF token is empty");
     updateCsrfToken(csrfToken);
   }
 

@@ -52,12 +52,12 @@ import {
   buttonStyle,
   PanelBanner,
   css,
-  Switch,
   TitleSuffixSpacer,
   ProBadge,
   DialogClose,
   DialogTitle,
   DialogTitleActions,
+  toast,
 } from "@webstudio-is/design-system";
 import {
   CopyIcon,
@@ -95,7 +95,6 @@ import { useUnmount } from "~/shared/hook-utils/use-mount";
 import { selectInstance } from "~/shared/awareness";
 import { computeExpression } from "~/shared/data-variables";
 import { $currentSystem } from "~/shared/system";
-import { Card } from "../marketplace/card";
 import { ImageInfo } from "./image-info";
 import { SearchPreview } from "./search-preview";
 import { SocialPreview } from "./social-preview";
@@ -105,6 +104,10 @@ import {
   duplicatePage,
   isPathAvailable,
 } from "./page-utils";
+import {
+  createPageOnServer,
+  updatePageOnServer,
+} from "./page-crud-api";
 import { Form } from "./form";
 import { CustomMetadata } from "./custom-metadata";
 import { findMatchingRedirect } from "~/shared/project-settings/utils";
@@ -581,101 +584,6 @@ const fieldsetStyle = css({
     opacity: 0.4,
   },
 });
-
-const MarketplaceSection = ({
-  values,
-  onChange,
-}: {
-  values: Values;
-  onChange: OnChange;
-}) => {
-  const excludeId = useId();
-  const categoryId = useId();
-  const categoryMeta = values.customMetas.find(
-    ({ property }) => property === "ws:category"
-  );
-  // @todo remove after all stores are migrated
-  const categoryFallback = String(
-    computeExpression(categoryMeta?.content ?? `""`, new Map())
-  );
-  const category = values.marketplaceCategory ?? categoryFallback ?? "Pages";
-  const assets = useStore($assets);
-  const thumbnailAsset = assets.get(values.marketplaceThumbnailAssetId);
-  const thumnailFallbackAsset = assets.get(values.socialImageAssetId);
-  return (
-    <Grid gap={2} css={{ padding: theme.panel.padding }}>
-      <Label text="title">Marketplace</Label>
-      <Grid
-        flow="column"
-        gap={1}
-        justify="start"
-        align="center"
-        css={{ py: theme.spacing[2] }}
-      >
-        <Switch
-          id={excludeId}
-          checked={values.marketplaceInclude}
-          onCheckedChange={(value) =>
-            onChange({ field: "marketplaceInclude", value })
-          }
-        />
-        <Label htmlFor={excludeId}>Include in the marketplace</Label>
-      </Grid>
-      <Grid gap={1}>
-        <Label htmlFor={categoryId}>Category</Label>
-        <InputField
-          id={categoryId}
-          name="marketplaceCategory"
-          value={values.marketplaceCategory}
-          onChange={(event) =>
-            onChange({
-              field: "marketplaceCategory",
-              value: event.target.value,
-            })
-          }
-        />
-      </Grid>
-      <Grid gap={1} flow="column">
-        <ImageControl
-          onAssetIdChange={(value) =>
-            onChange({ field: "marketplaceThumbnailAssetId", value })
-          }
-        >
-          <Button color="neutral" css={{ justifySelf: "start" }}>
-            Choose thumbnail from assets
-          </Button>
-        </ImageControl>
-      </Grid>
-      {thumbnailAsset?.type === "image" && (
-        <ImageInfo
-          asset={thumbnailAsset}
-          onDelete={() =>
-            onChange({ field: "marketplaceThumbnailAssetId", value: "" })
-          }
-        />
-      )}
-      <Grid gap={1}>
-        <Label>Marketplace preview</Label>
-        <Box
-          css={{
-            padding: theme.spacing[5],
-            borderRadius: theme.borderRadius[4],
-            border: `1px solid ${theme.colors.borderMain}`,
-            justifySelf: "start",
-          }}
-        >
-          <Grid gap={1} css={{ width: theme.spacing[30] }}>
-            {category && <Label text="title">{category}</Label>}
-            <Card
-              title={values.name}
-              image={thumbnailAsset ?? thumnailFallbackAsset}
-            />
-          </Grid>
-        </Box>
-      </Grid>
-    </Grid>
-  );
-};
 
 const FormFields = ({
   autoSelect,
@@ -1201,15 +1109,6 @@ const FormFields = ({
           </InputErrorsTooltip>
         </fieldset>
 
-        {(project?.marketplaceApprovalStatus === "PENDING" ||
-          project?.marketplaceApprovalStatus === "APPROVED" ||
-          project?.marketplaceApprovalStatus === "REJECTED") && (
-          <>
-            <Separator />
-            <MarketplaceSection values={values} onChange={onChange} />
-          </>
-        )}
-
         <Box css={{ height: theme.spacing[10] }} />
       </ScrollArea>
     </Grid>
@@ -1250,6 +1149,7 @@ export const NewPageSettings = ({
   onSuccess: (pageId: Page["id"]) => void;
 }) => {
   const pages = useStore($pages);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [values, setValues] = useState<Values>({
     ...fieldDefaultValues,
@@ -1258,12 +1158,28 @@ export const NewPageSettings = ({
   const { variableValues } = useStore($pageRootScope);
   const errors = validateValues(pages, undefined, values, variableValues);
 
-  const handleSubmit = () => {
-    if (Object.keys(errors).length === 0) {
-      const pageId = nanoid();
-      createPage(pageId, values);
-      updatePage(pageId, values);
+  const handleSubmit = async () => {
+    if (Object.keys(errors).length !== 0 || isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const created = await createPageOnServer(values);
+      const pageId = String(created.id);
+
+      createPageLocal(pageId, values);
+      updatePageLocal(pageId, values);
+
       onSuccess(pageId);
+      toast.success("Page created");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unable to create page";
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1271,7 +1187,7 @@ export const NewPageSettings = ({
     <NewPageSettingsView
       onSubmit={handleSubmit}
       onClose={onClose}
-      isSubmitting={false}
+      isSubmitting={isSubmitting}
     >
       <FormFields
         autoSelect
@@ -1331,7 +1247,7 @@ const NewPageSettingsView = ({
   );
 };
 
-const createPage = (pageId: Page["id"], values: Values) => {
+const createPageLocal = (pageId: Page["id"], values: Values) => {
   serverSyncStore.createTransaction(
     [$pages, $instances],
     (pages, instances) => {
@@ -1360,7 +1276,7 @@ const createPage = (pageId: Page["id"], values: Values) => {
   );
 };
 
-const updatePage = (pageId: Page["id"], values: Partial<Values>) => {
+const updatePageLocal = (pageId: Page["id"], values: Partial<Values>) => {
   const updatePageMutable = (
     page: Page,
     values: Partial<Values>,
@@ -1537,7 +1453,18 @@ export const PageSettings = ({
       return;
     }
 
-    updatePage(pageId, unsavedValues);
+    void updatePageOnServer(pageId, {
+      name: values.name,
+      path: values.path,
+      title: values.title,
+      description: values.description,
+    }).catch((error) => {
+      const message =
+        error instanceof Error ? error.message : "Unable to save page";
+      toast.error(message);
+    });
+
+    updatePageLocal(pageId, unsavedValues);
 
     setUnsavedValues({});
   });
@@ -1573,7 +1500,18 @@ export const PageSettings = ({
     ) {
       return;
     }
-    updatePage(pageId, unsavedValues);
+    void updatePageOnServer(pageId, {
+      name: values.name,
+      path: values.path,
+      title: values.title,
+      description: values.description,
+    }).catch((error) => {
+      const message =
+        error instanceof Error ? error.message : "Unable to save page";
+      toast.error(message);
+    });
+
+    updatePageLocal(pageId, unsavedValues);
   });
 
   const handleRequestDelete = () => {

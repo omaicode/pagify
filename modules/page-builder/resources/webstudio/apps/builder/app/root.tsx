@@ -16,8 +16,12 @@ export const loader = () => {
 };
 
 export default function App() {
-  const { features } = useLoaderData<typeof loader>();
-  setEnv(features);
+  const data = useLoaderData<typeof loader>() as
+    | {
+        features?: string;
+      }
+    | undefined;
+  setEnv(data?.features ?? "");
   useSetFeatures();
 
   return <Outlet />;

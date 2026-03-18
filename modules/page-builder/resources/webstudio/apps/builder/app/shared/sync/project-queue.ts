@@ -9,7 +9,11 @@ import { restPatchPath } from "~/shared/router-utils";
 import { toast } from "@webstudio-is/design-system";
 import { fetch } from "~/shared/fetch.client";
 import type { SyncStorage, Transaction } from "~/shared/sync-client";
-import { loadBuilderData } from "~/shared/builder-data";
+import {
+  loadBuilderData,
+  serializeBuilderDataForPatch,
+} from "~/shared/builder-data";
+import { $selectedPage } from "~/shared/awareness";
 
 export { commandQueue };
 
@@ -41,6 +45,11 @@ export type QueueStatus =
   | { status: "fatal"; error: string };
 
 export const $queueStatus = atom<QueueStatus>({ status: "idle" });
+
+const projectDetailsCache = new Map<
+  Project["id"],
+  { version: number; buildId: Build["id"]; authToken: string | undefined }
+>();
 
 // Transaction completion tracking
 type TransactionCompleteCallback = (success: boolean) => void;
@@ -185,6 +194,11 @@ export const enqueueProjectDetails = ({
   if (authPermit === "view") {
     return;
   }
+  projectDetailsCache.set(projectId, {
+    version,
+    buildId,
+    authToken,
+  });
   commandQueue.enqueue({
     type: "setDetails",
     projectId,
@@ -194,6 +208,36 @@ export const enqueueProjectDetails = ({
   });
   // Start polling after enqueuing to ensure command is in queue
   startPolling();
+};
+
+export const getCachedProjectDetails = (projectId: Project["id"]) => {
+  return projectDetailsCache.get(projectId);
+};
+
+export const syncProjectDetails = async ({
+  projectId,
+  authPermit,
+  authToken,
+  signal,
+}: {
+  projectId: Project["id"];
+  authPermit: AuthPermit;
+  authToken?: string;
+  signal: AbortSignal;
+}) => {
+  if (authPermit === "view") {
+    return;
+  }
+
+  const data = await loadBuilderData({ projectId, signal });
+
+  enqueueProjectDetails({
+    projectId,
+    buildId: data.id,
+    version: data.version,
+    authPermit,
+    authToken,
+  });
 };
 
 const pollQueue = async (signal: AbortSignal) => {
@@ -256,17 +300,10 @@ const pollQueue = async (signal: AbortSignal) => {
     const details = detailsMap.get(projectId);
 
     if (details === undefined) {
-      const error =
-        "Project details not found. Synchronization has been paused. Please reload to continue.";
-
-      toast.error(error, {
-        id: "details-error",
-        duration: Number.POSITIVE_INFINITY,
-      });
-
-      $queueStatus.set({ status: "fatal", error });
-
-      return;
+      commandQueue.enqueue(command);
+      $queueStatus.set({ status: "recovering" });
+      await pause(300);
+      continue;
     }
 
     // We don't know how to handle api errors. Like parsing errors, etc.
@@ -292,6 +329,7 @@ const pollQueue = async (signal: AbortSignal) => {
           method: "post",
           body: JSON.stringify({
             transactions: optimizedTransactions,
+            state: serializeBuilderDataForPatch(),
             buildId: details.buildId,
             projectId,
             // provide latest stored version to server
@@ -389,6 +427,7 @@ const pollQueue = async (signal: AbortSignal) => {
 export class ServerSyncStorage implements SyncStorage {
   name = "server";
   private projectId: string;
+  private static readonly RESTORE_TIMEOUT_MS = 10000;
 
   constructor(projectId: string) {
     this.projectId = projectId;
@@ -397,27 +436,58 @@ export class ServerSyncStorage implements SyncStorage {
   sendTransaction(transaction: Transaction<Change[]>) {
     if (transaction.object === "server") {
       $lastTransactionId.set(transaction.id);
+      const currentProjectId = $selectedPage.get()?.id ?? this.projectId;
       commandQueue.enqueue({
         type: "transactions",
         transactions: [transaction],
-        projectId: this.projectId,
+        projectId: currentProjectId,
       });
     }
   }
   subscribe(setState: (state: unknown) => void, signal: AbortSignal) {
     const projectId = this.projectId;
+    let settled = false;
+
+    const settle = (state: unknown) => {
+      if (settled || signal.aborted) {
+        return;
+      }
+
+      settled = true;
+      setState(state);
+    };
+
+    const timeoutId = window.setTimeout(() => {
+      console.warn("Server sync storage restore timed out, falling back to live data load", {
+        projectId,
+      });
+      settle(undefined);
+    }, ServerSyncStorage.RESTORE_TIMEOUT_MS);
+
     loadBuilderData({ projectId, signal })
       .then((data) => {
+        window.clearTimeout(timeoutId);
+        projectDetailsCache.set(projectId, {
+          version: data.version,
+          buildId: data.id,
+          authToken: undefined,
+        });
         const serverData = new Map(Object.entries(data));
-        setState(new Map([["server", serverData]]));
+        settle(new Map([["server", serverData]]));
       })
       .catch((err) => {
-        if (err instanceof Error) {
-          console.error(err);
+        window.clearTimeout(timeoutId);
+
+        if (signal.aborted) {
           return;
         }
 
-        // Abort error do nothing
+        if (err instanceof Error) {
+          console.error(err);
+        }
+
+        // Never block sync bootstrap on restore failure.
+        settle(undefined);
       });
   }
 }

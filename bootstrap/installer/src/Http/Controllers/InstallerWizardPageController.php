@@ -43,7 +43,7 @@ class InstallerWizardPageController extends Controller
      */
     private function resolveAssets(): array
     {
-        $manifestPath = public_path('installer/.vite/manifest.json');
+        $manifestPath = public_path('build/installer/.vite/manifest.json');
 
         if (! is_file($manifestPath)) {
             return [
@@ -74,8 +74,8 @@ class InstallerWizardPageController extends Controller
         $cssFiles = array_values(array_filter(array_map('strval', (array) ($entry['css'] ?? [])), static fn (string $value): bool => $value !== ''));
 
         return [
-            'css' => array_map(static fn (string $file): string => '/installer/'.$file, $cssFiles),
-            'js' => $jsFile === '' ? [] : ['/installer/'.$jsFile],
+            'css' => array_map(static fn (string $file): string => '/build/installer/'.$file, $cssFiles),
+            'js' => $jsFile === '' ? [] : ['/build/installer/'.$jsFile],
         ];
     }
 }

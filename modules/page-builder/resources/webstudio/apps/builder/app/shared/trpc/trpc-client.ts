@@ -10,12 +10,13 @@ import type {
 import { createRecursiveProxy } from "@trpc/server/shared";
 import { useMemo, useState } from "react";
 import { fetch } from "~/shared/fetch.client";
+import { trpcPath } from "~/shared/router-utils/path-utils";
 
 export const nativeClient = createTRPCProxyClient<AppRouter>({
   links: [
     httpBatchLink({
       fetch,
-      url: "/trpc",
+      url: trpcPath(),
     }),
   ],
 });

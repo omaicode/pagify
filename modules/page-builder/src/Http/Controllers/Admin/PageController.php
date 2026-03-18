@@ -26,6 +26,8 @@ class PageController extends Controller
 {
 	use AuthorizesRequests;
 
+	private const VIRTUAL_PROJECT_ID = 'pagify-local';
+
 	public function __construct(
 		private readonly PageService $pageService,
 		private readonly BlockRegistryService $blockRegistry,
@@ -39,49 +41,19 @@ class PageController extends Controller
 	) {
 	}
 
-	public function index(): Response
+	public function index(Request $request): Response
 	{
 		$this->authorize('viewAny', Page::class);
-
-		$pages = Page::query()->latest('id')->paginate(20);
-
-		$pages->setCollection(
-			$pages->getCollection()->map(static fn (Page $page): array => [
-				'id' => $page->id,
-				'title' => $page->title,
-				'slug' => $page->slug,
-				'status' => $page->status,
-				'published_at' => $page->published_at?->toDateTimeString(),
-				'updated_at' => $page->updated_at?->toDateTimeString(),
-				'routes' => [
-					'edit' => route('page-builder.admin.pages.edit', $page),
-					'destroy' => route('page-builder.admin.pages.destroy', $page),
-				],
-			])
-		);
-
-		return Inertia::render('PageBuilder/Pages/Index', [
-			'pages' => $pages,
-			'routes' => [
-				'create' => route('page-builder.admin.pages.create'),
-			],
+		return Inertia::render('PageBuilder/Editor', [
+			'editor' => $this->editorPayload($request),
 		]);
 	}
 
-	public function create(Request $request): Response
+	public function create(Request $request): RedirectResponse
 	{
 		$this->authorize('create', Page::class);
 
-		return Inertia::render('PageBuilder/Pages/Create', [
-			'editor' => $this->editorPayload($request),
-			'startup' => [
-				'layout' => null,
-			],
-			'routes' => [
-				'store' => route('page-builder.admin.pages.store'),
-				'index' => route('page-builder.admin.pages.index'),
-			],
-		]);
+		return $this->redirectToEditor($request);
 	}
 
 	public function store(StorePageRequest $request): RedirectResponse
@@ -100,34 +72,24 @@ class PageController extends Controller
 			metadata: ['slug' => $page->slug],
 		);
 
-		return redirect()
-			->route('page-builder.admin.pages.edit', $page)
+		return $this->redirectToEditor($request, $page)
 			->with('status', __('page-builder::messages.page_created'));
 	}
 
-	public function edit(Page $page): Response
+	public function edit(Request $request, Page $page): RedirectResponse
 	{
 		$this->authorize('update', $page);
-		$request = request();
 
-		return Inertia::render('PageBuilder/Pages/Edit', [
-			'page' => [
-				'id' => $page->id,
-				'title' => $page->title,
-				'slug' => $page->slug,
-				'status' => $page->status,
-				'layout' => (array) ($page->layout_json ?? []),
-				'seo_meta' => (array) ($page->seo_meta_json ?? []),
-				'published_at' => $page->published_at?->toDateTimeString(),
-			],
-			'editor' => $this->editorPayload($request, $page),
-			'routes' => [
-				'update' => route('page-builder.admin.pages.update', $page),
-				'destroy' => route('page-builder.admin.pages.destroy', $page),
-				'publish' => route('page-builder.admin.pages.publish', $page),
-				'index' => route('page-builder.admin.pages.index'),
-			],
-		]);
+		return $this->redirectToEditor($request, $page);
+	}
+
+	private function redirectToEditor(Request $request, ?Page $page = null): RedirectResponse
+	{
+		$activeThemeSlug = $this->themes->activeThemeForCurrentSite();
+		$iframe = $this->iframeEditorPayload($request, $activeThemeSlug, $page);
+		$editorSpaBaseUrl = route('page-builder.admin.editor.spa', ['path' => '/']);
+
+		return redirect()->to((string) ($iframe['url'] ?? $editorSpaBaseUrl));
 	}
 
 	/**
@@ -175,19 +137,17 @@ class PageController extends Controller
 	 */
 	private function iframeEditorPayload(Request $request, string $activeThemeSlug, ?Page $page = null): array
 	{
-		$config = (array) config('page-builder.webstudio_iframe', []);
-		$editorUrl = route('page-builder.admin.editor.host');
+		$editorUrl = route('page-builder.admin.editor.spa', ['path' => '/']);
+		$origin = $request->getSchemeAndHttpHost();
+		$initialPageId = $page?->id;
 
-		$origin = trim((string) ($config['origin'] ?? ''));
-		if ($origin === '') {
-			$parsedScheme = (string) parse_url($editorUrl, PHP_URL_SCHEME);
-			$parsedHost = (string) parse_url($editorUrl, PHP_URL_HOST);
-			$parsedPort = parse_url($editorUrl, PHP_URL_PORT);
-
-			if ($parsedScheme !== '' && $parsedHost !== '') {
-				$origin = $parsedScheme . '://' . $parsedHost . ($parsedPort !== null ? ':' . $parsedPort : '');
-			}
+		if ($initialPageId === null) {
+			$initialPageId = Page::query()->orderBy('id')->value('id');
 		}
+
+		$bootstrapProjectId = $initialPageId !== null
+			? (string) $initialPageId
+			: self::VIRTUAL_PROJECT_ID;
 
 		/** @var \Pagify\Core\Models\Admin|null $admin */
 		$admin = $request->user('web');
@@ -204,15 +164,10 @@ class PageController extends Controller
 		]);
 
 		$query = [
-			'mode' => 'page-builder',
-			'theme' => $activeThemeSlug,
 			'accessToken' => $issuedToken['token'],
 			'parentOrigin' => $request->getSchemeAndHttpHost(),
+			'pageId' => $bootstrapProjectId,
 		];
-
-		if ($page !== null) {
-			$query['pageId'] = (string) $page->id;
-		}
 
 		if ($site?->id !== null) {
 			$query['siteId'] = (string) $site->id;
@@ -227,9 +182,9 @@ class PageController extends Controller
 			'origin' => $origin,
 			'access_token' => $issuedToken['token'],
 			'token_expires_at' => $issuedToken['expires_at'],
-			'token_refresh_url' => route('page-builder.api.v1.admin.editor.access-token'),
-			'token_verify_url' => route('page-builder.api.v1.admin.editor.verify-token'),
-			'contract_url' => route('page-builder.api.v1.admin.editor.contract'),
+			'token_refresh_url' => route('page-builder.api.v1.admin.editor.access-token', [], false),
+			'token_verify_url' => route('page-builder.api.v1.admin.editor.verify-token', [], false),
+			'contract_url' => route('page-builder.api.v1.admin.editor.contract', [], false),
 			'message_namespace' => 'pagify:editor',
 		];
 	}
@@ -801,7 +756,7 @@ class PageController extends Controller
 			metadata: ['slug' => $updated->slug],
 		);
 
-		return redirect()->route('page-builder.admin.pages.edit', $updated)->with('status', __('page-builder::messages.page_updated'));
+		return $this->redirectToEditor($request, $updated)->with('status', __('page-builder::messages.page_updated'));
 	}
 
 	public function publish(Request $request, Page $page): RedirectResponse
@@ -819,7 +774,7 @@ class PageController extends Controller
 			metadata: ['slug' => $page->slug],
 		);
 
-		return redirect()->route('page-builder.admin.pages.edit', $page)->with('status', __('page-builder::messages.page_published'));
+		return $this->redirectToEditor($request, $page)->with('status', __('page-builder::messages.page_published'));
 	}
 
 	public function destroy(Page $page): RedirectResponse

@@ -23,7 +23,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   try {
     preventCrossOriginCookie(request);
-    allowedDestinations(request, ["document"]);
+    allowedDestinations(request, ["document", "iframe"]);
     // CSRF is not needed for document only routes
 
     const returnTo = (await returnToPath(request)) ?? builderPath();

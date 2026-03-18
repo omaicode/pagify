@@ -6,7 +6,15 @@ export const isBuilder = (request: Request): boolean => {
 
 export const isCanvas = (request: Request): boolean => {
   const url = new URL(request.url);
-  if (isBuilderUrl(url.origin) && url.pathname === "/canvas") {
+  const pathname = url.pathname.replace(/\/+$/, "");
+
+  // Support both upstream builder route (/canvas) and Pagify embedded route
+  // (.../page-builder/editor-spa/canvas) without requiring projectId parsing.
+  if (pathname === "/canvas") {
+    return true;
+  }
+
+  if (pathname.endsWith("/page-builder/editor-spa/canvas")) {
     return true;
   }
 

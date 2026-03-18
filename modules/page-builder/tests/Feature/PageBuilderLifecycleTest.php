@@ -9,6 +9,7 @@ use Pagify\Core\Models\Admin;
 use Pagify\Media\Models\MediaAsset;
 use Pagify\Media\Models\MediaUsage;
 use Pagify\PageBuilder\Models\Page;
+use Pagify\PageBuilder\Models\PageBuilderState;
 use Pagify\PageBuilder\Services\EditorAccessTokenService;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
@@ -19,14 +20,13 @@ class PageBuilderLifecycleTest extends TestCase
 
 	public function test_create_update_publish_page_lifecycle(): void
 	{
-		$admin = $this->makeAdminWithPermissions([
-			'page-builder.page.viewAny',
-			'page-builder.page.create',
-			'page-builder.page.update',
-			'page-builder.page.publish',
+		$accessToken = $this->issueEditorToken([
+			'page:read',
+			'page:write',
+			'page:publish',
 		]);
 
-		$this->actingAs($admin, 'web')->post('/admin/page-builder/pages', [
+		$this->withEditorToken($accessToken)->postJson('/api/v1/admin/page-builder/pages', [
 			'title' => 'Landing Page',
 			'slug' => 'landing-page',
 			'status' => 'draft',
@@ -41,12 +41,12 @@ class PageBuilderLifecycleTest extends TestCase
 				'title' => 'Landing',
 				'description' => 'Landing description',
 			],
-		])->assertRedirect();
+		])->assertStatus(201);
 
 		$page = Page::query()->where('slug', 'landing-page')->firstOrFail();
 		$this->assertSame('draft', $page->status);
 
-		$this->actingAs($admin, 'web')->put('/admin/page-builder/pages/' . $page->id, [
+		$this->withEditorToken($accessToken)->putJson('/api/v1/admin/page-builder/pages/' . $page->id, [
 			'title' => 'Landing Page Updated',
 			'slug' => 'landing-page',
 			'status' => 'draft',
@@ -62,9 +62,11 @@ class PageBuilderLifecycleTest extends TestCase
 				'description' => 'Updated description',
 				'canonical_url' => 'https://example.test/pages/landing-page',
 			],
-		])->assertRedirect();
+		])->assertOk();
 
-		$this->actingAs($admin, 'web')->post('/admin/page-builder/pages/' . $page->id . '/publish')->assertRedirect();
+		$this->withEditorToken($accessToken)
+			->postJson('/api/v1/admin/page-builder/pages/' . $page->id . '/publish')
+			->assertOk();
 
 		$page->refresh();
 		$this->assertSame('published', $page->status);
@@ -73,11 +75,9 @@ class PageBuilderLifecycleTest extends TestCase
 
 	public function test_registry_api_returns_blocks_and_breakpoints(): void
 	{
-		$admin = $this->makeAdminWithPermissions([
-			'page-builder.page.viewAny',
-		]);
+		$accessToken = $this->issueEditorToken(['page:read']);
 
-		$response = $this->actingAs($admin, 'web')->get('/api/v1/admin/page-builder/registry');
+		$response = $this->withEditorToken($accessToken)->get('/api/v1/admin/page-builder/registry');
 
 		$response
 			->assertOk()
@@ -90,13 +90,13 @@ class PageBuilderLifecycleTest extends TestCase
 
 	public function test_create_and_publish_page_with_webstudio_layout_payload(): void
 	{
-		$admin = $this->makeAdminWithPermissions([
-			'page-builder.page.viewAny',
-			'page-builder.page.create',
-			'page-builder.page.publish',
+		$accessToken = $this->issueEditorToken([
+			'page:read',
+			'page:write',
+			'page:publish',
 		]);
 
-		$this->actingAs($admin, 'web')->post('/admin/page-builder/pages', [
+		$this->withEditorToken($accessToken)->postJson('/api/v1/admin/page-builder/pages', [
 			'title' => 'Webstudio Landing',
 			'slug' => 'webstudio-landing',
 			'status' => 'published',
@@ -108,7 +108,7 @@ class PageBuilderLifecycleTest extends TestCase
 					'updated_at' => now()->toIso8601String(),
 				],
 			],
-		])->assertRedirect();
+		])->assertStatus(201);
 
 		$page = Page::query()->where('slug', 'webstudio-landing')->firstOrFail();
 		$this->assertSame('published', $page->status);
@@ -118,11 +118,9 @@ class PageBuilderLifecycleTest extends TestCase
 
 	public function test_editor_access_token_endpoint_returns_token_for_create_context(): void
 	{
-		$admin = $this->makeAdminWithPermissions([
-			'page-builder.page.create',
-		]);
+		$bootstrapToken = $this->issueEditorToken(['page:read']);
 
-		$response = $this->actingAs($admin, 'web')
+		$response = $this->withEditorToken($bootstrapToken)
 			->postJson('/api/v1/admin/page-builder/editor/access-token', []);
 
 		$response
@@ -134,32 +132,33 @@ class PageBuilderLifecycleTest extends TestCase
 			]);
 	}
 
-	public function test_editor_access_token_endpoint_requires_update_permission_when_page_is_provided(): void
+	public function test_editor_access_token_endpoint_rejects_page_scope_mismatch(): void
 	{
-		$creator = $this->makeAdminWithPermissions([
-			'page-builder.page.create',
+		$pageA = Page::query()->create([
+			'title' => 'Page A',
+			'slug' => 'page-a',
+			'status' => 'draft',
+			'layout_json' => [],
 		]);
-
-		$page = Page::query()->create([
-			'title' => 'Requires Update Permission',
-			'slug' => 'requires-update-permission',
+		$pageB = Page::query()->create([
+			'title' => 'Page B',
+			'slug' => 'page-b',
 			'status' => 'draft',
 			'layout_json' => [],
 		]);
 
-		$this->actingAs($creator, 'web')
+		$pageScopedToken = $this->issueEditorToken(['page:read'], pageId: $pageA->id, pageSlug: $pageA->slug);
+
+		$this->withEditorToken($pageScopedToken)
 			->postJson('/api/v1/admin/page-builder/editor/access-token', [
-				'page_id' => $page->id,
+				'page_id' => $pageB->id,
 			])
-			->assertForbidden();
+			->assertStatus(403)
+			->assertJsonPath('code', 'FORBIDDEN');
 
-		$editor = $this->makeAdminWithPermissions([
-			'page-builder.page.update',
-		]);
-
-		$this->actingAs($editor, 'web')
+		$this->withEditorToken($pageScopedToken)
 			->postJson('/api/v1/admin/page-builder/editor/access-token', [
-				'page_id' => $page->id,
+				'page_id' => $pageA->id,
 			])
 			->assertOk()
 			->assertJsonPath('success', true);
@@ -167,14 +166,7 @@ class PageBuilderLifecycleTest extends TestCase
 
 	public function test_editor_verify_token_endpoint_accepts_valid_token(): void
 	{
-		$admin = $this->makeAdminWithPermissions([
-			'page-builder.page.create',
-		]);
-
-		$tokenResponse = $this->actingAs($admin, 'web')
-			->postJson('/api/v1/admin/page-builder/editor/access-token', []);
-
-		$accessToken = (string) $tokenResponse->json('data.access_token');
+		$accessToken = $this->issueEditorToken(['page:read']);
 
 		$this->postJson('/api/v1/admin/page-builder/editor/verify-token', [
 			'token' => $accessToken,
@@ -196,14 +188,7 @@ class PageBuilderLifecycleTest extends TestCase
 
 	public function test_editor_verify_token_endpoint_rejects_replay_when_consume_enabled(): void
 	{
-		$admin = $this->makeAdminWithPermissions([
-			'page-builder.page.create',
-		]);
-
-		$tokenResponse = $this->actingAs($admin, 'web')
-			->postJson('/api/v1/admin/page-builder/editor/access-token', []);
-
-		$accessToken = (string) $tokenResponse->json('data.access_token');
+		$accessToken = $this->issueEditorToken(['page:read']);
 
 		$this->postJson('/api/v1/admin/page-builder/editor/verify-token', [
 			'token' => $accessToken,
@@ -218,6 +203,22 @@ class PageBuilderLifecycleTest extends TestCase
 		])
 			->assertStatus(401)
 			->assertJsonPath('code', 'UNAUTHORIZED');
+	}
+
+	public function test_webstudio_cgi_image_route_redirects_same_origin_absolute_asset_url(): void
+	{
+		$response = $this->get('/cgi/image/http%3A%2F%2F127.0.0.1%3A8000%2Fstorage%2Fmedia%2F2026%2F03%2Fdemo.png?width=128&quality=80&format=auto');
+
+		$response
+			->assertRedirect('http://127.0.0.1/storage/media/2026/03/demo.png');
+	}
+
+	public function test_webstudio_cgi_image_route_redirects_relative_asset_path(): void
+	{
+		$response = $this->get('/cgi/image/storage/media/2026/03/demo.png?width=128&quality=80&format=auto');
+
+		$response
+			->assertRedirect('/storage/media/2026/03/demo.png');
 	}
 
 	public function test_editor_contract_endpoint_returns_runtime_contract_and_endpoints(): void
@@ -239,11 +240,6 @@ class PageBuilderLifecycleTest extends TestCase
 
 	public function test_editor_builder_data_endpoint_returns_layout_context_for_valid_token(): void
 	{
-		$admin = $this->makeAdminWithPermissions([
-			'page-builder.page.create',
-			'page-builder.page.update',
-		]);
-
 		$page = Page::query()->create([
 			'title' => 'Builder Data',
 			'slug' => 'builder-data',
@@ -259,12 +255,7 @@ class PageBuilderLifecycleTest extends TestCase
 			],
 		]);
 
-		$tokenResponse = $this->actingAs($admin, 'web')
-			->postJson('/api/v1/admin/page-builder/editor/access-token', [
-				'page_id' => $page->id,
-			]);
-
-		$accessToken = (string) $tokenResponse->json('data.access_token');
+		$accessToken = $this->issueEditorToken(['page:read'], pageId: $page->id, pageSlug: $page->slug);
 
 		$this->postJson('/api/v1/admin/page-builder/editor/builder-data', [
 			'token' => $accessToken,
@@ -315,10 +306,6 @@ class PageBuilderLifecycleTest extends TestCase
 
 	public function test_editor_media_assets_endpoint_returns_media_for_valid_token(): void
 	{
-		$admin = $this->makeAdminWithPermissions([
-			'page-builder.page.create',
-		]);
-
 		MediaAsset::query()->create([
 			'uuid' => '223e4567-e89b-12d3-a456-426614174001',
 			'disk' => 'public',
@@ -330,10 +317,7 @@ class PageBuilderLifecycleTest extends TestCase
 			'kind' => 'image',
 		]);
 
-		$tokenResponse = $this->actingAs($admin, 'web')
-			->postJson('/api/v1/admin/page-builder/editor/access-token', []);
-
-		$accessToken = (string) $tokenResponse->json('data.access_token');
+		$accessToken = $this->issueEditorToken(['media:read']);
 
 		$this->postJson('/api/v1/admin/page-builder/editor/media/assets', [
 			'token' => $accessToken,
@@ -344,18 +328,61 @@ class PageBuilderLifecycleTest extends TestCase
 			->assertJsonPath('meta.pagination.current_page', 1);
 	}
 
+	public function test_webstudio_compat_assets_return_relative_asset_name_for_loader(): void
+	{
+		$asset = MediaAsset::query()->create([
+			'uuid' => '323e4567-e89b-12d3-a456-426614174001',
+			'disk' => 'public',
+			'path' => 'media/2026/03/demo.png',
+			'filename' => 'demo.png',
+			'original_name' => 'demo.png',
+			'mime_type' => 'image/png',
+			'extension' => 'png',
+			'size_bytes' => 1234,
+			'kind' => 'image',
+		]);
+
+		$accessToken = $this->issueEditorToken(['media:read']);
+
+		$this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->getJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/assets?projectId=pagify-local')
+			->assertOk()
+			->assertJsonPath('0.id', (string) $asset->id)
+			->assertJsonPath('0.name', 'storage/media/2026/03/demo.png');
+	}
+
+	public function test_webstudio_compat_asset_delete_removes_asset_from_system(): void
+	{
+		$asset = MediaAsset::query()->create([
+			'uuid' => '423e4567-e89b-12d3-a456-426614174001',
+			'disk' => 'public',
+			'path' => 'media/2026/03/delete-me.png',
+			'filename' => 'delete-me.png',
+			'original_name' => 'delete-me.png',
+			'mime_type' => 'image/png',
+			'extension' => 'png',
+			'size_bytes' => 1234,
+			'kind' => 'image',
+		]);
+
+		$accessToken = $this->issueEditorToken(['media:write']);
+
+		$this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->deleteJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/assets/' . $asset->id)
+			->assertOk()
+			->assertJsonPath('deleted', true)
+			->assertJsonPath('id', (string) $asset->id);
+
+		$this->assertNull(MediaAsset::query()->find($asset->id));
+	}
+
 	public function test_editor_media_upload_endpoint_uploads_asset_for_valid_token(): void
 	{
 		Storage::fake('public');
 
-		$admin = $this->makeAdminWithPermissions([
-			'page-builder.page.create',
-		]);
-
-		$tokenResponse = $this->actingAs($admin, 'web')
-			->postJson('/api/v1/admin/page-builder/editor/access-token', []);
-
-		$accessToken = (string) $tokenResponse->json('data.access_token');
+		$accessToken = $this->issueEditorToken(['media:write']);
 
 		$response = $this->post('/api/v1/admin/page-builder/editor/media/assets/upload', [
 			'token' => $accessToken,
@@ -396,6 +423,178 @@ class PageBuilderLifecycleTest extends TestCase
 			->assertJsonPath('code', 'FORBIDDEN');
 	}
 
+	public function test_webstudio_rest_data_and_patch_endpoints_accept_valid_token(): void
+	{
+		$page = Page::query()->create([
+			'title' => 'Compat Data',
+			'slug' => 'compat-data',
+			'status' => 'draft',
+			'layout_json' => [
+				'type' => 'webstudio',
+				'webstudio' => [
+					'html' => '<main>Compat Data</main>',
+				],
+			],
+		]);
+
+		$accessToken = $this->issueEditorToken(
+			['page:read', 'page:write'],
+			pageId: $page->id,
+			pageSlug: $page->slug
+		);
+
+		$dataResponse = $this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->getJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/data/' . $page->id);
+
+		$dataResponse
+			->assertOk()
+			->assertJsonPath('projectId', (string) $page->id)
+			->assertJsonPath('project.id', (string) $page->id)
+			->assertJsonPath('pages.homePage.id', (string) $page->id)
+			->assertJsonPath('breakpoints.0.id', 'aqVX0VTx9bxHqRd0MS3a3');
+
+		$version = (int) $dataResponse->json('version');
+
+		$this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->postJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/patch', [
+			'projectId' => (string) $page->id,
+			'buildId' => 'build-' . $page->id,
+			'version' => $version,
+			'transactions' => [],
+		])
+			->assertOk()
+			->assertJsonPath('status', 'ok');
+
+		$this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->postJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/trpc/domain.project?batch=1', [])
+			->assertOk()
+			->assertJsonPath('0.result.data.success', true)
+			->assertJsonPath('0.result.data.project.id', (string) $page->id);
+	}
+
+	public function test_webstudio_rest_data_uses_live_page_status_from_database_not_persisted_pages_snapshot(): void
+	{
+		$page = Page::query()->create([
+			'title' => 'Live Status Page',
+			'slug' => 'live-status-page',
+			'status' => 'draft',
+			'layout_json' => [],
+		]);
+
+		PageBuilderState::query()->create([
+			'page_id' => $page->id,
+			'site_id' => $page->site_id,
+			'build_id' => 'build-' . $page->id,
+			'version' => 2,
+			'data_json' => [
+				'pages' => [
+					'homePage' => [
+						'id' => (string) $page->id,
+						'name' => 'Stale Published',
+						'path' => '',
+						'title' => '"Stale Published"',
+						'meta' => [
+							'status' => 'published',
+						],
+						'rootInstanceId' => 'root-' . (string) $page->id,
+					],
+					'pages' => [],
+					'folders' => [[
+						'id' => 'root',
+						'name' => 'Root',
+						'slug' => '',
+						'children' => [(string) $page->id],
+					]],
+				],
+			],
+		]);
+
+		$accessToken = $this->issueEditorToken(['page:read'], pageId: $page->id, pageSlug: $page->slug);
+
+		$this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->getJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/data/' . $page->id)
+			->assertOk()
+			->assertJsonPath('pages.homePage.name', 'Live Status Page')
+			->assertJsonPath('pages.homePage.meta.status', 'draft');
+	}
+
+	public function test_webstudio_rest_data_endpoint_creates_initial_empty_page_when_database_is_empty(): void
+	{
+		Page::query()->delete();
+
+		$accessToken = $this->issueEditorToken(['page:read']);
+
+		$response = $this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->getJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/data/pagify-local');
+
+		$response
+			->assertOk()
+			->assertJsonPath('projectId', 'pagify-local')
+			->assertJsonPath('pages.homePage.path', '');
+
+		$page = Page::query()->first();
+
+		$this->assertNotNull($page);
+		$this->assertSame('Empty', $page->title);
+		$this->assertSame('empty', $page->slug);
+		$this->assertSame('draft', $page->status);
+		$this->assertSame((string) $page->id, (string) $response->json('pages.homePage.id'));
+	}
+
+	public function test_webstudio_dashboard_logout_endpoint_returns_redirect_payload(): void
+	{
+		$admin = $this->makeAdminWithPermissions([
+			'page-builder.page.create',
+		]);
+
+		$this->actingAs($admin, 'web')
+			->postJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/dashboard-logout')
+			->assertOk()
+			->assertJsonStructure(['redirectTo']);
+	}
+
+	public function test_webstudio_trpc_domain_project_returns_virtual_project_without_page_context(): void
+	{
+		$accessToken = $this->issueEditorToken(['page:read']);
+
+		$this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->postJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/trpc/domain.project?batch=1', [
+			0 => [
+				'projectId' => 'pagify-local',
+			],
+		])
+			->assertOk()
+			->assertJsonPath('0.result.data.success', true)
+			->assertJsonPath('0.result.data.project.id', 'pagify-local');
+	}
+
+	public function test_webstudio_trpc_domain_project_accepts_wrapped_batch_input_shape(): void
+	{
+		$accessToken = $this->issueEditorToken(['page:read']);
+
+		$this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->postJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/trpc/domain.project?batch=1', [
+			0 => [
+				'json' => [
+					'projectId' => 'pagify-local',
+				],
+				'meta' => [
+					'values' => [],
+				],
+			],
+		])
+			->assertOk()
+			->assertJsonPath('0.result.data.success', true)
+			->assertJsonPath('0.result.data.project.id', 'pagify-local');
+	}
+
 	public function test_editor_media_assets_endpoint_returns_forbidden_when_site_scope_mismatches(): void
 	{
 		/** @var EditorAccessTokenService $tokenService */
@@ -417,52 +616,20 @@ class PageBuilderLifecycleTest extends TestCase
 			->assertJsonPath('code', 'FORBIDDEN');
 	}
 
-	public function test_editor_host_route_requires_authentication_and_permission(): void
+	public function test_pages_menu_route_renders_admin_shell_with_embedded_editor_iframe(): void
 	{
-		$this->get('/admin/page-builder/editor-host')->assertRedirect();
+		$page = Page::query()->create([
+			'title' => 'Initial Page',
+			'slug' => 'initial-page',
+			'status' => 'draft',
+			'layout_json' => [],
+		]);
 
-		/** @var Admin $withoutPermission */
-		$withoutPermission = Admin::factory()->create();
-
-		$this->actingAs($withoutPermission, 'web')
-			->get('/admin/page-builder/editor-host')
-			->assertForbidden();
-
-		$allowed = $this->makeAdminWithPermissions([
+		$admin = $this->makeAdminWithPermissions([
 			'page-builder.page.viewAny',
 		]);
 
-		$this->actingAs($allowed, 'web')
-			->get('/admin/page-builder/editor-host?accessToken=test-token')
-			->assertOk()
-			->assertSee('PagifyPageBuilderEditorBoot', false)
-			->assertSee('test-token', false);
-
-		$creatorOnly = $this->makeAdminWithPermissions([
-			'page-builder.page.create',
-		]);
-
-		$this->actingAs($creatorOnly, 'web')
-			->get('/admin/page-builder/editor-host?accessToken=test-token')
-			->assertOk();
-
-		config()->set('page-builder.webstudio_iframe.runtime_mode', 'upstream-experimental');
-
-		$this->actingAs($allowed, 'web')
-			->get('/admin/page-builder/editor-host?accessToken=test-token')
-			->assertOk()
-			->assertSee('upstream-experimental', false);
-	}
-
-	public function test_create_payload_uses_module_editor_host_route_for_iframe(): void
-	{
-		config()->set('page-builder.webstudio_iframe.origin', '');
-
-		$admin = $this->makeAdminWithPermissions([
-			'page-builder.page.create',
-		]);
-
-		$response = $this->actingAs($admin, 'web')->get('/admin/page-builder/pages/create', [
+		$response = $this->actingAs($admin, 'web')->get('/admin/page-builder/pages', [
 			'X-Inertia' => 'true',
 			'X-Requested-With' => 'XMLHttpRequest',
 		]);
@@ -470,12 +637,14 @@ class PageBuilderLifecycleTest extends TestCase
 		$response
 			->assertOk()
 			->assertHeader('X-Inertia', 'true')
+			->assertJsonPath('component', 'PageBuilder/Editor')
 			->assertJsonPath('props.editor.iframe.enabled', true);
 
 		$iframeUrl = (string) $response->json('props.editor.iframe.url');
 
-		$this->assertStringStartsWith(route('page-builder.admin.editor.host'), $iframeUrl);
+		$this->assertStringStartsWith(route('page-builder.admin.editor.spa'), $iframeUrl);
 		$this->assertStringContainsString('accessToken=', $iframeUrl);
+		$this->assertStringNotContainsString('authToken=', $iframeUrl);
 
 		$query = parse_url($iframeUrl, PHP_URL_QUERY);
 		parse_str(is_string($query) ? $query : '', $params);
@@ -483,15 +652,73 @@ class PageBuilderLifecycleTest extends TestCase
 		$expectedOrigin = rtrim((string) config('app.url'), '/');
 
 		$this->assertSame($expectedOrigin, $params['parentOrigin'] ?? null);
+		$this->assertSame((string) $page->id, $params['pageId'] ?? null);
+	}
+
+	public function test_pages_menu_route_bootstraps_virtual_project_when_no_pages_exist(): void
+	{
+		Page::query()->delete();
+
+		$admin = $this->makeAdminWithPermissions([
+			'page-builder.page.viewAny',
+		]);
+
+		$response = $this->actingAs($admin, 'web')->get('/admin/page-builder/pages', [
+			'X-Inertia' => 'true',
+			'X-Requested-With' => 'XMLHttpRequest',
+		]);
+
+		$response
+			->assertOk()
+			->assertHeader('X-Inertia', 'true')
+			->assertJsonPath('component', 'PageBuilder/Editor')
+			->assertJsonPath('props.editor.iframe.enabled', true);
+
+		$iframeUrl = (string) $response->json('props.editor.iframe.url');
+
+		$this->assertStringStartsWith(route('page-builder.admin.editor.spa'), $iframeUrl);
+
+		$query = parse_url($iframeUrl, PHP_URL_QUERY);
+		parse_str(is_string($query) ? $query : '', $params);
+
+		$this->assertSame('pagify-local', $params['pageId'] ?? null);
+	}
+
+	public function test_canvas_route_is_available_for_authorized_editor_user(): void
+	{
+		$admin = $this->makeAdminWithPermissions([
+			'page-builder.page.create',
+		]);
+
+		$this->actingAs($admin, 'web')
+			->get('/' . config('app.admin_url_prefix') . '/page-builder/editor-spa/canvas?accessToken=test-token')
+			->assertOk()
+			->assertSee('Pagify Webstudio Editor', false);
+	}
+
+	public function test_canvas_route_accepts_valid_access_token_without_web_session(): void
+	{
+		/** @var EditorAccessTokenService $tokenService */
+		$tokenService = app(EditorAccessTokenService::class);
+
+		$issued = $tokenService->issue([
+			'admin_id' => null,
+			'page_id' => null,
+			'site_id' => null,
+			'theme' => 'default',
+			'scopes' => ['page:read'],
+		]);
+
+		$accessToken = (string) ($issued['token'] ?? '');
+
+		$this->get('/' . config('app.admin_url_prefix') . '/page-builder/editor-spa/canvas?accessToken=' . urlencode($accessToken))
+			->assertOk()
+			->assertSee('Pagify Webstudio Editor', false);
 	}
 
 	public function test_page_media_usage_is_synced_on_update_and_cleared_on_delete(): void
 	{
-		$admin = $this->makeAdminWithPermissions([
-			'page-builder.page.create',
-			'page-builder.page.update',
-			'page-builder.page.delete',
-		]);
+		$accessToken = $this->issueEditorToken(['page:read', 'page:write']);
 
 		$asset = MediaAsset::query()->create([
 			'uuid' => '123e4567-e89b-12d3-a456-426614174000',
@@ -504,7 +731,7 @@ class PageBuilderLifecycleTest extends TestCase
 			'kind' => 'image',
 		]);
 
-		$this->actingAs($admin, 'web')->post('/admin/page-builder/pages', [
+		$this->withEditorToken($accessToken)->postJson('/api/v1/admin/page-builder/pages', [
 			'title' => 'Media Sync',
 			'slug' => 'media-sync',
 			'status' => 'draft',
@@ -515,7 +742,7 @@ class PageBuilderLifecycleTest extends TestCase
 					'assets' => ['123e4567-e89b-12d3-a456-426614174000'],
 				],
 			],
-		])->assertRedirect();
+		])->assertStatus(201);
 
 		$page = Page::query()->where('slug', 'media-sync')->firstOrFail();
 
@@ -525,7 +752,7 @@ class PageBuilderLifecycleTest extends TestCase
 			->where('asset_id', $asset->id)
 			->exists());
 
-		$this->actingAs($admin, 'web')->put('/admin/page-builder/pages/' . $page->id, [
+		$this->withEditorToken($accessToken)->putJson('/api/v1/admin/page-builder/pages/' . $page->id, [
 			'title' => 'Media Sync Updated',
 			'slug' => 'media-sync',
 			'status' => 'draft',
@@ -535,7 +762,7 @@ class PageBuilderLifecycleTest extends TestCase
 					'html' => '<main data-pbx-content-slot="true"><p>No media</p></main>',
 				],
 			],
-		])->assertRedirect();
+		])->assertOk();
 
 		$this->assertFalse(MediaUsage::query()
 			->where('context_type', 'page_builder.page')
@@ -543,7 +770,9 @@ class PageBuilderLifecycleTest extends TestCase
 			->where('asset_id', $asset->id)
 			->exists());
 
-		$this->actingAs($admin, 'web')->delete('/admin/page-builder/pages/' . $page->id)->assertRedirect();
+		$this->withEditorToken($accessToken)
+			->deleteJson('/api/v1/admin/page-builder/pages/' . $page->id)
+			->assertOk();
 
 		$this->assertFalse(MediaUsage::query()
 			->where('context_type', 'page_builder.page')
@@ -569,5 +798,33 @@ class PageBuilderLifecycleTest extends TestCase
 		}
 
 		return $admin;
+	}
+
+	private function withEditorToken(string $token): self
+	{
+		return $this->withHeaders([
+			'x-auth-token' => $token,
+		]);
+	}
+
+	/**
+	 * @param array<int, string> $scopes
+	 */
+	private function issueEditorToken(array $scopes, ?int $adminId = null, ?int $pageId = null, ?string $pageSlug = null): string
+	{
+		/** @var EditorAccessTokenService $tokenService */
+		$tokenService = app(EditorAccessTokenService::class);
+
+		$issued = $tokenService->issue([
+			'admin_id' => $adminId,
+			'page_id' => $pageId,
+			'page_slug' => $pageSlug,
+			'site_id' => null,
+			'site_slug' => null,
+			'theme' => 'default',
+			'scopes' => $scopes,
+		]);
+
+		return (string) ($issued['token'] ?? '');
 	}
 }

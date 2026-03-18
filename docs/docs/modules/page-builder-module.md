@@ -75,6 +75,7 @@ Source of truth in admin codebase:
 - Restrict iframe origins with `PAGE_BUILDER_IFRAME_EDITOR_ORIGIN`.
 - Runtime mode is controlled by `PAGE_BUILDER_IFRAME_EDITOR_RUNTIME_MODE` (`upstream-embedded` default).
 - Direct upstream UI embed target is controlled by `PAGE_BUILDER_IFRAME_EDITOR_UPSTREAM_URL`.
+- Build output syncs Webstudio client assets directly into `public/build/page-builder`.
 - Keep `PAGE_BUILDER_IFRAME_EDITOR_TOKEN_TTL` short.
 - Rotate `PAGE_BUILDER_IFRAME_EDITOR_TOKEN_SECRET` periodically.
 - Reject tokens failing `iss`, `aud`, signature, or `exp` validation.

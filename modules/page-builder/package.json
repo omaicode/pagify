@@ -3,18 +3,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
     "webstudio:install": "pnpm --dir ./resources/webstudio install --frozen-lockfile",
-    "webstudio:build": "pnpm --dir ./resources/webstudio --filter=@webstudio-is/builder build",
-    "build:host": "vite build",
-    "build": "npm run webstudio:install && npm run webstudio:build && npm run build:host"
-  },
-  "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "webstudio:build": "WEBSTUDIO_PAGIFY_BUILD=1 pnpm --dir ./resources/webstudio build",
+    "webstudio:sync-client": "sh -c 'rm -rf ../../public/build/page-builder && mkdir -p ../../public/build/page-builder && cp -R ./resources/webstudio/apps/builder/build/client/. ../../public/build/page-builder/'",
+    "vite:build": "vite build --config ./vite.config.ts",
+    "build": "npm run webstudio:install && npm run webstudio:build && npm run webstudio:sync-client && npm run vite:build"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.7.0",
-    "vite": "^7.3.1"
+    "laravel-vite-plugin": "^2.0.0",
+    "vite": "^7.0.7"
   }
 }

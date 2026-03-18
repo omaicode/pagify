@@ -8,7 +8,7 @@ use InvalidArgumentException;
 use Pagify\Core\Http\Controllers\Api\ApiController;
 use Pagify\PageBuilder\Services\EditorAccessTokenService;
 
-class AdminPageBuilderEditorTokenVerifyController extends ApiController
+class EditorTokenVerifyController extends ApiController
 {
 	public function __invoke(Request $request, EditorAccessTokenService $editorAccessToken): JsonResponse
 	{

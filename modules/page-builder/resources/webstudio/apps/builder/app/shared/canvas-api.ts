@@ -23,35 +23,29 @@ declare global {
   }
 }
 
-const isInIframe = () => {
-  try {
-    return window.self !== window.top;
-  } catch (error) {
-    return true;
-  }
-};
-
 const getIframeApi = () => {
-  if (isInIframe()) {
-    // Inside the iframe, use the local window.api
-    return _canvasApi;
-  } else {
-    // Find first iframe with the API
-    for (let i = 0; i < window.frames.length; ++i) {
-      try {
-        const frame = window.frames[i];
-        if (frame && frame[apiWindowNamespace]) {
-          return frame[apiWindowNamespace];
-        }
-      } catch {
-        // Certain extensions, such as Zotero, inject iframes into the page
-        // These iframes can be inaccessible and may cause access errors
-        // Therefore, we should skip processing them
-      }
-    }
-
-    return;
+  // If current window already exposes canvas API, use it directly.
+  // This is true inside the actual canvas iframe.
+  if (window[apiWindowNamespace]) {
+    return window[apiWindowNamespace];
   }
+
+  // Otherwise find first child iframe exposing the canvas API.
+  // This works for both top-level builder and builder embedded in another iframe.
+  for (let i = 0; i < window.frames.length; ++i) {
+    try {
+      const frame = window.frames[i];
+      if (frame && frame[apiWindowNamespace]) {
+        return frame[apiWindowNamespace];
+      }
+    } catch {
+      // Certain extensions, such as Zotero, inject iframes into the page
+      // These iframes can be inaccessible and may cause access errors
+      // Therefore, we should skip processing them
+    }
+  }
+
+  return;
 };
 
 const isKeyOf = <T>(key: unknown, obj: T): key is keyof T => {
@@ -87,8 +81,10 @@ export const canvasApi = createRecursiveProxy((options) => {
       isKeyOf(key, currentMethod),
       `API method ${options.path.join(".")} not found`
     );
-    invariant(typeof currentMethod === "object");
     invariant(currentMethod != null);
+    invariant(
+      typeof currentMethod === "object" || typeof currentMethod === "function"
+    );
 
     currentMethod = currentMethod[key];
   }
@@ -105,10 +101,8 @@ export const canvasApi = createRecursiveProxy((options) => {
  * Initializes the canvas API in the iframe. Must be called in the iframe context.
  */
 export const initCanvasApi = () => {
-  if (isInIframe()) {
-    $canvasIframeState.set("ready");
-    window[apiWindowNamespace] = _canvasApi;
-  }
+  $canvasIframeState.set("ready");
+  window[apiWindowNamespace] = _canvasApi;
   return () => {
     // Does not work as expected, because the iframe is detached from the builder
     $canvasIframeState.set("idle");

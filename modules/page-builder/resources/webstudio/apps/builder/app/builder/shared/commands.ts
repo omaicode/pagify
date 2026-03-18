@@ -163,16 +163,6 @@ export const { emitCommand, subscribeCommands } = createCommandsEmitter({
       disableOnInputLikeControls: true,
     },
     {
-      name: "openExportDialog",
-      description: "Export project code",
-      category: "General",
-      defaultHotkeys: ["shift+E"],
-      handler: () => {
-        $publishDialog.set("export");
-      },
-      disableOnInputLikeControls: true,
-    },
-    {
       name: "toggleComponentsPanel",
       description: "Toggle components panel",
       category: "Panels",

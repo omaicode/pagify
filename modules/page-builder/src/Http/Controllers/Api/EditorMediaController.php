@@ -12,7 +12,7 @@ use Pagify\Media\Models\MediaFolder;
 use Pagify\Media\Services\MediaAssetManager;
 use Pagify\PageBuilder\Services\EditorAccessTokenService;
 
-class AdminPageBuilderEditorMediaController extends ApiController
+class EditorMediaController extends ApiController
 {
 	public function index(Request $request, EditorAccessTokenService $editorAccessToken, SiteContext $siteContext): JsonResponse
 	{

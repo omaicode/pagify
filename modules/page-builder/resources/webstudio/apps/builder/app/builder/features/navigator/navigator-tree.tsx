@@ -130,8 +130,7 @@ export const $flatTree = computed(
     ) => {
       const instance = instances.get(instanceId);
       if (instance === undefined) {
-        // log instead of failing navigator tree
-        console.error(`Unknown instance ${instanceId}`);
+        console.warn(`Instance with id ${instanceId} not found`);
         return;
       }
       const propValues = propValuesByInstanceSelector.get(

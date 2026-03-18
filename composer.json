@@ -64,6 +64,14 @@
             "cd bootstrap/installer/frontend && npm install",
             "cd bootstrap/installer/frontend && npm run build"
         ],
+        "build:ui": [
+            "cd themes/admin/${ADMIN_THEME:-default} && npm install",
+            "cd themes/admin/${ADMIN_THEME:-default} && npm run build",
+            "cd bootstrap/installer/frontend && npm install",
+            "cd bootstrap/installer/frontend && npm run build",
+            "cd modules/page-builder && npm install",
+            "cd modules/page-builder && npm run build"
+        ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
             "cd themes/admin/${ADMIN_THEME:-default} && npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"cd ../../.. && php artisan serve\" \"cd ../../.. && php artisan queue:listen --tries=1 --timeout=0\" \"cd ../../.. && php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"

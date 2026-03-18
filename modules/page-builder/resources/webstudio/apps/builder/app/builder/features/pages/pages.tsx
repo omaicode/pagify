@@ -32,6 +32,7 @@ import {
   DeletePageConfirmationDialog,
   DeleteFolderConfirmationDialog,
 } from "./confirmation-dialogs";
+import { deletePageOnServer, isPersistedPageId } from "./page-crud-api";
 import {
   $editingPageId,
   $isContentMode,
@@ -451,11 +452,22 @@ const PageEditor = ({
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (pageIdToDelete) {
+      try {
+        await deletePageOnServer(pageIdToDelete);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Unable to delete page";
+        toast.error(message);
+        return;
+      }
+
       updateWebstudioData((data) => {
         deletePageMutable(pageIdToDelete, data);
       });
+
+      toast.success("Page deleted");
     }
     onClose();
     // switch to home page when deleted currently selected page
@@ -580,11 +592,23 @@ export const PagesPanel = ({ onClose }: { onClose: () => void }) => {
     return;
   }
 
-  const handlePageDeleteConfirm = () => {
+  const handlePageDeleteConfirm = async () => {
     if (pageIdToDelete) {
+      try {
+        await deletePageOnServer(pageIdToDelete);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Unable to delete page";
+        toast.error(message);
+        return;
+      }
+
       updateWebstudioData((data) => {
         deletePageMutable(pageIdToDelete, data);
       });
+
+      toast.success("Page deleted");
+
       // Close settings if this page was being edited
       if (editingItemId === pageIdToDelete) {
         $editingPageId.set(undefined);
@@ -593,8 +617,20 @@ export const PagesPanel = ({ onClose }: { onClose: () => void }) => {
     setPageIdToDelete(undefined);
   };
 
-  const handleDeleteFolderConfirm = () => {
+  const handleDeleteFolderConfirm = async () => {
     if (folderIdToDelete) {
+      const pageIds = getAllChildrenAndSelf(folderIdToDelete, pages.folders, "page");
+      const persistedPageIds = pageIds.filter((pageId) => isPersistedPageId(pageId));
+
+      try {
+        await Promise.all(persistedPageIds.map((pageId) => deletePageOnServer(pageId)));
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Unable to delete folder pages";
+        toast.error(message);
+        return;
+      }
+
       updateWebstudioData((data) => {
         const { pageIds } = deleteFolderWithChildrenMutable(
           folderIdToDelete,
@@ -604,6 +640,9 @@ export const PagesPanel = ({ onClose }: { onClose: () => void }) => {
           deletePageMutable(pageId, data);
         });
       });
+
+      toast.success("Folder deleted");
+
       // Close settings if this folder was being edited
       if (editingItemId === folderIdToDelete) {
         $editingPageId.set(undefined);

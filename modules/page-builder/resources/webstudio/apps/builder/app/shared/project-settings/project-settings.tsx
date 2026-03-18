@@ -23,7 +23,6 @@ import { leftPanelWidth, rightPanelWidth } from "./utils";
 import { SectionGeneral } from "./section-general";
 import { SectionRedirects } from "./section-redirects";
 import { SectionPublish } from "./section-publish";
-import { SectionMarketplace } from "./section-marketplace";
 import { SectionBackups } from "./section-backups";
 import { titleCase } from "title-case";
 
@@ -34,7 +33,6 @@ const sections = new Map<
   ["general", SectionGeneral],
   ["redirects", SectionRedirects],
   ["publish", SectionPublish],
-  ["marketplace", SectionMarketplace],
   ["backups", SectionBackups],
 ] as const);
 

@@ -17,6 +17,36 @@ import {
   $styles,
 } from "./nano-states";
 import { fetch } from "~/shared/fetch.client";
+import { restDataPath } from "~/shared/router-utils/path-utils";
+
+const BUILDER_DATA_TIMEOUT_MS = 15000;
+
+const createLoadAbortSignal = (parentSignal: AbortSignal, timeoutMs: number) => {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => {
+    controller.abort(new Error("Builder data request timed out"));
+  }, timeoutMs);
+
+  const onParentAbort = () => {
+    controller.abort(parentSignal.reason);
+  };
+
+  if (parentSignal.aborted) {
+    onParentAbort();
+  } else {
+    parentSignal.addEventListener("abort", onParentAbort, { once: true });
+  }
+
+  const cleanup = () => {
+    window.clearTimeout(timeoutId);
+    parentSignal.removeEventListener("abort", onParentAbort);
+  };
+
+  return {
+    signal: controller.signal,
+    cleanup,
+  };
+};
 
 export type BuilderData = WebstudioData & {
   marketplaceProduct: undefined | MarketplaceProduct;
@@ -54,6 +84,21 @@ export const getBuilderData = (): BuilderData => {
   };
 };
 
+export const serializeBuilderDataForPatch = (
+  data: BuilderData = getBuilderData()
+) => {
+  return {
+    instances: Array.from(data.instances.values()),
+    props: Array.from(data.props.values()),
+    dataSources: Array.from(data.dataSources.values()),
+    resources: Array.from(data.resources.values()),
+    breakpoints: Array.from(data.breakpoints.values()),
+    styleSources: Array.from(data.styleSources.values()),
+    styleSourceSelections: Array.from(data.styleSourceSelections.values()),
+    styles: Array.from(data.styles.values()),
+  };
+};
+
 const getPair = <Item extends { id: string }>(item: Item) =>
   [item.id, item] as const;
 
@@ -65,10 +110,36 @@ export const loadBuilderData = async ({
   signal: AbortSignal;
 }): Promise<LoadedBuilderData> => {
   const currentUrl = new URL(location.href);
-  const url = new URL(`/rest/data/${projectId}`, currentUrl.origin);
+  const url = new URL(restDataPath(projectId), currentUrl.origin);
   const headers = new Headers();
 
-  const response = await fetch(url, { headers, signal });
+  const { signal: timedSignal, cleanup } = createLoadAbortSignal(
+    signal,
+    BUILDER_DATA_TIMEOUT_MS
+  );
+
+  let response: Response;
+
+  try {
+    response = await fetch(url, { headers, signal: timedSignal });
+  } catch (error) {
+    cleanup();
+
+    const isTimeout =
+      timedSignal.aborted === true &&
+      signal.aborted === false &&
+      (error instanceof DOMException || error instanceof Error);
+
+    if (isTimeout) {
+      throw new Error(
+        `Builder data request timed out after ${BUILDER_DATA_TIMEOUT_MS}ms: ${url}`
+      );
+    }
+
+    throw error;
+  }
+
+  cleanup();
 
   if (response.ok) {
     const data = (await response.json()) as Awaited<ReturnType<typeof loader>>;

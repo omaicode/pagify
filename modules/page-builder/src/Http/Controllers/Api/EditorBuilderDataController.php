@@ -12,7 +12,7 @@ use Pagify\PageBuilder\Models\Page;
 use Pagify\PageBuilder\Services\BlockRegistryService;
 use Pagify\PageBuilder\Services\EditorAccessTokenService;
 
-class AdminPageBuilderEditorBuilderDataController extends ApiController
+class EditorBuilderDataController extends ApiController
 {
 	public function __invoke(
 		Request $request,
