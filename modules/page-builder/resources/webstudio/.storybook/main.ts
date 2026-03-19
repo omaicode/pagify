@@ -18,7 +18,7 @@ const hasPrivateFolders = !isFolderEmpty(
 
 const visualTestingStories: StorybookConfig["stories"] = [
   {
-    directory: "../apps/builder",
+    directory: "../builder",
     titlePrefix: "Builder",
     files: "**/*.stories.tsx",
   },
@@ -97,7 +97,7 @@ export default {
         alias: [
           {
             find: "~",
-            replacement: path.resolve("./apps/builder/app"),
+            replacement: path.resolve("./builder/app"),
           },
         ],
       },

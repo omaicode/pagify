@@ -5,7 +5,7 @@
   "scripts": {
     "webstudio:install": "pnpm --dir ./resources/webstudio install --frozen-lockfile",
     "webstudio:build": "WEBSTUDIO_PAGIFY_BUILD=1 pnpm --dir ./resources/webstudio build",
-    "webstudio:sync-client": "sh -c 'rm -rf ../../public/build/page-builder && mkdir -p ../../public/build/page-builder && cp -R ./resources/webstudio/apps/builder/build/client/. ../../public/build/page-builder/'",
+    "webstudio:sync-client": "sh -c 'rm -rf ../../public/build/page-builder && mkdir -p ../../public/build/page-builder && cp -R ./resources/webstudio/builder/build/client/. ../../public/build/page-builder/'",
     "vite:build": "vite build --config ./vite.config.ts",
     "build": "npm run webstudio:install && npm run webstudio:build && npm run webstudio:sync-client && npm run vite:build"
   },

@@ -5,7 +5,7 @@ import {
   type ItemSelector,
   type ItemSource,
   StyleSourceInput as StyleSourceInputComponent,
-} from ".";
+} from "../style-source";
 
 export default {
   title: "Style panel/Style Source Input",

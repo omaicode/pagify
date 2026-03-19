@@ -1,4 +1,4 @@
-import createDebugRaw from "debug";
+import createDebugRaw from "~/shared/debug";
 
 const getModuleName = (url: string) => {
   const nameParts = url.split("/").pop()?.split(".") ?? [];

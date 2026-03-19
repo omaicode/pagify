@@ -13,7 +13,7 @@ import {
   CloudIcon,
   OfflineIcon,
   ShieldIcon,
-  WebstudioIcon,
+  PagifyLogoIcon,
 } from "@webstudio-is/icons";
 import { $queueStatus } from "~/shared/sync/project-queue";
 import { $authPermit } from "~/shared/nano-states";
@@ -28,7 +28,7 @@ export default {
 
 const MenuPlaceholder = () => (
   <ToolbarButton aria-label="Menu">
-    <WebstudioIcon size={22} />
+    <PagifyLogoIcon size={22} />
   </ToolbarButton>
 );
 

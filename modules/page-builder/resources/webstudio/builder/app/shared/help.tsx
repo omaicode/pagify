@@ -10,10 +10,5 @@ export const help = [
     label: "Docs",
     url: "https://docs.webstudio.is/",
     icon: <ContentIcon />,
-  },
-  {
-    label: "Community",
-    url: "https://wstd.us/community",
-    icon: <DiscordIcon />,
-  },
+  }
 ] as const;

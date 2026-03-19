@@ -2,7 +2,7 @@ import { useStore } from "@nanostores/react";
 import type { Meta, StoryFn } from "@storybook/react";
 import { StorySection, Text } from "@webstudio-is/design-system";
 import { ToolbarButton } from "@webstudio-is/design-system";
-import { WebstudioIcon } from "@webstudio-is/icons";
+import { PagifyLogoIcon } from "@webstudio-is/icons";
 import { TopbarLayout } from "~/builder/shared/topbar-layout";
 import { AddressBarPopover } from "./address-bar";
 import { $dataSources, $pages } from "~/shared/sync/data-stores";
@@ -73,7 +73,7 @@ export const AddressBar: StoryFn = () => {
       <TopbarLayout
         menu={
           <ToolbarButton aria-label="Menu">
-            <WebstudioIcon size={22} />
+            <PagifyLogoIcon size={22} />
           </ToolbarButton>
         }
         left={<AddressBarPopover />}
