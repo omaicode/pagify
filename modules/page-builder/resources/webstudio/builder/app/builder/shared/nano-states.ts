@@ -4,6 +4,7 @@ import {
   $selectedInstanceRenderState,
 } from "~/shared/nano-states/misc";
 import { $canvasIframeState } from "~/shared/nano-states/canvas";
+import { $pages } from "~/shared/nano-states/pages";
 import type { SidebarPanelName } from "~/builder/sidebar-left/types";
 import { $settings, getSetting } from "./client-settings";
 
@@ -108,16 +109,25 @@ export const $loadingState = computed(
 const $activeSidebarPanel_ = atom<SidebarPanelName | undefined>();
 
 export const $activeSidebarPanel = computed(
-  [$activeSidebarPanel_, $isPreviewMode, $loadingState, $settings],
-  (currentPanel, isPreviewMode, loadingState, { navigatorLayout }) => {
+  [$activeSidebarPanel_, $isPreviewMode, $loadingState, $settings, $pages],
+  (currentPanel, isPreviewMode, loadingState, _settings, pages) => {
     if (loadingState.state !== "ready") {
       return "none";
     }
+
+    const persistedPageIds = pages
+      ? [pages.homePage.id, ...pages.pages.map((page) => page.id)]
+      : [];
+    const hasPersistedPages = persistedPageIds.some((pageId) => /^\d+$/.test(pageId));
+    if (hasPersistedPages === false) {
+      return "pages";
+    }
+
     if (isPreviewMode) {
       return currentPanel === "pages" ? "pages" : "none";
     }
     if (currentPanel === undefined) {
-      return navigatorLayout === "undocked" ? "navigator" : "none";
+      return "pages";
     }
     return currentPanel;
   }

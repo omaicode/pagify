@@ -60,7 +60,6 @@
     "@unocss/preset-wind3": "66.1.2",
     "@vercel/remix": "2.15.3",
     "@webstudio-is/asset-uploader": "workspace:*",
-    "@webstudio-is/authorization-token": "workspace:*",
     "@webstudio-is/css-data": "workspace:*",
     "@webstudio-is/css-engine": "workspace:*",
     "@webstudio-is/dashboard": "workspace:*",

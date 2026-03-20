@@ -1,16 +1,13 @@
 import { TooltipProvider } from "@radix-ui/react-tooltip";
+import * as React from "react";
 import {
-  Button,
   Flex,
   globalCss,
   rawTheme,
   Text,
   theme,
 } from "@webstudio-is/design-system";
-import { GithubIcon, GoogleIcon, PagifyLogoIcon } from "@webstudio-is/icons";
-import { Form } from "@remix-run/react";
-import { authPath } from "~/shared/router-utils";
-import { SecretLogin } from "./secret-login";
+import { PagifyLogoIcon } from "@webstudio-is/icons";
 
 const globalStyles = globalCss({
   body: {
@@ -21,16 +18,10 @@ const globalStyles = globalCss({
 
 export type LoginProps = {
   errorMessage?: string;
-  isGithubEnabled?: boolean;
-  isGoogleEnabled?: boolean;
-  isSecretLoginEnabled?: boolean;
 };
 
 export const Login = ({
   errorMessage,
-  isGithubEnabled,
-  isGoogleEnabled,
-  isSecretLoginEnabled,
 }: LoginProps) => {
   globalStyles();
   return (
@@ -63,30 +54,12 @@ export const Login = ({
 
         <TooltipProvider>
           <Flex direction="column" gap="3" css={{ width: "100%" }}>
-            <Form method="post" style={{ display: "contents" }}>
-              <Button
-                disabled={isGoogleEnabled === false}
-                prefix={<GoogleIcon size={22} />}
-                color="primary"
-                css={{ height: theme.spacing[15] }}
-                formAction={authPath({ provider: "google" })}
-              >
-                Sign in with Google
-              </Button>
-              <Button
-                disabled={isGithubEnabled === false}
-                prefix={<GithubIcon size={22} fill="currentColor" />}
-                color="ghost"
-                css={{
-                  border: `1px solid ${theme.colors.borderDark}`,
-                  height: theme.spacing[15],
-                }}
-                formAction={authPath({ provider: "github" })}
-              >
-                Sign in with GitHub
-              </Button>
-            </Form>
-            {isSecretLoginEnabled && <SecretLogin />}
+            <Text align="center" color="moreSubtle">
+              Authentication is disabled.
+            </Text>
+            <Text align="center" color="moreSubtle">
+              Open editor with a valid accessToken in URL.
+            </Text>
           </Flex>
         </TooltipProvider>
         {errorMessage ? (

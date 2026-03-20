@@ -23,6 +23,7 @@ import {
   $registeredComponentMetas,
   $dragAndDropState,
   $isDesignMode,
+  $pages,
 } from "~/shared/nano-states";
 import { NavigatorTree } from "~/builder/features/navigator";
 import type { Settings } from "~/builder/shared/client-settings";
@@ -66,8 +67,24 @@ export const Inspector = ({ navigatorLayout }: InspectorProps) => {
   const isDragging = useStore($isDragging);
   const metas = useStore($registeredComponentMetas);
   const selectedPage = useStore($selectedPage);
+  const pages = useStore($pages);
   const activeInspectorPanel = useStore($activeInspectorPanel);
   const isDesignMode = useStore($isDesignMode);
+  const hasPersistedPages = pages
+    ? [pages.homePage.id, ...pages.pages.map((page) => page.id)].some((pageId) =>
+        /^\d+$/.test(pageId)
+      )
+    : false;
+
+  if (hasPersistedPages === false) {
+    return (
+      <Flex css={{ p: theme.spacing[9] }}>
+        <Card css={{ p: theme.spacing[9], width: "100%" }}>
+          <Text>Create your first page in the Pages tab to start editing styles and settings.</Text>
+        </Card>
+      </Flex>
+    );
+  }
 
   if (navigatorLayout === "docked" && isDragging) {
     return <NavigatorTree />;

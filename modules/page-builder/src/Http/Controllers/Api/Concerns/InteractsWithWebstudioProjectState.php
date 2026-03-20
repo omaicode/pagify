@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Pagify\Core\Support\SiteContext;
 use Pagify\PageBuilder\Models\Page;
+use Pagify\PageBuilder\Models\PageBuilderState;
 use Pagify\PageBuilder\Services\EditorAccessTokenService;
 
 trait InteractsWithWebstudioProjectState
@@ -90,23 +91,64 @@ trait InteractsWithWebstudioProjectState
 	 */
 	protected function resolvePage(array $claims, string $projectId): ?Page
 	{
-		$pageId = isset($claims['page_id']) ? (int) $claims['page_id'] : null;
+		$pageId = is_numeric($projectId) ? (int) $projectId : null;
 		if ($pageId === null || $pageId <= 0) {
-			$pageId = is_numeric($projectId) ? (int) $projectId : null;
+			$pageId = isset($claims['page_id']) ? (int) $claims['page_id'] : null;
 		}
 
 		if ($pageId === null || $pageId <= 0) {
 			return null;
 		}
 
-		return Page::query()->find($pageId);
+		$page = Page::query()->withTrashed()->find($pageId);
+		if (! $page instanceof Page) {
+			$page = Page::query()->withoutGlobalScopes()->withTrashed()->find($pageId);
+		}
+
+		if (! $page instanceof Page) {
+			return null;
+		}
+
+		$claimSiteId = isset($claims['site_id']) ? (int) $claims['site_id'] : null;
+		if ($claimSiteId !== null && $claimSiteId > 0 && (int) $page->site_id !== $claimSiteId) {
+			return null;
+		}
+
+		return $page;
 	}
 
 	protected function currentVersion(string $projectId, ?Page $page): int
 	{
 		$cached = Cache::get($this->versionCacheKey($projectId));
-		if (is_int($cached) && $cached > 0) {
-			return $cached;
+		$cachedVersion = is_int($cached) && $cached > 0 ? $cached : null;
+
+		$persistedVersion = null;
+		if ($page !== null) {
+			$rawPersistedVersion = PageBuilderState::query()
+				->where('page_id', $page->id)
+				->value('version');
+
+			if (is_int($rawPersistedVersion) && $rawPersistedVersion > 0) {
+				$persistedVersion = $rawPersistedVersion;
+			} elseif (is_numeric($rawPersistedVersion)) {
+				$normalizedPersistedVersion = (int) $rawPersistedVersion;
+				if ($normalizedPersistedVersion > 0) {
+					$persistedVersion = $normalizedPersistedVersion;
+				}
+			}
+		}
+
+		$resolvedVersion = null;
+		if ($cachedVersion !== null && $persistedVersion !== null) {
+			$resolvedVersion = max($cachedVersion, $persistedVersion);
+		} else {
+			$resolvedVersion = $cachedVersion ?? $persistedVersion;
+		}
+
+		if (is_int($resolvedVersion) && $resolvedVersion > 0) {
+			Cache::put($this->versionCacheKey($projectId), $resolvedVersion, now()->addDay());
+
+			return $resolvedVersion;
 		}
 
 		$seed = $page?->updated_at?->timestamp;
@@ -178,12 +220,12 @@ trait InteractsWithWebstudioProjectState
 	 * @param array<string, mixed> $state
 	 * @return array<string, mixed>
 	 */
-	protected function projectPayload(Page $page, array $state): array
+	protected function projectPayload(string $projectId, Page $page, array $state): array
 	{
 		$createdAtIso = $page->created_at?->toIso8601String() ?? now()->toIso8601String();
 
 		return [
-			'id' => (string) $page->id,
+			'id' => $projectId,
 			'title' => (string) $page->title,
 			'domain' => (string) ($state['domain'] ?? $page->slug),
 			'isDeleted' => false,

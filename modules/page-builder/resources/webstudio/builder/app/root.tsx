@@ -4,6 +4,8 @@ import {
   type ShouldRevalidateFunction,
 } from "@remix-run/react";
 import { useSetFeatures } from "./shared/use-set-features";
+// eslint-disable-next-line no-restricted-syntax
+import React from "react";
 
 export default function App() {
   useSetFeatures();

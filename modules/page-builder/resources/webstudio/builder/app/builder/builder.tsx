@@ -13,7 +13,6 @@ import {
 import type { AuthPermit } from "@webstudio-is/trpc-interface/index.server";
 import { initializeClientSync, getSyncClient } from "~/shared/sync/sync-client";
 import {
-  syncProjectDetails,
   usePreventUnload,
 } from "~/shared/sync/project-queue";
 import { usePublish, $publisher } from "~/shared/pubsub";
@@ -46,13 +45,13 @@ import { BlockingAlerts } from "./features/blocking-alerts";
 import { useSyncPageUrl } from "~/shared/pages";
 import { useMount, useUnmount } from "~/shared/hook-utils/use-mount";
 import { subscribeCommands } from "~/builder/shared/commands";
-import type { UserPlanFeatures } from "~/shared/db/user-plan-features.server";
+
 import {
   $activeSidebarPanel,
   $dataLoadingState,
   $loadingState,
 } from "./shared/nano-states";
-import type { TokenPermissions } from "@webstudio-is/authorization-token";
+import type { TokenPermissions } from "~/shared/authorization-token";
 import { useToastErrors } from "~/shared/error/toast-error";
 import { initBuilderApi } from "~/shared/builder-api";
 import { updateWebstudioData } from "~/shared/instance-utils";
@@ -78,6 +77,21 @@ import type { SidebarPanelName } from "./sidebar-left/types";
 import { SidebarLeft } from "./sidebar-left/sidebar-left";
 import { useDisableContextMenu } from "./shared/use-disable-context-menu";
 import { $selectedPage } from "~/shared/awareness";
+
+type UserPlanFeatures = {
+  allowAdditionalPermissions: boolean;
+  allowDynamicData: boolean;
+  allowContentMode: boolean;
+  allowStagingPublish: boolean;
+  maxContactEmails: number;
+  maxDomainsAllowedPerUser: number;
+  maxPublishesAllowedPerUser: number;
+  /** All user purchases (subscriptions and LTDs). subscriptionId present only for recurring subscriptions */
+  purchases: Array<{
+    planName: string;
+    subscriptionId?: string;
+  }>;
+};
 
 const useSetWindowTitle = () => {
   const project = useStore($project);
@@ -314,7 +328,6 @@ export const Builder = ({
   }, [publish]);
 
   const project = useStore($project);
-  const selectedPage = useStore($selectedPage);
 
   usePreventUnload();
   const isPreviewMode = useStore($isPreviewMode);
@@ -375,39 +388,6 @@ export const Builder = ({
     });
     return unsubscribe;
   }, []);
-
-  useEffect(() => {
-    if (
-      authPermit === "view" ||
-      dataLoadingState !== "loaded" ||
-      selectedPage === undefined ||
-      selectedPage.id === projectId
-    ) {
-      return;
-    }
-
-    const controller = new AbortController();
-
-    syncProjectDetails({
-      projectId: selectedPage.id,
-      authPermit,
-      authToken,
-      signal: controller.signal,
-    }).catch((error) => {
-      if (controller.signal.aborted) {
-        return;
-      }
-
-      console.error("Failed to sync page details for patch queue", {
-        pageId: selectedPage.id,
-        error,
-      });
-    });
-
-    return () => {
-      controller.abort("page-changed");
-    };
-  }, [authPermit, authToken, dataLoadingState, selectedPage?.id]);
 
   const canvasUrl = getCanvasUrl();
 

@@ -8,7 +8,7 @@ import {
   getCachedProjectDetails,
   stopPolling,
 } from "./project-queue";
-import { loadBuilderData } from "~/shared/builder-data";
+import { loadBuilderData, loadBuilderPageData } from "~/shared/builder-data";
 import {
   $project,
   $pages,
@@ -25,9 +25,13 @@ import {
   $publisherHost,
   resetDataStores,
 } from "./data-stores";
+import { $selectedPage } from "~/shared/awareness";
+import { $isPageDataLoading } from "~/shared/nano-states";
 
 let client: SyncClient | undefined;
 let currentProjectId: string | undefined;
+let pageSelectionUnsubscribe: undefined | (() => void);
+let pageSelectionAbortController: undefined | AbortController;
 
 const sleep = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
@@ -99,6 +103,71 @@ export const initializeClientSync = ({
     });
     currentProjectId = projectId;
   }
+
+  pageSelectionUnsubscribe?.();
+  pageSelectionUnsubscribe = $selectedPage.subscribe((selectedPage) => {
+    if (
+      selectedPage === undefined ||
+      currentProjectId !== projectId ||
+      /^\d+$/.test(selectedPage.id) === false
+    ) {
+      return;
+    }
+
+    // Avoid redundant request when selected page instances are already in-memory.
+    if ($instances.get().has(selectedPage.rootInstanceId)) {
+      return;
+    }
+
+    pageSelectionAbortController?.abort();
+    const controller = new AbortController();
+    pageSelectionAbortController = controller;
+    $isPageDataLoading.set(true);
+
+    loadBuilderPageData({
+      projectId,
+      pageId: selectedPage.id,
+      signal: controller.signal,
+    })
+      .then((pageData) => {
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        // Apply per-page snapshot so navigator/inspector immediately reflect selected page.
+        $instances.set(pageData.instances);
+        $props.set(pageData.props);
+        $dataSources.set(pageData.dataSources);
+        $resources.set(pageData.resources);
+        $breakpoints.set(pageData.breakpoints);
+        $styleSources.set(pageData.styleSources);
+        $styleSourceSelections.set(pageData.styleSourceSelections);
+        $styles.set(pageData.styles);
+
+        if (authPermit !== "view") {
+          enqueueProjectDetails({
+            projectId,
+            buildId: pageData.id,
+            version: pageData.version,
+            authPermit,
+            authToken,
+          });
+        }
+      })
+      .catch((error) => {
+        if (controller.signal.aborted || signal.aborted) {
+          return;
+        }
+        console.error("Failed to load selected page data:", error);
+        onError?.(error);
+      })
+      .finally(() => {
+        if (pageSelectionAbortController === controller) {
+          pageSelectionAbortController = undefined;
+        }
+        $isPageDataLoading.set(false);
+      });
+  });
 
   client.connect({
     signal,
@@ -176,6 +245,11 @@ export const initializeClientSync = ({
  * Call this when closing the builder or switching between projects.
  */
 export const destroyClientSync = () => {
+  pageSelectionAbortController?.abort();
+  pageSelectionAbortController = undefined;
+  pageSelectionUnsubscribe?.();
+  pageSelectionUnsubscribe = undefined;
+  $isPageDataLoading.set(false);
   resetDataStores();
   stopPolling();
 };

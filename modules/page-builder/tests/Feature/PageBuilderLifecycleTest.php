@@ -9,6 +9,7 @@ use Pagify\Core\Models\Admin;
 use Pagify\Media\Models\MediaAsset;
 use Pagify\Media\Models\MediaUsage;
 use Pagify\PageBuilder\Models\Page;
+use Pagify\PageBuilder\Models\PageBuilderInstance;
 use Pagify\PageBuilder\Models\PageBuilderState;
 use Pagify\PageBuilder\Services\EditorAccessTokenService;
 use Spatie\Permission\Models\Permission;
@@ -472,7 +473,264 @@ class PageBuilderLifecycleTest extends TestCase
 		])->postJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/trpc/domain.project?batch=1', [])
 			->assertOk()
 			->assertJsonPath('0.result.data.success', true)
-			->assertJsonPath('0.result.data.project.id', (string) $page->id);
+			->assertJsonPath('0.result.data.project.id', 'default');
+	}
+
+	public function test_webstudio_patch_persists_instances_by_page_and_data_returns_root_page_instances_only(): void
+	{
+		$rootPage = Page::query()->create([
+			'title' => 'Root Page',
+			'slug' => 'root-page',
+			'status' => 'draft',
+			'layout_json' => [],
+		]);
+
+		$secondPage = Page::query()->create([
+			'title' => 'Second Page',
+			'slug' => 'second-page',
+			'status' => 'draft',
+			'layout_json' => [],
+		]);
+
+		$accessToken = $this->issueEditorToken(
+			['page:read', 'page:write'],
+			pageId: $secondPage->id,
+			pageSlug: $secondPage->slug
+		);
+
+		$dataResponse = $this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->getJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/data/unified');
+
+		$dataResponse->assertOk()->assertJsonPath('projectId', 'unified');
+		$version = (int) $dataResponse->json('version');
+
+		$this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->postJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/patch', [
+			'projectId' => 'unified',
+			'pageId' => (string) $secondPage->id,
+			'buildId' => 'build-unified',
+			'version' => $version,
+			'transactions' => [],
+			'state' => [
+				'instances' => [
+					[
+						'id' => 'root-' . (string) $rootPage->id,
+						'type' => 'instance',
+						'component' => 'ws:element',
+						'children' => [['type' => 'id', 'value' => 'root-child']],
+						'tag' => 'body',
+					],
+					[
+						'id' => 'root-child',
+						'type' => 'instance',
+						'component' => 'ws:element',
+						'children' => [],
+						'tag' => 'main',
+					],
+					[
+						'id' => 'root-' . (string) $secondPage->id,
+						'type' => 'instance',
+						'component' => 'ws:element',
+						'children' => [['type' => 'id', 'value' => 'second-child']],
+						'tag' => 'body',
+					],
+					[
+						'id' => 'second-child',
+						'type' => 'instance',
+						'component' => 'ws:element',
+						'children' => [],
+						'tag' => 'section',
+					],
+				],
+			],
+		])
+			->assertOk()
+			->assertJsonPath('status', 'ok');
+
+		$this->assertDatabaseHas('pb_page_builder_instances', [
+			'project_id' => 'unified',
+			'page_id' => $secondPage->id,
+		]);
+
+		$storedInstances = PageBuilderInstance::query()
+			->withoutGlobalScopes()
+			->where('project_id', 'unified')
+			->where('page_id', $secondPage->id)
+			->value('instances_json');
+
+		$this->assertIsArray($storedInstances);
+		$this->assertSame('root-' . (string) $secondPage->id, (string) ($storedInstances[0]['id'] ?? ''));
+
+		$rootDataResponse = $this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->getJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/data/unified');
+
+		$rootDataResponse
+			->assertOk()
+			->assertJsonPath('pages.homePage.id', (string) $rootPage->id)
+			->assertJsonPath('instances.0.id', 'root-' . (string) $rootPage->id);
+
+		$instanceIds = array_values(array_map(
+			static fn (array $instance): string => (string) ($instance['id'] ?? ''),
+			(array) $rootDataResponse->json('instances', [])
+		));
+
+		$this->assertNotContains('root-' . (string) $secondPage->id, $instanceIds);
+	}
+
+	public function test_webstudio_page_data_endpoint_returns_selected_page_instances(): void
+	{
+		$rootPage = Page::query()->create([
+			'title' => 'Root Page',
+			'slug' => 'root-page',
+			'status' => 'draft',
+			'layout_json' => [],
+		]);
+
+		$secondPage = Page::query()->create([
+			'title' => 'Second Page',
+			'slug' => 'second-page',
+			'status' => 'draft',
+			'layout_json' => [],
+		]);
+
+		$accessToken = $this->issueEditorToken(
+			['page:read', 'page:write'],
+			pageId: $secondPage->id,
+			pageSlug: $secondPage->slug
+		);
+
+		$initialDataResponse = $this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->getJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/data/unified');
+
+		$initialDataResponse->assertOk();
+		$version = (int) $initialDataResponse->json('version');
+
+		$this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->postJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/patch', [
+			'projectId' => 'unified',
+			'pageId' => (string) $secondPage->id,
+			'buildId' => 'build-unified',
+			'version' => $version,
+			'transactions' => [],
+			'state' => [
+				'instances' => [
+					[
+						'id' => 'root-' . (string) $rootPage->id,
+						'type' => 'instance',
+						'component' => 'ws:element',
+						'children' => [['type' => 'id', 'value' => 'root-child']],
+						'tag' => 'body',
+					],
+					[
+						'id' => 'root-child',
+						'type' => 'instance',
+						'component' => 'ws:element',
+						'children' => [],
+						'tag' => 'main',
+					],
+					[
+						'id' => 'root-' . (string) $secondPage->id,
+						'type' => 'instance',
+						'component' => 'ws:element',
+						'children' => [['type' => 'id', 'value' => 'second-child']],
+						'tag' => 'body',
+					],
+					[
+						'id' => 'second-child',
+						'type' => 'instance',
+						'component' => 'ws:element',
+						'children' => [],
+						'tag' => 'section',
+					],
+				],
+			],
+		])->assertOk()->assertJsonPath('status', 'ok');
+
+		$pageDataResponse = $this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->getJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/data/unified/pages/' . $secondPage->id);
+
+		$pageDataResponse
+			->assertOk()
+			->assertJsonPath('projectId', 'unified')
+			->assertJsonPath('pageId', (string) $secondPage->id)
+			->assertJsonPath('instances.0.id', 'root-' . (string) $secondPage->id);
+
+		$pageInstanceIds = array_values(array_map(
+			static fn (array $instance): string => (string) ($instance['id'] ?? ''),
+			(array) $pageDataResponse->json('instances', [])
+		));
+
+		$this->assertContains('second-child', $pageInstanceIds);
+		$this->assertNotContains('root-' . (string) $rootPage->id, $pageInstanceIds);
+	}
+
+	public function test_webstudio_patch_uses_page_root_instance_id_payload_when_extracting_instances(): void
+	{
+		$page = Page::query()->create([
+			'title' => 'Custom Root Page',
+			'slug' => 'custom-root-page',
+			'status' => 'draft',
+			'layout_json' => [],
+		]);
+
+		$accessToken = $this->issueEditorToken(
+			['page:read', 'page:write'],
+			pageId: $page->id,
+			pageSlug: $page->slug
+		);
+
+		$dataResponse = $this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->getJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/data/unified');
+
+		$dataResponse->assertOk();
+		$version = (int) $dataResponse->json('version');
+
+		$customRootId = 'custom-root-' . (string) $page->id;
+
+		$this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->postJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/patch', [
+			'projectId' => 'unified',
+			'pageId' => (string) $page->id,
+			'pageRootInstanceId' => $customRootId,
+			'buildId' => 'build-unified',
+			'version' => $version,
+			'transactions' => [],
+			'state' => [
+				'instances' => [
+					[
+						'id' => $customRootId,
+						'type' => 'instance',
+						'component' => 'ws:element',
+						'children' => [['type' => 'id', 'value' => 'custom-child']],
+						'tag' => 'body',
+					],
+					[
+						'id' => 'custom-child',
+						'type' => 'instance',
+						'component' => 'ws:element',
+						'children' => [],
+						'tag' => 'section',
+					],
+				],
+			],
+		])->assertOk()->assertJsonPath('status', 'ok');
+
+		$storedInstances = PageBuilderInstance::query()
+			->withoutGlobalScopes()
+			->where('project_id', 'unified')
+			->where('page_id', $page->id)
+			->value('instances_json');
+
+		$this->assertIsArray($storedInstances);
+		$this->assertSame($customRootId, (string) ($storedInstances[0]['id'] ?? ''));
 	}
 
 	public function test_webstudio_rest_data_uses_live_page_status_from_database_not_persisted_pages_snapshot(): void
@@ -522,7 +780,7 @@ class PageBuilderLifecycleTest extends TestCase
 			->assertJsonPath('pages.homePage.meta.status', 'draft');
 	}
 
-	public function test_webstudio_rest_data_endpoint_creates_initial_empty_page_when_database_is_empty(): void
+	public function test_webstudio_rest_data_endpoint_works_without_persisted_pages_when_database_is_empty(): void
 	{
 		Page::query()->delete();
 
@@ -535,15 +793,10 @@ class PageBuilderLifecycleTest extends TestCase
 		$response
 			->assertOk()
 			->assertJsonPath('projectId', 'pagify-local')
-			->assertJsonPath('pages.homePage.path', '');
+			->assertJsonPath('pages.homePage.path', '')
+			->assertJsonPath('pages.homePage.id', 'home-pagify-local');
 
-		$page = Page::query()->first();
-
-		$this->assertNotNull($page);
-		$this->assertSame('Empty', $page->title);
-		$this->assertSame('empty', $page->slug);
-		$this->assertSame('draft', $page->status);
-		$this->assertSame((string) $page->id, (string) $response->json('pages.homePage.id'));
+		$this->assertNull(Page::query()->first());
 	}
 
 	public function test_webstudio_dashboard_logout_endpoint_returns_redirect_payload(): void

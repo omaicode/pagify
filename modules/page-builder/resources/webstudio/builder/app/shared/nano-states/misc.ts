@@ -11,13 +11,13 @@ import type {
   StyleSource,
 } from "@webstudio-is/sdk";
 import type { CssProperty, UnitValue } from "@webstudio-is/css-engine";
-import type { TokenPermissions } from "@webstudio-is/authorization-token";
+import type { TokenPermissions } from "~/shared/authorization-token";
 import type { AssetType } from "@webstudio-is/asset-uploader";
 import type { DragStartPayload } from "~/canvas/shared/use-drag-drop";
 import { type InstanceSelector } from "../tree-utils";
 import type { ChildrenOrientation } from "@webstudio-is/design-system";
 import { $awareness, $selectedInstance } from "../awareness";
-import type { UserPlanFeatures } from "../db/user-plan-features.server";
+
 import {
   $project,
   $publisherHost,
@@ -296,7 +296,7 @@ export const $hoveredInstanceSelector = atom<undefined | InstanceSelector>(
 );
 
 // keep in sync with user-plan-features.server
-export const $userPlanFeatures = atom<UserPlanFeatures>({
+export const $userPlanFeatures = atom<Record<string, unknown>>({
   allowAdditionalPermissions: false,
   allowDynamicData: false,
   allowContentMode: false,
@@ -334,6 +334,9 @@ export const $authTokenPermissions = atom<TokenPermissions>({
 });
 
 export const $authToken = atom<string | undefined>(undefined);
+
+// True while switching to another page and fetching page-scoped editor data.
+export const $isPageDataLoading = atom<boolean>(false);
 
 export const $stagingUsername = atom<string | undefined>();
 export const $stagingPassword = atom<string | undefined>();

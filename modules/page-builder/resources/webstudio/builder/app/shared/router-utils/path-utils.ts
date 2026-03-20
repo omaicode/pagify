@@ -255,6 +255,9 @@ export const restResourcesLoader = () =>
 export const restDataPath = (projectId: string) =>
   withPageBuilderApiPrefix(`/data/${projectId}`);
 
+export const restPageDataPath = (projectId: string, pageId: string) =>
+  withPageBuilderApiPrefix(`/data/${projectId}/pages/${pageId}`);
+
 export const trpcPath = () => withPageBuilderApiPrefix(`/trpc`);
 
 export const adminPagesPath = () => withPageBuilderApiPrefix(`/pages`);

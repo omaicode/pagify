@@ -71,6 +71,9 @@ Route::prefix('api/v1/'.config('app.admin_url_prefix').'/page-builder')
         // Webstudio compatibility routes
 		Route::get('/data/{projectId}', [WebstudioCompatController::class, 'data'])
 			->where('projectId', '[A-Za-z0-9_-]+');
+		Route::get('/data/{projectId}/pages/{pageId}', [WebstudioCompatController::class, 'dataPage'])
+			->where('projectId', '[A-Za-z0-9_-]+')
+			->where('pageId', '[0-9]+');
 		Route::post('/patch', [WebstudioCompatController::class, 'patch']);
 		Route::post('/resources-loader', [WebstudioCompatController::class, 'resourcesLoader']);
 		Route::match(['GET', 'POST'], '/assets', [WebstudioCompatController::class, 'assets']);

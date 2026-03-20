@@ -17,7 +17,7 @@ import {
   $styles,
 } from "./nano-states";
 import { fetch } from "~/shared/fetch.client";
-import { restDataPath } from "~/shared/router-utils/path-utils";
+import { restDataPath, restPageDataPath } from "~/shared/router-utils/path-utils";
 
 const BUILDER_DATA_TIMEOUT_MS = 15000;
 
@@ -58,6 +58,36 @@ export type LoadedBuilderData = BuilderData &
     Awaited<ReturnType<typeof loader>>,
     "id" | "version" | "publisherHost" | "projectId"
   >;
+
+export type LoadedBuilderPageData = {
+  id: string;
+  version: number;
+  projectId: string;
+  pageId: string;
+  instances: LoadedBuilderData["instances"];
+  props: LoadedBuilderData["props"];
+  dataSources: LoadedBuilderData["dataSources"];
+  resources: LoadedBuilderData["resources"];
+  breakpoints: LoadedBuilderData["breakpoints"];
+  styleSources: LoadedBuilderData["styleSources"];
+  styleSourceSelections: LoadedBuilderData["styleSourceSelections"];
+  styles: LoadedBuilderData["styles"];
+};
+
+type BuilderPageDataResponse = {
+  id: string;
+  version: number;
+  projectId: string;
+  pageId: string;
+  instances: Awaited<ReturnType<typeof loader>>["instances"];
+  props: Awaited<ReturnType<typeof loader>>["props"];
+  dataSources: Awaited<ReturnType<typeof loader>>["dataSources"];
+  resources: Awaited<ReturnType<typeof loader>>["resources"];
+  breakpoints: Awaited<ReturnType<typeof loader>>["breakpoints"];
+  styleSources: Awaited<ReturnType<typeof loader>>["styleSources"];
+  styleSourceSelections: Awaited<ReturnType<typeof loader>>["styleSourceSelections"];
+  styles: Awaited<ReturnType<typeof loader>>["styles"];
+};
 
 export const getBuilderData = (): BuilderData => {
   const pages = $pages.get();
@@ -174,5 +204,47 @@ export const loadBuilderData = async ({
 
   throw Error(
     `Unable to load builder data. Response status: ${response.status}. Response text: ${text}`
+  );
+};
+
+export const loadBuilderPageData = async ({
+  projectId,
+  pageId,
+  signal,
+}: {
+  projectId: string;
+  pageId: string;
+  signal: AbortSignal;
+}): Promise<LoadedBuilderPageData> => {
+  const currentUrl = new URL(location.href);
+  const url = new URL(restPageDataPath(projectId, pageId), currentUrl.origin);
+  const headers = new Headers();
+
+  const response = await fetch(url, { headers, signal });
+
+  if (response.ok) {
+    const data = (await response.json()) as BuilderPageDataResponse;
+
+    return {
+      id: data.id,
+      version: data.version,
+      projectId: data.projectId,
+      pageId: data.pageId,
+      instances: new Map(data.instances.map(getPair)),
+      props: new Map(data.props.map(getPair)),
+      dataSources: new Map(data.dataSources.map(getPair)),
+      resources: new Map(data.resources.map(getPair)),
+      breakpoints: new Map(data.breakpoints.map(getPair)),
+      styleSources: new Map(data.styleSources.map(getPair)),
+      styleSourceSelections: new Map(
+        data.styleSourceSelections.map((item) => [item.instanceId, item])
+      ),
+      styles: new Map(data.styles.map((item) => [getStyleDeclKey(item), item])),
+    };
+  }
+
+  const text = await response.text();
+  throw Error(
+    `Unable to load page data. Response status: ${response.status}. Response text: ${text}`
   );
 };

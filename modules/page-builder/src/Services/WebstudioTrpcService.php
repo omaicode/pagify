@@ -97,7 +97,7 @@ class WebstudioTrpcService
 	private function dispatchTrpcProcedure(string $procedurePath, mixed $input, array $claims, SiteContext $siteContext): array
 	{
 		$procedureInput = $this->normalizeProcedureInput($input);
-		$projectId = (string) (data_get($procedureInput, 'projectId') ?? data_get($claims, 'page_id') ?? 'pagify-local');
+		$projectId = (string) (data_get($procedureInput, 'projectId') ?? data_get($claims, 'theme') ?? 'unified');
 		$page = $this->resolvePage($claims, $projectId);
 
 		switch ($procedurePath) {
@@ -111,7 +111,7 @@ class WebstudioTrpcService
 				return TrpcEnvelope::success([
 					'success' => true,
 					'project' => $page !== null
-						? $this->projectPayload($page, $state)
+						? $this->projectPayload($projectId, $page, $state)
 						: $this->virtualProjectPayload($projectId, $claims, $state),
 				]);
 

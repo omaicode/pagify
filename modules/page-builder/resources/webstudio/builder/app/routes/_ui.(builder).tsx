@@ -31,14 +31,44 @@ export const meta: MetaFunction = ({ data }) => {
   return metas;
 };
 
-const PAGIFY_LOCAL_PROJECT_ID = "pagify-local";
+const PAGIFY_DEFAULT_PROJECT_ID = "unified";
+const ACCESS_TOKEN_JWT_PATTERN =
+  /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
+
+const createAccessTokenError = (message: string, description?: string) => {
+  return new Response(
+    JSON.stringify({
+      message,
+      description,
+    }),
+    {
+      status: 401,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+};
+
+const assertValidAccessToken = ({
+  accessToken,
+}: {
+  accessToken: string;
+}) => {
+  if (ACCESS_TOKEN_JWT_PATTERN.test(accessToken) === false) {
+    throw createAccessTokenError(
+      "Invalid accessToken.",
+      "accessToken must be a valid JWT."
+    );
+  }
+};
 
 const createPagifyLocalBuilderPayload = ({
   projectId,
   authToken,
 }: {
   projectId: string;
-  authToken?: string;
+  authToken: string;
 }) => {
   return {
     projectId,
@@ -86,10 +116,21 @@ export const clientLoader = async ({
 
   const projectId =
     url.searchParams.get("projectId") ??
-    url.searchParams.get("pageId") ??
-    PAGIFY_LOCAL_PROJECT_ID;
+    url.searchParams.get("theme") ??
+    PAGIFY_DEFAULT_PROJECT_ID;
 
-  const authToken = url.searchParams.get("accessToken") ?? undefined;
+  const authToken = url.searchParams.get("accessToken");
+
+  if (authToken === null || authToken === "") {
+    throw createAccessTokenError(
+      "Missing accessToken.",
+      "Please provide accessToken in URL query."
+    );
+  }
+
+  assertValidAccessToken({
+    accessToken: authToken,
+  });
 
   return createPagifyLocalBuilderPayload({ projectId, authToken });
 };

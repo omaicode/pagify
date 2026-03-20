@@ -1,10 +1,11 @@
 import { useRef, useState, type ReactNode } from "react";
-import { Kbd, rawTheme, Text } from "@webstudio-is/design-system";
+import { Kbd, rawTheme, Text, toast } from "@webstudio-is/design-system";
 import { useSubscribe, type Publish } from "~/shared/pubsub";
 import {
   $dragAndDropState,
   $isContentMode,
   $isPreviewMode,
+  $pages,
 } from "~/shared/nano-states";
 import { Flex } from "@webstudio-is/design-system";
 import { theme } from "@webstudio-is/design-system";
@@ -162,11 +163,17 @@ type SidebarLeftProps = {
 export const SidebarLeft = ({ publish }: SidebarLeftProps) => {
   const activePanel = useStore($activeSidebarPanel);
   const dragAndDropState = useStore($dragAndDropState);
+  const pages = useStore($pages);
   const { Panel } = panels.find((item) => item.name === activePanel) ?? none;
   const isPreviewMode = useStore($isPreviewMode);
   const isContentMode = useStore($isContentMode);
   const tabsWrapperRef = useRef<HTMLDivElement>(null);
   const returnTabRef = useRef<SidebarPanelName | undefined>(undefined);
+  const hasPersistedPages = pages
+    ? [pages.homePage.id, ...pages.pages.map((page) => page.id)].some((pageId) =>
+        /^\d+$/.test(pageId)
+      )
+    : false;
 
   useSubscribe("dragEnd", () => {
     setActiveSidebarPanel("auto");
@@ -187,6 +194,10 @@ export const SidebarLeft = ({ publish }: SidebarLeftProps) => {
   });
 
   useExternalDragStateEffect((state) => {
+    if (hasPersistedPages === false) {
+      return;
+    }
+
     if (state !== POTENTIAL) {
       if (returnTabRef.current !== undefined) {
         setActiveSidebarPanel(returnTabRef.current);
@@ -240,6 +251,11 @@ export const SidebarLeft = ({ publish }: SidebarLeftProps) => {
                       label={label}
                       value={name}
                       onClick={() => {
+                        if (hasPersistedPages === false && name !== "pages") {
+                          toast.error("Please create a page first");
+                          return;
+                        }
+
                         toggleActiveSidebarPanel(name);
                       }}
                     >

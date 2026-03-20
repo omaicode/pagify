@@ -37,12 +37,12 @@ export const PublishSwitch = () => {
   }, [isPublished, pageId]);
 
   const onToggle = async (checked: boolean) => {
-    if (
-      selectedPage === undefined ||
-      pages === undefined ||
-      isPersisted === false ||
-      isSubmitting
-    ) {
+    if (selectedPage === undefined || pages === undefined || isSubmitting) {
+      return;
+    }
+
+    if (isPersisted === false) {
+      toast.error("Please create a page first");
       return;
     }
 
@@ -87,7 +87,7 @@ export const PublishSwitch = () => {
     canPublish === false
       ? "Only owner/admin or editors with publish permission can update publish status"
       : isPersisted === false
-        ? "Save page to server before publishing"
+        ? "Create a page before publishing"
         : "Toggle publish status for current page";
 
   return (
@@ -97,13 +97,13 @@ export const PublishSwitch = () => {
           display: "inline-flex",
           alignItems: "center",
           gap: 8,
-          opacity: canPublish && isPersisted ? 1 : 0.6,
+          opacity: canPublish ? 1 : 0.6,
         }}
       >
         <Text variant="labels">Publish</Text>
         <Switch
           checked={checked}
-          disabled={canPublish === false || isPersisted === false || isSubmitting}
+          disabled={canPublish === false || isSubmitting}
           onCheckedChange={onToggle}
         />
       </label>

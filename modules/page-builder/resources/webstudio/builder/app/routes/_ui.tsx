@@ -4,7 +4,6 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  type ClientLoaderFunctionArgs,
   type ShouldRevalidateFunction,
 } from "@remix-run/react";
 import interFont from "@fontsource-variable/inter/index.css?url";
@@ -13,10 +12,8 @@ import robotoMonoFont from "@fontsource/roboto-mono/index.css?url";
 import appCss from "../shared/app.css?url";
 import { type LinksFunction } from "@remix-run/server-runtime";
 import { ErrorBoundary as ErrorBoundaryComponent } from "~/shared/error/error-boundary";
-import {
-  csrfToken as clientCsrfToken,
-  updateCsrfToken,
-} from "~/shared/csrf.client";
+// eslint-disable-next-line no-restricted-syntax
+import React from "react";
 
 export const links: LinksFunction = () => {
   // `links` returns an array of objects whose
@@ -46,28 +43,6 @@ const Document = (props: { children: React.ReactNode }) => {
     </html>
   );
 };
-
-export const clientLoader = async ({
-  request,
-}: ClientLoaderFunctionArgs) => {
-  const serverData = {
-    csrfToken:
-      request.headers.get("sec-fetch-mode") === "navigate"
-        ? "pagify-spa-csrf"
-        : "",
-  };
-
-  if (clientCsrfToken === undefined && serverData.csrfToken !== "") {
-    const { csrfToken } = serverData;
-    updateCsrfToken(csrfToken);
-  }
-
-  // Hide real CSRF token from window.__remixContext
-  serverData.csrfToken = "";
-  return serverData;
-};
-
-clientLoader.hydrate = true;
 
 export const ErrorBoundary = () => {
   return (

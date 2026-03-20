@@ -7,6 +7,8 @@ type Command =
   | {
       type: "transactions";
       projectId: Project["id"];
+      pageId: string;
+      pageRootInstanceId?: string;
       transactions: Transaction<Change[]>[];
     }
   | {
@@ -31,7 +33,11 @@ export const enqueue = (command: Command) => {
       break;
     }
 
-    if (projectCommand.projectId === command.projectId) {
+    if (
+      projectCommand.projectId === command.projectId &&
+      projectCommand.pageId === command.pageId &&
+      projectCommand.pageRootInstanceId === command.pageRootInstanceId
+    ) {
       projectCommand.transactions.push(...command.transactions);
       return;
     }

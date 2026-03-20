@@ -19,7 +19,6 @@ import {
 import {
   ChevronRightIcon,
   FolderIcon,
-  HomeIcon,
   EllipsesIcon,
   NewFolderIcon,
   NewPageIcon,
@@ -172,6 +171,17 @@ type DropTarget = {
   indexWithinChildren: number;
 };
 
+const hasPersistedPages = (
+  pages: {
+    homePage: { id: string };
+    pages: Array<{ id: string }>;
+  }
+) => {
+  return [pages.homePage.id, ...pages.pages.map((page) => page.id)].some(
+    (pageId) => isPersistedPageId(pageId)
+  );
+};
+
 const $dropTarget = atom<undefined | DropTarget>();
 
 const $flatPagesTree = computed(
@@ -179,6 +189,9 @@ const $flatPagesTree = computed(
   (pagesData, expandedItems, dropTarget) => {
     const flatPagesTree: PagesTreeItem[] = [];
     if (pagesData === undefined) {
+      return flatPagesTree;
+    }
+    if (!hasPersistedPages(pagesData)) {
       return flatPagesTree;
     }
     const folders = new Map(
@@ -397,9 +410,7 @@ const PagesTree = ({
                 {item.type === "page" && (
                   <TreeNodeLabel
                     prefix={
-                      item.id === pages?.homePage.id ? (
-                        <HomeIcon />
-                      ) : isPathnamePattern(item.page.path) ? (
+                      isPathnamePattern(item.page.path) ? (
                         <DynamicPageIcon />
                       ) : (
                         <PageIcon />
@@ -592,6 +603,8 @@ export const PagesPanel = ({ onClose }: { onClose: () => void }) => {
     return;
   }
 
+  const hasAnyPersistedPages = hasPersistedPages(pages);
+
   const handlePageDeleteConfirm = async () => {
     if (pageIdToDelete) {
       try {
@@ -661,6 +674,11 @@ export const PagesPanel = ({ onClose }: { onClose: () => void }) => {
                 <Tooltip content="New folder" side="bottom">
                   <Button
                     onClick={() => {
+                      if (!hasAnyPersistedPages) {
+                        toast.error("Please create a page first");
+                        return;
+                      }
+
                       $editingPageId.set(
                         editingItemId === newFolderId ? undefined : newFolderId
                       );
@@ -691,28 +709,52 @@ export const PagesPanel = ({ onClose }: { onClose: () => void }) => {
       </PanelTitle>
       <Separator />
 
-      <PageContextMenu
-        onRequestDeletePage={setPageIdToDelete}
-        onRequestDeleteFolder={setFolderIdToDelete}
-      >
-        <div>
-          <PagesTree
-            selectedPageId={currentPage.id}
-            onSelect={(itemId) => {
-              selectPage(itemId);
-              onClose();
-            }}
-            editingItemId={editingItemId}
-            onEdit={(itemId) => {
-              // always select page when edit its settings
-              if (itemId && isFolder(itemId, pages.folders) === false) {
+      {hasAnyPersistedPages ? (
+        <PageContextMenu
+          onRequestDeletePage={setPageIdToDelete}
+          onRequestDeleteFolder={setFolderIdToDelete}
+        >
+          <div>
+            <PagesTree
+              selectedPageId={currentPage.id}
+              onSelect={(itemId) => {
                 selectPage(itemId);
-              }
-              $editingPageId.set(itemId);
-            }}
-          />
+                onClose();
+              }}
+              editingItemId={editingItemId}
+              onEdit={(itemId) => {
+                // always select page when edit its settings
+                if (itemId && isFolder(itemId, pages.folders) === false) {
+                  selectPage(itemId);
+                }
+                $editingPageId.set(itemId);
+              }}
+            />
+          </div>
+        </PageContextMenu>
+      ) : (
+        <div
+          style={{
+            padding: 16,
+            display: "grid",
+            gap: 12,
+          }}
+        >
+          <div style={{ color: rawTheme.colors.foregroundSubtle }}>
+            No pages yet. Create your first page to start building.
+          </div>
+          {isDesignMode && (
+            <Button
+              onClick={() => {
+                $editingPageId.set(newPageId);
+              }}
+              prefix={<NewPageIcon />}
+            >
+              Create first page
+            </Button>
+          )}
         </div>
-      </PageContextMenu>
+      )}
       {editingItemId !== undefined && (
         <FloatingPanel
           content={

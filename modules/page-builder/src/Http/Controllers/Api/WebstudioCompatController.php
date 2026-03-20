@@ -16,6 +16,7 @@ use Pagify\Media\Models\MediaAsset;
 use Pagify\Media\Services\MediaAssetManager;
 use Pagify\PageBuilder\Http\Controllers\Api\Concerns\InteractsWithWebstudioProjectState;
 use Pagify\PageBuilder\Models\Page;
+use Pagify\PageBuilder\Models\PageBuilderInstance;
 use Pagify\PageBuilder\Models\PageBuilderState;
 use Pagify\PageBuilder\Services\EditorAccessTokenService;
 
@@ -43,19 +44,32 @@ class WebstudioCompatController extends ApiController
 			return $claims;
 		}
 
-		$this->ensureInitialPageExists($siteContext, $claims);
-
-		$page = $this->resolvePage($claims, $projectId);
+		$allPages = Page::query()->orderBy('id')->get();
+		$rootPage = $allPages->first();
+		$page = $rootPage instanceof Page ? $rootPage : $this->resolvePage($claims, $projectId);
 		$builderState = $page !== null
 			? PageBuilderState::query()->where('page_id', $page->id)->first()
 			: null;
 		$version = $builderState?->version ?? $this->currentVersion($projectId, $page);
 		$state = $this->readProjectRuntimeState($projectId, $page, $siteContext);
-		$allPages = Page::query()->orderBy('id')->get();
 		$pageBundle = $this->buildPagesBundle($projectId, $page, $allPages);
 		$persistedBuildData = is_array($builderState?->data_json)
 			? (array) $builderState->data_json
 			: [];
+		$rootInstances = $this->persistedOrDefaultArray($persistedBuildData, 'instances', $pageBundle['instances']);
+		if ($rootPage instanceof Page) {
+			$persistedRootInstances = PageBuilderInstance::query()
+				->withoutGlobalScopes()
+				->where('project_id', $projectId)
+				->where('page_id', $rootPage->id)
+				->value('instances_json');
+
+			if (is_array($persistedRootInstances)) {
+				$rootInstances = $persistedRootInstances;
+			}
+
+			$rootInstances = $this->extractInstancesForPage($rootInstances, $rootPage);
+		}
 		$nowIso = now()->toIso8601String();
 
 		$response = [
@@ -65,7 +79,7 @@ class WebstudioCompatController extends ApiController
 			'createdAt' => $nowIso,
 			'updatedAt' => $nowIso,
 			'project' => $page !== null
-			? $this->projectPayload($page, $state)
+			? $this->projectPayload($projectId, $page, $state)
 			: [
 				'id' => (string) $projectId,
 				'title' => 'Pagify Project',
@@ -82,7 +96,7 @@ class WebstudioCompatController extends ApiController
 				'latestStaticBuild' => $state['latestStaticBuild'] ?? null,
 			],
 			'assets' => $this->mapAssetsForProject($projectId),
-			'instances' => $this->persistedOrDefaultArray($persistedBuildData, 'instances', $pageBundle['instances']),
+			'instances' => $rootInstances,
 			'props' => $this->persistedOrDefaultArray($persistedBuildData, 'props', []),
 			'dataSources' => $this->persistedOrDefaultArray($persistedBuildData, 'dataSources', []),
 			'resources' => $this->persistedOrDefaultArray($persistedBuildData, 'resources', []),
@@ -106,37 +120,66 @@ class WebstudioCompatController extends ApiController
 		return response()->json($response);
 	}
 
-	/**
-	 * @param array<string, mixed> $claims
-	 */
-	private function ensureInitialPageExists(SiteContext $siteContext, array $claims): void
+	public function dataPage(Request $request, string $projectId, string $pageId, EditorAccessTokenService $editorAccessToken, SiteContext $siteContext): JsonResponse
 	{
-		if (Page::query()->exists()) {
-			return;
+		$claims = $this->authorizeRequest($request, $editorAccessToken, $siteContext, 'page:read');
+		if ($claims instanceof JsonResponse) {
+			return $claims;
 		}
 
-		$site = $siteContext->site();
-		$adminId = isset($claims['admin_id']) && is_numeric($claims['admin_id'])
-			? (int) $claims['admin_id']
-			: null;
+		$page = $this->resolvePage($claims, $pageId);
+		if (! $page instanceof Page) {
+			return response()->json([
+				'status' => 'error',
+				'errors' => 'Page not found',
+			], 404);
+		}
 
-		Page::query()->create([
-			'site_id' => $site?->id,
-			'title' => 'Empty',
-			'slug' => 'empty',
-			'status' => 'draft',
-			'layout_json' => [
-				'type' => 'webstudio',
-				'webstudio' => [
-					'html' => '<main data-pbx-content-slot="true"></main>',
-					'css' => '',
-				],
-			],
-			'seo_meta_json' => [
-				'title' => 'Empty',
-			],
-			'created_by_admin_id' => $adminId,
-			'updated_by_admin_id' => $adminId,
+		$builderState = PageBuilderState::query()->withoutGlobalScopes()->where('page_id', $page->id)->first();
+		$version = $builderState?->version ?? $this->currentVersion($projectId, $page);
+		$persistedBuildData = is_array($builderState?->data_json)
+			? (array) $builderState->data_json
+			: [];
+
+		$defaultInstances = [[
+			'id' => 'root-'.(string) $page->id,
+			'type' => 'instance',
+			'component' => 'ws:element',
+			'children' => [],
+			'tag' => 'body',
+		]];
+
+		$instances = $this->persistedOrDefaultArray($persistedBuildData, 'instances', $defaultInstances);
+		$persistedPageInstances = PageBuilderInstance::query()
+			->withoutGlobalScopes()
+			->where('project_id', $projectId)
+			->where('page_id', $page->id)
+			->value('instances_json');
+
+		if (is_array($persistedPageInstances)) {
+			$instances = $persistedPageInstances;
+		}
+
+		$instances = $this->extractInstancesForPage($instances, $page);
+
+		return response()->json([
+			'id' => (string) ($builderState?->build_id ?: ('build-'.$projectId)),
+			'version' => $version,
+			'projectId' => (string) $projectId,
+			'pageId' => (string) $page->id,
+			'instances' => $instances,
+			'props' => $this->persistedOrDefaultArray($persistedBuildData, 'props', []),
+			'dataSources' => $this->persistedOrDefaultArray($persistedBuildData, 'dataSources', []),
+			'resources' => $this->persistedOrDefaultArray($persistedBuildData, 'resources', []),
+			'breakpoints' => $this->persistedOrDefaultArray($persistedBuildData, 'breakpoints', [
+				['id' => 'aqVX0VTx9bxHqRd0MS3a3', 'label' => 'Base'],
+				['id' => 'wS1by9VwuSNP-NjL5yM7k', 'label' => 'Tablet', 'maxWidth' => 991],
+				['id' => 'KlGACE3pdP2LWNWyLD8dL', 'label' => 'Mobile landscape', 'maxWidth' => 767],
+				['id' => 'SH8TDdiQpG6IF3gDM0ZJU', 'label' => 'Mobile portrait', 'maxWidth' => 479],
+			]),
+			'styleSources' => $this->persistedOrDefaultArray($persistedBuildData, 'styleSources', []),
+			'styleSourceSelections' => $this->persistedOrDefaultArray($persistedBuildData, 'styleSourceSelections', []),
+			'styles' => $this->persistedOrDefaultArray($persistedBuildData, 'styles', []),
 		]);
 	}
 
@@ -265,6 +308,12 @@ class WebstudioCompatController extends ApiController
 
 		$payload = $request->json()->all();
 		$projectId = (string) ($payload['projectId'] ?? '');
+		$pageId = isset($payload['pageId']) && is_numeric($payload['pageId'])
+			? (int) $payload['pageId']
+			: null;
+		$pageRootInstanceId = isset($payload['pageRootInstanceId']) && is_string($payload['pageRootInstanceId'])
+			? trim($payload['pageRootInstanceId'])
+			: null;
 		$clientVersion = (int) ($payload['version'] ?? 0);
 
 		if ($projectId === '') {
@@ -274,7 +323,15 @@ class WebstudioCompatController extends ApiController
 			], 400);
 		}
 
-		$page = $this->resolvePage($claims, $projectId);
+		$page = $pageId !== null && $pageId > 0
+			? $this->resolvePage($claims, (string) $pageId)
+			: $this->resolvePage($claims, $projectId);
+		if (! $page instanceof Page) {
+			return response()->json([
+				'status' => 'error',
+				'errors' => 'Unable to resolve target page for this patch request.',
+			], 422);
+		}
 		$serverVersion = $this->currentVersion($projectId, $page);
 
 		if ($clientVersion !== $serverVersion) {
@@ -287,20 +344,38 @@ class WebstudioCompatController extends ApiController
 		$nextVersion = $serverVersion + 1;
 		Cache::put($this->versionCacheKey($projectId), $nextVersion, now()->addDay());
 
-		if ($page !== null) {
-			$builderState = PageBuilderState::query()->firstOrNew([
-				'page_id' => $page->id,
-			]);
-			$builderState->site_id = $page->site_id;
-			$builderState->build_id = (string) ($payload['buildId'] ?? ($builderState->build_id ?: ('build-'.$projectId)));
-			$builderState->version = $nextVersion;
+		$builderState = PageBuilderState::query()->withoutGlobalScopes()->firstOrNew([
+			'page_id' => $page->id,
+		]);
+		$builderState->site_id = $page->site_id;
+		$builderState->build_id = (string) ($payload['buildId'] ?? ($builderState->build_id ?: ('build-'.$projectId)));
+		$builderState->version = $nextVersion;
 
-			if (isset($payload['state']) && is_array($payload['state'])) {
-				$builderState->data_json = (array) $payload['state'];
-			}
-
-			$builderState->save();
+		if (isset($payload['state']) && is_array($payload['state'])) {
+			$builderState->data_json = (array) $payload['state'];
 		}
+
+		$builderState->save();
+
+		$instancesPayload = [];
+		if (isset($payload['state']) && is_array($payload['state'])) {
+			$statePayload = (array) $payload['state'];
+			$instancesPayload = $this->extractInstancesForPage(
+				is_array($statePayload['instances'] ?? null) ? (array) $statePayload['instances'] : [],
+				$page,
+				$pageRootInstanceId
+			);
+		}
+
+		$pageBuilderInstance = PageBuilderInstance::query()->withoutGlobalScopes()->firstOrNew([
+			'project_id' => $projectId,
+			'page_id' => $page->id,
+		]);
+		$pageBuilderInstance->site_id = $page->site_id;
+		$pageBuilderInstance->build_id = (string) ($payload['buildId'] ?? ($pageBuilderInstance->build_id ?: ('build-'.$projectId)));
+		$pageBuilderInstance->build_version = $nextVersion;
+		$pageBuilderInstance->instances_json = $instancesPayload;
+		$pageBuilderInstance->save();
 
 		return response()->json([
 			'status' => 'ok',
@@ -494,5 +569,85 @@ class WebstudioCompatController extends ApiController
 		}
 
 		return $default;
+	}
+
+	/**
+	 * @param array<int, array<string, mixed>> $instances
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function extractInstancesForPage(array $instances, Page $page, ?string $preferredRootId = null): array
+	{
+		$byId = [];
+		foreach ($instances as $instance) {
+			if (! is_array($instance)) {
+				continue;
+			}
+
+			$instanceId = isset($instance['id']) && is_string($instance['id']) ? $instance['id'] : '';
+			if ($instanceId === '') {
+				continue;
+			}
+
+			$byId[$instanceId] = $instance;
+		}
+
+		$candidateRootIds = [];
+		if (is_string($preferredRootId) && $preferredRootId !== '') {
+			$candidateRootIds[] = $preferredRootId;
+		}
+		$candidateRootIds[] = 'root-'.(string) $page->id;
+
+		$rootId = null;
+		foreach ($candidateRootIds as $candidateRootId) {
+			if (isset($byId[$candidateRootId])) {
+				$rootId = $candidateRootId;
+				break;
+			}
+		}
+
+		if ($rootId === null) {
+			return [];
+		}
+
+		$selected = [];
+		$visited = [];
+		$stack = [$rootId];
+
+		while ($stack !== []) {
+			$currentId = array_pop($stack);
+			if (! is_string($currentId) || $currentId === '' || isset($visited[$currentId])) {
+				continue;
+			}
+
+			$visited[$currentId] = true;
+			$current = $byId[$currentId] ?? null;
+			if (! is_array($current)) {
+				continue;
+			}
+
+			$selected[] = $current;
+
+			$children = $current['children'] ?? null;
+			if (! is_array($children)) {
+				continue;
+			}
+
+			foreach ($children as $child) {
+				if (is_array($child)) {
+					$childType = isset($child['type']) && is_string($child['type']) ? $child['type'] : null;
+					$childValue = isset($child['value']) && is_string($child['value']) ? $child['value'] : null;
+					if ($childType === 'id' && $childValue !== null && $childValue !== '') {
+						$stack[] = $childValue;
+					}
+					continue;
+				}
+
+				if (is_string($child) && $child !== '') {
+					$stack[] = $child;
+				}
+			}
+		}
+
+		return $selected;
 	}
 }

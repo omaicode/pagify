@@ -37,6 +37,8 @@ const pause = (timeout: number) => {
   return new Promise((resolve) => setTimeout(resolve, timeout));
 };
 
+const isPersistedPageId = (pageId: string) => /^\d+$/.test(pageId);
+
 export type QueueStatus =
   | { status: "running" }
   | { status: "idle" }
@@ -194,16 +196,27 @@ export const enqueueProjectDetails = ({
   if (authPermit === "view") {
     return;
   }
+
+  const cached = projectDetailsCache.get(projectId);
+  // Never move version backwards; page-scoped reloads may return older snapshots.
+  const normalizedVersion = Math.max(version, cached?.version ?? 0);
+
   projectDetailsCache.set(projectId, {
-    version,
+    version: normalizedVersion,
     buildId,
     authToken,
   });
+
+  // Avoid enqueueing stale setDetails commands that can race with newer state.
+  if (cached && normalizedVersion === cached.version && cached.buildId === buildId) {
+    return;
+  }
+
   commandQueue.enqueue({
     type: "setDetails",
     projectId,
     buildId,
-    version,
+    version: normalizedVersion,
     authToken,
   });
   // Start polling after enqueuing to ensure command is in queue
@@ -260,32 +273,12 @@ const pollQueue = async (signal: AbortSignal) => {
     }
 
     if (command.type === "setDetails") {
-      // At this moment we can be sure that all transactions for the command.projectId is already synchronized
-      // There are 2 options
-      // - Project opened again before transactions synchronized,
-      //   in that case project is outdated and we need to ask user to reload it.
-      // - Project opened after sync, everything is ok.
-      if (command.version < (detailsMap.get(command.projectId)?.version ?? 0)) {
-        const error =
-          "The project is outdated. Synchronization was incomplete when the project was opened. " +
-          "Please reload the page to get the latest version.";
-        const shouldReload = confirm(error);
+      const currentDetails = detailsMap.get(command.projectId);
+      const currentVersion = currentDetails?.version ?? 0;
 
-        if (shouldReload) {
-          location.reload();
-        }
-
-        // stop synchronization and wait til user reload
-        $queueStatus.set({ status: "fatal", error });
-
-        if (shouldReload === false) {
-          toast.error(
-            "Synchronization has been paused. Please reload to continue.",
-            { id: "outdated-error", duration: Number.POSITIVE_INFINITY }
-          );
-        }
-
-        break polling;
+      // Ignore stale setDetails commands instead of interrupting with modal confirms.
+      if (command.version < currentVersion) {
+        continue;
       }
 
       detailsMap.set(command.projectId, {
@@ -296,7 +289,7 @@ const pollQueue = async (signal: AbortSignal) => {
       continue;
     }
 
-    const { projectId, transactions } = command;
+    const { projectId, pageId, pageRootInstanceId, transactions } = command;
     const details = detailsMap.get(projectId);
 
     if (details === undefined) {
@@ -327,14 +320,16 @@ const pollQueue = async (signal: AbortSignal) => {
         }));
         const response = await fetch(restPatchPath(), {
           method: "post",
+          headers,
           body: JSON.stringify({
             transactions: optimizedTransactions,
             state: serializeBuilderDataForPatch(),
             buildId: details.buildId,
             projectId,
+            pageId,
+            pageRootInstanceId,
             // provide latest stored version to server
             version: details.version,
-            headers,
           }),
         });
 
@@ -427,7 +422,6 @@ const pollQueue = async (signal: AbortSignal) => {
 export class ServerSyncStorage implements SyncStorage {
   name = "server";
   private projectId: string;
-  private static readonly RESTORE_TIMEOUT_MS = 10000;
 
   constructor(projectId: string) {
     this.projectId = projectId;
@@ -436,59 +430,37 @@ export class ServerSyncStorage implements SyncStorage {
   sendTransaction(transaction: Transaction<Change[]>) {
     if (transaction.object === "server") {
       $lastTransactionId.set(transaction.id);
-      const currentProjectId = $selectedPage.get()?.id ?? this.projectId;
+      const currentPageId = $selectedPage.get()?.id;
+      if (currentPageId === undefined) {
+        return;
+      }
+      const currentPageRootInstanceId = $selectedPage.get()?.rootInstanceId;
+
+      // In empty-install mode, Webstudio boots with a virtual home page id
+      // like "home-unified". That page has no DB record yet, so syncing
+      // server patches must be skipped until a real page is created.
+      if (isPersistedPageId(currentPageId) === false) {
+        return;
+      }
+
       commandQueue.enqueue({
         type: "transactions",
         transactions: [transaction],
-        projectId: currentProjectId,
+        projectId: this.projectId,
+        pageId: currentPageId,
+        pageRootInstanceId: currentPageRootInstanceId,
       });
     }
   }
   subscribe(setState: (state: unknown) => void, signal: AbortSignal) {
-    const projectId = this.projectId;
-    let settled = false;
+    if (signal.aborted) {
+      return;
+    }
 
-    const settle = (state: unknown) => {
-      if (settled || signal.aborted) {
-        return;
-      }
-
-      settled = true;
-      setState(state);
-    };
-
-    const timeoutId = window.setTimeout(() => {
-      console.warn("Server sync storage restore timed out, falling back to live data load", {
-        projectId,
-      });
-      settle(undefined);
-    }, ServerSyncStorage.RESTORE_TIMEOUT_MS);
-
-    loadBuilderData({ projectId, signal })
-      .then((data) => {
-        window.clearTimeout(timeoutId);
-        projectDetailsCache.set(projectId, {
-          version: data.version,
-          buildId: data.id,
-          authToken: undefined,
-        });
-        const serverData = new Map(Object.entries(data));
-        settle(new Map([["server", serverData]]));
-      })
-      .catch((err) => {
-        window.clearTimeout(timeoutId);
-
-        if (signal.aborted) {
-          return;
-        }
-
-        if (err instanceof Error) {
-          console.error(err);
-        }
-
-        // Never block sync bootstrap on restore failure.
-        settle(undefined);
-      });
+    // Initial data is loaded once by initializeClientSync.
+    // Returning undefined here prevents a duplicate /data request
+    // from the storage restore path on first boot.
+    setState(undefined);
   }
 }
 

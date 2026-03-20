@@ -14,7 +14,6 @@ export default tseslint.config({
     "packages/*/lib/**",
     "packages/prisma-client/prisma/migrations/**",
     "packages/cli/templates/**",
-    "fixtures/**",
     "packages/sdk-components-animation/private-src/polyfill/**",
     "packages/sdk-components-animation/private-src/perf/**",
   ],

@@ -99,6 +99,7 @@ import { ImageInfo } from "./image-info";
 import { SearchPreview } from "./search-preview";
 import { SocialPreview } from "./social-preview";
 import {
+  cleanupChildRefsMutable,
   registerFolderChildMutable,
   $pageRootScope,
   duplicatePage,
@@ -1254,15 +1255,41 @@ const createPageLocal = (pageId: Page["id"], values: Values) => {
       if (pages === undefined) {
         return;
       }
-      const rootInstanceId = nanoid();
-      pages.pages.push({
+
+      const hasPersistedPages = [
+        pages.homePage.id,
+        ...pages.pages.map((page) => page.id),
+      ].some((id) => /^\d+$/.test(id));
+
+      const rootInstanceId = `root-${pageId}`;
+      const createdPage: Page = {
         id: pageId,
         name: values.name,
         path: values.path,
         title: values.title,
         rootInstanceId,
         meta: {},
-      });
+      };
+
+      if (hasPersistedPages === false) {
+        const virtualHomeId = pages.homePage.id;
+        const virtualHomeRootId = pages.homePage.rootInstanceId;
+
+        // Replace virtual home immediately so page list matches persisted data behavior.
+        pages.homePage = {
+          ...createdPage,
+          path: "",
+        };
+
+        cleanupChildRefsMutable(virtualHomeId, pages.folders);
+        registerFolderChildMutable(pages.folders, pageId, ROOT_FOLDER_ID);
+
+        instances.delete(virtualHomeRootId);
+      } else {
+        pages.pages.push(createdPage);
+        registerFolderChildMutable(pages.folders, pageId, values.parentFolderId);
+      }
+
       instances.set(rootInstanceId, {
         type: "instance",
         id: rootInstanceId,
@@ -1270,7 +1297,6 @@ const createPageLocal = (pageId: Page["id"], values: Values) => {
         tag: "body",
         children: [],
       });
-      registerFolderChildMutable(pages.folders, pageId, values.parentFolderId);
       selectInstance(undefined);
     }
   );
