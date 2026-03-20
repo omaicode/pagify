@@ -11,13 +11,8 @@ import interFont from "@fontsource-variable/inter/index.css?url";
 import manropeVariableFont from "@fontsource-variable/manrope/index.css?url";
 import robotoMonoFont from "@fontsource/roboto-mono/index.css?url";
 import appCss from "../shared/app.css?url";
-import {
-  json,
-  type LinksFunction,
-  type LoaderFunctionArgs,
-} from "@remix-run/server-runtime";
+import { type LinksFunction } from "@remix-run/server-runtime";
 import { ErrorBoundary as ErrorBoundaryComponent } from "~/shared/error/error-boundary";
-import { getCsrfTokenAndCookie } from "~/services/csrf-session.server";
 import {
   csrfToken as clientCsrfToken,
   updateCsrfToken,
@@ -52,41 +47,15 @@ const Document = (props: { children: React.ReactNode }) => {
   );
 };
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const [csrfToken, setCookieValue] = await getCsrfTokenAndCookie(request);
-
-  if (request.headers.get("sec-fetch-mode") !== "navigate") {
-    return json({ csrfToken: "" });
-  }
-
-  const headers = new Headers();
-
-  if (setCookieValue !== undefined) {
-    headers.set("Set-Cookie", setCookieValue);
-  }
-
-  return json(
-    { csrfToken },
-    {
-      headers,
-    }
-  );
-};
-
 export const clientLoader = async ({
-  serverLoader,
+  request,
 }: ClientLoaderFunctionArgs) => {
-  const remixContext = (window as typeof window & {
-    __remixContext?: {
-      isSpaMode?: boolean;
-    };
-  }).__remixContext;
-
-  const isSpaMode = remixContext?.isSpaMode === true;
-
-  const serverData = isSpaMode
-    ? { csrfToken: "pagify-spa-csrf" }
-    : await serverLoader<typeof loader>();
+  const serverData = {
+    csrfToken:
+      request.headers.get("sec-fetch-mode") === "navigate"
+        ? "pagify-spa-csrf"
+        : "",
+  };
 
   if (clientCsrfToken === undefined && serverData.csrfToken !== "") {
     const { csrfToken } = serverData;

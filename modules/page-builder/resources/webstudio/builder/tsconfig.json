@@ -1,8 +1,8 @@
 {
-  "extends": "@webstudio-is/tsconfig/base.json",
+  "extends": "../packages/tsconfig/base.json",
   "include": ["app", "**/*.ts", "**/*.tsx", "../../@types/**/*.d.ts"],
-
   "compilerOptions": {
+    "jsx": "react",
     "target": "ES2023",
     "types": [
       "@remix-run/node",
