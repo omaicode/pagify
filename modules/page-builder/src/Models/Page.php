@@ -21,6 +21,8 @@ class Page extends Model
 		'site_id',
 		'title',
 		'slug',
+		'folder_id',
+		'folder_order',
 		'status',
 		'layout_json',
 		'seo_meta_json',
@@ -32,6 +34,7 @@ class Page extends Model
 	protected $casts = [
 		'layout_json' => 'array',
 		'seo_meta_json' => 'array',
+		'folder_order' => 'integer',
 		'published_at' => 'datetime',
 	];
 

@@ -109,6 +109,7 @@ import {
   createPageOnServer,
   updatePageOnServer,
 } from "./page-crud-api";
+import { moveFolderItemOnServer } from "./folder-crud-api";
 import { Form } from "./form";
 import { CustomMetadata } from "./custom-metadata";
 import { findMatchingRedirect } from "~/shared/project-settings/utils";
@@ -154,9 +155,7 @@ type OnChange = (
   }[keyof Values]
 ) => void;
 
-type Errors = {
-  [fieldName in FieldName]?: string[];
-};
+type Errors = Partial<Record<keyof Values, string[]>>;
 
 const EmptyString = z.string().refine((string) => string === "");
 
@@ -1170,6 +1169,12 @@ export const NewPageSettings = ({
       const created = await createPageOnServer(values);
       const pageId = String(created.id);
 
+      await moveFolderItemOnServer({
+        itemType: "page",
+        itemId: pageId,
+        parentFolderId: values.parentFolderId,
+      });
+
       createPageLocal(pageId, values);
       updatePageLocal(pageId, values);
 
@@ -1489,6 +1494,18 @@ export const PageSettings = ({
         error instanceof Error ? error.message : "Unable to save page";
       toast.error(message);
     });
+    
+    if (unsavedValues.parentFolderId !== undefined) {
+      void moveFolderItemOnServer({
+        itemType: "page",
+        itemId: pageId,
+        parentFolderId: unsavedValues.parentFolderId,
+      }).catch((error) => {
+        const message =
+          error instanceof Error ? error.message : "Unable to move page";
+        toast.error(message);
+      });
+    }
 
     updatePageLocal(pageId, unsavedValues);
 
@@ -1536,6 +1553,18 @@ export const PageSettings = ({
         error instanceof Error ? error.message : "Unable to save page";
       toast.error(message);
     });
+    
+    if (unsavedValues.parentFolderId !== undefined) {
+      void moveFolderItemOnServer({
+        itemType: "page",
+        itemId: pageId,
+        parentFolderId: unsavedValues.parentFolderId,
+      }).catch((error) => {
+        const message =
+          error instanceof Error ? error.message : "Unable to move page";
+        toast.error(message);
+      });
+    }
 
     updatePageLocal(pageId, unsavedValues);
   });

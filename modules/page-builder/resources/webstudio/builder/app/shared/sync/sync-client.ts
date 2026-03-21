@@ -1,5 +1,6 @@
 import type { Project } from "@webstudio-is/project";
 import type { AuthPermit } from "@webstudio-is/trpc-interface/index.server";
+import type { Instance } from "@webstudio-is/sdk";
 import { SyncClient } from "~/shared/sync-client";
 import { registerContainers, createObjectPool } from "./sync-stores";
 import {
@@ -34,6 +35,41 @@ let pageSelectionUnsubscribe: undefined | (() => void);
 let pageSelectionAbortController: undefined | AbortController;
 
 const sleep = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
+
+const ensureSelectedPageRootInstance = ({
+  projectId,
+  pageId,
+  rootInstanceId,
+  instances,
+}: {
+  projectId: string;
+  pageId: string;
+  rootInstanceId: string;
+  instances: Map<string, Instance>;
+}) => {
+  if (instances.has(rootInstanceId)) {
+    return instances;
+  }
+
+  if (import.meta.env.DEV) {
+    console.warn("Page data missing root instance, injecting fallback root", {
+      projectId,
+      pageId,
+      rootInstanceId,
+    });
+  }
+
+  const safeInstances = new Map(instances);
+  safeInstances.set(rootInstanceId, {
+    id: rootInstanceId,
+    type: "instance",
+    component: "ws:element",
+    children: [],
+    tag: "body",
+  });
+
+  return safeInstances;
+};
 
 const loadBuilderDataWithRetry = async ({
   projectId,
@@ -119,6 +155,16 @@ export const initializeClientSync = ({
       return;
     }
 
+    // Keep UI stable during async page load to avoid transient missing-root errors.
+    $instances.set(
+      ensureSelectedPageRootInstance({
+        projectId,
+        pageId: selectedPage.id,
+        rootInstanceId: selectedPage.rootInstanceId,
+        instances: $instances.get(),
+      })
+    );
+
     pageSelectionAbortController?.abort();
     const controller = new AbortController();
     pageSelectionAbortController = controller;
@@ -134,8 +180,15 @@ export const initializeClientSync = ({
           return;
         }
 
+        const safeInstances = ensureSelectedPageRootInstance({
+          projectId,
+          pageId: selectedPage.id,
+          rootInstanceId: selectedPage.rootInstanceId,
+          instances: pageData.instances,
+        });
+
         // Apply per-page snapshot so navigator/inspector immediately reflect selected page.
-        $instances.set(pageData.instances);
+        $instances.set(safeInstances);
         $props.set(pageData.props);
         $dataSources.set(pageData.dataSources);
         $resources.set(pageData.resources);

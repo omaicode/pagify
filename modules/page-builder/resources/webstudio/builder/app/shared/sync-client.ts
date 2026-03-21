@@ -79,7 +79,17 @@ export class ImmerhinSyncObject implements SyncObject {
     }
   }
   applyTransaction(transaction: Transaction<Change[]>) {
-    this.store.addTransaction(transaction.id, transaction.payload, "remote");
+    try {
+      this.store.addTransaction(transaction.id, transaction.payload, "remote");
+    } catch (error) {
+      // Remote patches can become stale during page-switch hydration races.
+      // Ignore malformed remote transactions to keep editor usable.
+      console.warn("Skipping invalid remote sync transaction", {
+        object: this.name,
+        transactionId: transaction.id,
+        error,
+      });
+    }
   }
   revertTransaction(transaction: RevertedTransaction) {
     this.store.revertTransaction(transaction.id);

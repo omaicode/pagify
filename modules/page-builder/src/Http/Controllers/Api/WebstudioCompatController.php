@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Support\Collection;
 use Pagify\Core\Http\Controllers\Api\ApiController;
 use Pagify\Core\Support\SiteContext;
 use Pagify\Media\Models\MediaAsset;
@@ -19,6 +18,7 @@ use Pagify\PageBuilder\Models\Page;
 use Pagify\PageBuilder\Models\PageBuilderInstance;
 use Pagify\PageBuilder\Models\PageBuilderState;
 use Pagify\PageBuilder\Services\EditorAccessTokenService;
+use Pagify\PageBuilder\Services\PageFolderService;
 
 class WebstudioCompatController extends ApiController
 {
@@ -37,14 +37,15 @@ class WebstudioCompatController extends ApiController
 		]);
 	}
 
-	public function data(Request $request, string $projectId, EditorAccessTokenService $editorAccessToken, SiteContext $siteContext): JsonResponse
+	public function data(Request $request, string $projectId, EditorAccessTokenService $editorAccessToken, SiteContext $siteContext, PageFolderService $pageFolderService): JsonResponse
 	{
 		$claims = $this->authorizeRequest($request, $editorAccessToken, $siteContext, 'page:read');
 		if ($claims instanceof JsonResponse) {
 			return $claims;
 		}
 
-		$allPages = Page::query()->orderBy('id')->get();
+		$siteId = isset($claims['site_id']) ? (int) $claims['site_id'] : null;
+		$allPages = Page::query()->orderBy('folder_order')->orderBy('id')->get();
 		$rootPage = $allPages->first();
 		$page = $rootPage instanceof Page ? $rootPage : $this->resolvePage($claims, $projectId);
 		$builderState = $page !== null
@@ -52,7 +53,7 @@ class WebstudioCompatController extends ApiController
 			: null;
 		$version = $builderState?->version ?? $this->currentVersion($projectId, $page);
 		$state = $this->readProjectRuntimeState($projectId, $page, $siteContext);
-		$pageBundle = $this->buildPagesBundle($projectId, $page, $allPages);
+		$pageBundle = $pageFolderService->buildPagesBundle($projectId, $page, $allPages, $siteId);
 		$persistedBuildData = is_array($builderState?->data_json)
 			? (array) $builderState->data_json
 			: [];
@@ -161,6 +162,7 @@ class WebstudioCompatController extends ApiController
 		}
 
 		$instances = $this->extractInstancesForPage($instances, $page);
+		$instances = $this->ensurePageRootInstance($instances, $page);
 
 		return response()->json([
 			'id' => (string) ($builderState?->build_id ?: ('build-'.$projectId)),
@@ -181,122 +183,6 @@ class WebstudioCompatController extends ApiController
 			'styleSourceSelections' => $this->persistedOrDefaultArray($persistedBuildData, 'styleSourceSelections', []),
 			'styles' => $this->persistedOrDefaultArray($persistedBuildData, 'styles', []),
 		]);
-	}
-
-	/**
-	 * @return array{pages: array<string, mixed>, instances: array<int, array<string, mixed>>}
-	 */
-	private function buildPagesBundle(string $projectId, ?Page $selectedPage, Collection $allPages): array
-	{
-		$homePage = $selectedPage ?? $allPages->first();
-
-		if (! $homePage instanceof Page) {
-			$homePageId = 'home-'.$projectId;
-			$homeRootInstanceId = 'root-'.$homePageId;
-
-			return [
-				'pages' => [
-					'homePage' => [
-						'id' => $homePageId,
-						'name' => 'Home',
-						'path' => '',
-						'title' => '"Home"',
-						'meta' => [],
-						'rootInstanceId' => $homeRootInstanceId,
-					],
-					'pages' => [],
-					'folders' => [[
-						'id' => 'root',
-						'name' => 'Root',
-						'slug' => '',
-						'children' => [$homePageId],
-					]],
-				],
-				'instances' => [[
-					'type' => 'instance',
-					'id' => $homeRootInstanceId,
-					'component' => 'ws:element',
-					'children' => [],
-					'tag' => 'body',
-				]],
-			];
-		}
-
-		$items = [];
-		$children = [];
-		$instances = [];
-
-		foreach ($allPages as $page) {
-			if (! $page instanceof Page) {
-				continue;
-			}
-
-			$pageId = (string) $page->id;
-			$rootInstanceId = 'root-'.$pageId;
-			$seo = (array) ($page->seo_meta_json ?? []);
-			$title = (string) ($seo['title'] ?? $page->title);
-			$quotedTitle = json_encode($title, JSON_UNESCAPED_SLASHES);
-			if (! is_string($quotedTitle) || $quotedTitle === '') {
-				$quotedTitle = '"'.addslashes($title).'"';
-			}
-
-			$slug = trim((string) $page->slug, '/');
-			$path = $page->id === $homePage->id ? '' : '/'.$slug;
-
-			$items[] = [
-				'id' => $pageId,
-				'name' => (string) $page->title,
-				'path' => $path,
-				'title' => $quotedTitle,
-				'meta' => [
-					'status' => (string) $page->status,
-					'published_at' => $page->published_at?->toIso8601String(),
-				],
-				'rootInstanceId' => $rootInstanceId,
-			];
-
-			$children[] = $pageId;
-			$instances[] = [
-				'type' => 'instance',
-				'id' => $rootInstanceId,
-				'component' => 'ws:element',
-				'children' => [],
-				'tag' => 'body',
-			];
-		}
-
-		$homeSeo = (array) ($homePage->seo_meta_json ?? []);
-		$homeTitle = (string) ($homeSeo['title'] ?? $homePage->title);
-		$quotedHomeTitle = json_encode($homeTitle, JSON_UNESCAPED_SLASHES);
-		if (! is_string($quotedHomeTitle) || $quotedHomeTitle === '') {
-			$quotedHomeTitle = '"'.addslashes($homeTitle).'"';
-		}
-
-		return [
-			'pages' => [
-				'homePage' => [
-					'id' => (string) $homePage->id,
-					'name' => (string) $homePage->title,
-					'path' => '',
-					'title' => $quotedHomeTitle,
-					'meta' => [
-						'status' => (string) $homePage->status,
-						'published_at' => $homePage->published_at?->toIso8601String(),
-					],
-					'rootInstanceId' => 'root-'.(string) $homePage->id,
-				],
-				'pages' => array_values(array_filter($items, static fn (array $item): bool => $item['id'] !== (string) $homePage->id)),
-				'folders' => [
-					[
-						'id' => 'root',
-						'name' => 'Root',
-						'slug' => '',
-						'children' => $children,
-					],
-				],
-			],
-			'instances' => $instances,
-		];
 	}
 
 	public function patch(Request $request, EditorAccessTokenService $editorAccessToken, SiteContext $siteContext): JsonResponse
@@ -649,5 +535,38 @@ class WebstudioCompatController extends ApiController
 		}
 
 		return $selected;
+	}
+
+	/**
+	 * Guarantee selected page always has a root instance in compatibility payload.
+	 * This prevents Webstudio navigator/canvas from entering invalid state when
+	 * persisted snapshots are stale or missing the current page root node.
+	 *
+	 * @param array<int, array<string, mixed>> $instances
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function ensurePageRootInstance(array $instances, Page $page): array
+	{
+		$expectedRootId = 'root-' . (string) $page->id;
+
+		foreach ($instances as $instance) {
+			$instanceId = is_array($instance) && isset($instance['id']) && is_string($instance['id'])
+				? $instance['id']
+				: '';
+
+			if ($instanceId === $expectedRootId) {
+				return $instances;
+			}
+		}
+
+		array_unshift($instances, [
+			'id' => $expectedRootId,
+			'type' => 'instance',
+			'component' => 'ws:element',
+			'children' => [],
+			'tag' => 'body',
+		]);
+
+		return $instances;
 	}
 }

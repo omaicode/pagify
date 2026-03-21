@@ -733,6 +733,154 @@ class PageBuilderLifecycleTest extends TestCase
 		$this->assertSame($customRootId, (string) ($storedInstances[0]['id'] ?? ''));
 	}
 
+	public function test_webstudio_page_data_endpoint_injects_fallback_root_when_persisted_snapshot_has_no_page_root(): void
+	{
+		$rootPage = Page::query()->create([
+			'title' => 'Root Page',
+			'slug' => 'root-page',
+			'status' => 'draft',
+			'layout_json' => [],
+		]);
+
+		$secondPage = Page::query()->create([
+			'title' => 'Second Page',
+			'slug' => 'second-page',
+			'status' => 'draft',
+			'layout_json' => [],
+		]);
+
+		$accessToken = $this->issueEditorToken(
+			['page:read'],
+			pageId: $secondPage->id,
+			pageSlug: $secondPage->slug
+		);
+
+		PageBuilderState::query()->create([
+			'page_id' => $secondPage->id,
+			'site_id' => $secondPage->site_id,
+			'build_id' => 'build-unified',
+			'version' => 3,
+			'data_json' => [
+				'instances' => [
+					[
+						'id' => 'root-' . (string) $rootPage->id,
+						'type' => 'instance',
+						'component' => 'ws:element',
+						'children' => [],
+						'tag' => 'body',
+					],
+				],
+			],
+		]);
+
+		$response = $this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->getJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/data/unified/pages/' . $secondPage->id);
+
+		$response
+			->assertOk()
+			->assertJsonPath('pageId', (string) $secondPage->id)
+			->assertJsonPath('instances.0.id', 'root-' . (string) $secondPage->id);
+	}
+
+	public function test_page_folder_api_supports_crud_reparent_and_page_reorder_with_server_hydration(): void
+	{
+		$homePage = Page::query()->create([
+			'title' => 'Home',
+			'slug' => 'home',
+			'status' => 'draft',
+			'layout_json' => [],
+		]);
+
+		$childPage = Page::query()->create([
+			'title' => 'Child',
+			'slug' => 'child',
+			'status' => 'draft',
+			'layout_json' => [],
+		]);
+
+		$accessToken = $this->issueEditorToken(['page:read', 'page:write']);
+
+		$createResponse = $this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->postJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/folders', [
+			'folder_id' => 'marketing',
+			'name' => 'Marketing',
+			'slug' => 'marketing',
+			'parent_folder_id' => 'root',
+		]);
+
+		$createResponse
+			->assertStatus(201)
+			->assertJsonPath('success', true)
+			->assertJsonPath('data.id', 'marketing');
+
+		$this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->postJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/folders', [
+			'folder_id' => 'campaigns',
+			'name' => 'Campaigns',
+			'slug' => 'campaigns',
+			'parent_folder_id' => 'root',
+		])->assertStatus(201);
+
+		$this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->postJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/folders/move', [
+			'item_type' => 'folder',
+			'item_id' => 'marketing',
+			'parent_folder_id' => 'campaigns',
+			'index_within_children' => 0,
+		])->assertOk()->assertJsonPath('data.status', 'ok');
+
+		$this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->postJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/folders/move', [
+			'item_type' => 'page',
+			'item_id' => (string) $childPage->id,
+			'parent_folder_id' => 'marketing',
+			'index_within_children' => 0,
+		])->assertOk()->assertJsonPath('data.status', 'ok');
+
+		$this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->putJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/folders/marketing', [
+			'name' => 'Marketing Updated',
+			'slug' => 'marketing-updated',
+		])->assertOk()->assertJsonPath('data.slug', 'marketing-updated');
+
+		$hydrateResponse = $this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->getJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/data/unified');
+
+		$hydrateResponse
+			->assertOk()
+			->assertJsonPath('pages.homePage.id', (string) $homePage->id)
+			->assertJsonFragment([
+				'id' => 'campaigns',
+				'name' => 'Campaigns',
+			])
+			->assertJsonFragment([
+				'id' => 'marketing',
+				'name' => 'Marketing Updated',
+			]);
+
+		$this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->deleteJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/folders/marketing')
+			->assertOk()
+			->assertJsonPath('data.deleted', true);
+
+		$childPage->refresh();
+		$this->assertNull($childPage->folder_id);
+
+		$this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->getJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/data/unified')
+			->assertOk()
+			->assertJsonPath('pages.homePage.meta.status', 'draft');
+	}
+
 	public function test_webstudio_rest_data_uses_live_page_status_from_database_not_persisted_pages_snapshot(): void
 	{
 		$page = Page::query()->create([

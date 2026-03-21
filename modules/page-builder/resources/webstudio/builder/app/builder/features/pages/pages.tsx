@@ -33,6 +33,10 @@ import {
 } from "./confirmation-dialogs";
 import { deletePageOnServer, isPersistedPageId } from "./page-crud-api";
 import {
+  deleteFolderOnServer,
+  moveFolderItemOnServer,
+} from "./folder-crud-api";
+import {
   $editingPageId,
   $isContentMode,
   $isDesignMode,
@@ -352,10 +356,28 @@ const PagesTree = ({
                   $dropTarget.set(undefined);
                 }
               }}
-              onDrop={(item) => {
+              onDrop={async (item) => {
                 if (dropTarget === undefined) {
                   return;
                 }
+
+                try {
+                  await moveFolderItemOnServer({
+                    itemType: item.type,
+                    itemId: item.id,
+                    parentFolderId: dropTarget.parentId,
+                    indexWithinChildren: dropTarget.indexWithinChildren,
+                  });
+                } catch (error) {
+                  const message =
+                    error instanceof Error
+                      ? error.message
+                      : "Unable to move page/folder";
+                  toast.error(message);
+                  $dropTarget.set(undefined);
+                  return;
+                }
+
                 updateWebstudioData((data) => {
                   reparentPageOrFolderMutable(
                     data.pages.folders,
@@ -632,14 +654,11 @@ export const PagesPanel = ({ onClose }: { onClose: () => void }) => {
 
   const handleDeleteFolderConfirm = async () => {
     if (folderIdToDelete) {
-      const pageIds = getAllChildrenAndSelf(folderIdToDelete, pages.folders, "page");
-      const persistedPageIds = pageIds.filter((pageId) => isPersistedPageId(pageId));
-
       try {
-        await Promise.all(persistedPageIds.map((pageId) => deletePageOnServer(pageId)));
+        await deleteFolderOnServer(folderIdToDelete);
       } catch (error) {
         const message =
-          error instanceof Error ? error.message : "Unable to delete folder pages";
+          error instanceof Error ? error.message : "Unable to delete folder";
         toast.error(message);
         return;
       }

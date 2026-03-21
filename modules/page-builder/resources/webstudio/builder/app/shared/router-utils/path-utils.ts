@@ -258,6 +258,15 @@ export const restDataPath = (projectId: string) =>
 export const restPageDataPath = (projectId: string, pageId: string) =>
   withPageBuilderApiPrefix(`/data/${projectId}/pages/${pageId}`);
 
+export const adminFoldersPath = () =>
+  withPageBuilderApiPrefix(`/folders`);
+
+export const adminFolderPath = (folderId: string) =>
+  withPageBuilderApiPrefix(`/folders/${folderId}`);
+
+export const adminFolderMovePath = () =>
+  withPageBuilderApiPrefix(`/folders/move`);
+
 export const trpcPath = () => withPageBuilderApiPrefix(`/trpc`);
 
 export const adminPagesPath = () => withPageBuilderApiPrefix(`/pages`);

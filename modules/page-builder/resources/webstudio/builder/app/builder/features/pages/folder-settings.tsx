@@ -12,6 +12,7 @@ import {
   ScrollArea,
   TitleSuffixSpacer,
   Tooltip,
+  toast,
   rawTheme,
   theme,
 } from "@webstudio-is/design-system";
@@ -35,6 +36,10 @@ import { $isDesignMode } from "~/shared/nano-states";
 import { serverSyncStore } from "~/shared/sync/sync-stores";
 import { Form } from "./form";
 import { isSlugAvailable, registerFolderChildMutable } from "./page-utils";
+import {
+  createFolderOnServer,
+  updateFolderOnServer,
+} from "./folder-crud-api";
 
 const Values = Folder.pick({ name: true, slug: true }).extend({
   parentFolderId: z.string(),
@@ -216,11 +221,34 @@ export const NewFolderSettings = ({
 
   const errors = validateValues(pages, values);
 
-  const handleSubmit = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
     if (Object.keys(errors).length === 0) {
       const folderId = nanoid();
+      if (isSubmitting) {
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        await createFolderOnServer({
+          id: folderId,
+          name: values.name,
+          slug: values.slug,
+          parentFolderId: values.parentFolderId,
+        });
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Unable to create folder";
+        toast.error(message);
+        setIsSubmitting(false);
+        return;
+      }
+
       createFolder(folderId, values);
       onSuccess(folderId);
+      setIsSubmitting(false);
     }
   };
 
@@ -229,8 +257,6 @@ export const NewFolderSettings = ({
       onRequestDelete();
     }
   };
-
-  const isSubmitting = false;
 
   return (
     <>
@@ -361,9 +387,22 @@ export const FolderSettings = ({
       return;
     }
 
-    updateFolder(folderId, unsavedValues);
-
-    setUnsavedValues({});
+    void updateFolderOnServer(folderId, {
+      ...(unsavedValues.name !== undefined ? { name: unsavedValues.name } : {}),
+      ...(unsavedValues.slug !== undefined ? { slug: unsavedValues.slug } : {}),
+      ...(unsavedValues.parentFolderId !== undefined
+        ? { parentFolderId: unsavedValues.parentFolderId }
+        : {}),
+    })
+      .then(() => {
+        updateFolder(folderId, unsavedValues);
+        setUnsavedValues({});
+      })
+      .catch((error) => {
+        const message =
+          error instanceof Error ? error.message : "Unable to update folder";
+        toast.error(message);
+      });
   });
 
   const handleSubmitDebounced = useDebouncedCallback(debouncedFn, 1000);
@@ -386,7 +425,22 @@ export const FolderSettings = ({
     ) {
       return;
     }
-    updateFolder(folderId, unsavedValues);
+
+    void updateFolderOnServer(folderId, {
+      ...(unsavedValues.name !== undefined ? { name: unsavedValues.name } : {}),
+      ...(unsavedValues.slug !== undefined ? { slug: unsavedValues.slug } : {}),
+      ...(unsavedValues.parentFolderId !== undefined
+        ? { parentFolderId: unsavedValues.parentFolderId }
+        : {}),
+    })
+      .then(() => {
+        updateFolder(folderId, unsavedValues);
+      })
+      .catch((error) => {
+        const message =
+          error instanceof Error ? error.message : "Unable to update folder";
+        toast.error(message);
+      });
   });
 
   if (folder === undefined) {

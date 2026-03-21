@@ -44,6 +44,9 @@ Primary admin APIs:
 - `api/v1/{admin_prefix}/page-builder/pages`
 - `api/v1/{admin_prefix}/page-builder/pages/{page}`
 - `api/v1/{admin_prefix}/page-builder/pages/{page}/publish`
+- `api/v1/{admin_prefix}/page-builder/folders`
+- `api/v1/{admin_prefix}/page-builder/folders/{folderId}`
+- `api/v1/{admin_prefix}/page-builder/folders/move`
 
 Webstudio compatibility APIs:
 
@@ -69,6 +72,7 @@ Webstudio asset proxy endpoints:
 - `PATCH` persistence is page-scoped, not global project-scoped.
 - `data_json` stores only persisted UI state required to rebuild the editor surface.
 - Dynamic data such as page tree metadata and current publish status should come from live server data, not from the persisted snapshot.
+- Folder tree is persisted in a site-scoped folder domain, and page-folder assignment is stored per page.
 
 ## `GET /data/{projectId}` behavior
 
@@ -77,7 +81,18 @@ The compatibility data endpoint is the source of truth for bootstrapping Webstud
 - Returns `id`, `version`, and `projectId` for the selected page state.
 - Returns persisted design state such as `instances`, `props`, `styles`, `styleSources`, `styleSourceSelections`, `resources`, and `dataSources`.
 - Returns page tree metadata from the current database state so page title, slug, and publish state stay fresh when switching pages.
+- Returns folder tree from server-authoritative folder domain (including nested folders and ordered children).
 - Returns media assets mapped from the Pagify media system.
+
+## Folder APIs behavior
+
+Page folders are managed through dedicated APIs instead of local-only editor state.
+
+- `GET /folders` returns folder tree payload for editor synchronization.
+- `POST /folders` creates a folder in current site scope.
+- `PUT /folders/{folderId}` updates folder metadata or parent.
+- `POST /folders/move` supports reorder/reparent for both folders and pages.
+- `DELETE /folders/{folderId}` removes folder and reparents page children to root.
 
 ## `POST /patch` behavior
 
@@ -111,8 +126,16 @@ Publish state is controlled per page.
 2. Laravel serves the Webstudio SPA shell.
 3. Webstudio boots with page-scoped compatibility data from `/data/{projectId}`.
 4. User edits the selected page.
-5. Webstudio saves page-scoped UI state through `/patch`.
-6. User toggles draft or publish state through page CRUD APIs.
+5. Webstudio mutates page/folder tree through folder/page APIs.
+6. Webstudio saves page-scoped UI state through `/patch`.
+7. User toggles draft or publish state through page CRUD APIs.
+
+## Admin fullscreen
+
+Admin editor shell provides a fullscreen toggle for easier editing.
+
+- Uses browser Fullscreen API when available.
+- Falls back to opening editor URL in a new full window/tab when Fullscreen API is unavailable.
 
 ## Operational notes
 

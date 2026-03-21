@@ -16,6 +16,7 @@ use Pagify\PageBuilder\Http\Controllers\Api\EditorBuilderDataController;
 use Pagify\PageBuilder\Http\Controllers\Api\EditorMediaController;
 use Pagify\PageBuilder\Http\Controllers\Api\EditorTokenVerifyController;
 use Pagify\PageBuilder\Http\Controllers\Api\PageCrudController;
+use Pagify\PageBuilder\Http\Controllers\Api\PageFolderController;
 use Pagify\PageBuilder\Http\Controllers\Api\RegistryController;
 use Pagify\PageBuilder\Http\Controllers\Api\WebstudioCompatController;
 use Pagify\PageBuilder\Http\Controllers\Api\WebstudioTrpcController;
@@ -61,6 +62,11 @@ Route::prefix('api/v1/'.config('app.admin_url_prefix').'/page-builder')
 		Route::put('/pages/{page}', [PageCrudController::class, 'update'])->name('pages.update');
 		Route::post('/pages/{page}/publish', [PageCrudController::class, 'publish'])->name('pages.publish');
 		Route::delete('/pages/{page}', [PageCrudController::class, 'destroy'])->name('pages.destroy');
+		Route::get('/folders', [PageFolderController::class, 'index'])->name('folders.index');
+		Route::post('/folders', [PageFolderController::class, 'store'])->name('folders.store');
+		Route::put('/folders/{folderId}', [PageFolderController::class, 'update'])->name('folders.update');
+		Route::delete('/folders/{folderId}', [PageFolderController::class, 'destroy'])->name('folders.destroy');
+		Route::post('/folders/move', [PageFolderController::class, 'move'])->name('folders.move');
 
 		Route::get('/editor/contract', EditorContractController::class)->name('editor.contract');
 		Route::post('/editor/verify-token', EditorTokenVerifyController::class)->name('editor.verify-token');
