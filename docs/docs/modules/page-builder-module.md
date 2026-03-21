@@ -152,3 +152,82 @@ Admin editor shell provides a fullscreen toggle for easier editing.
 - page-scoped compatibility data
 - asset upload and delete compatibility
 - publish state hydration from live database state
+
+## Register Component for Webstudio
+
+Page Builder supports component registration from both module and plugin by using PHP definition files.
+
+### Discovery flow
+
+1. Page Builder subscribes hook `page-builder.webstudio.components` on Event Bus.
+2. Discovery service scans enabled modules/plugins for definition files.
+3. Definitions are normalized by `BlockRegistryService` with owner metadata.
+4. Registry endpoint returns owner-aware blocks.
+5. Compatibility `GET /data/{projectId}` returns `registeredComponents` for editor bootstrap.
+6. Webstudio Components tab groups registered items by owner (module/plugin).
+
+### Module definition file
+
+Create file at `modules/{module-slug}/config/webstudio-components.php`.
+
+```php
+<?php
+
+return [
+  [
+    'key' => 'hero-banner',
+    'label' => 'Hero Banner',
+    'description' => 'Starter hero section for landing pages.',
+    'icon' => '🧩',
+    'category' => 'Marketing',
+    // Optional: override owner if needed
+    // 'owner' => 'page-builder',
+    // Optional: module|plugin
+    // 'owner_type' => 'module',
+  ],
+];
+```
+
+### Plugin definition file
+
+Create file at `plugins/{plugin-slug}/config/webstudio-components.php`.
+
+```php
+<?php
+
+return [
+  [
+    'key' => 'cta-strip',
+    'label' => 'CTA Strip',
+    'description' => 'Call-to-action strip with headline and button.',
+    'icon' => '📣',
+    'category' => 'Marketing',
+  ],
+];
+```
+
+### Supported fields
+
+- `key` (required): unique component key in owner scope
+- `label` (optional): display name in Components tab
+- `description` (optional): tooltip/description text
+- `icon` (optional): icon string
+- `category` (optional): legacy category metadata
+- `owner` (optional): module/plugin slug for grouping
+- `owner_type` (optional): `module` or `plugin`
+- `html_template` (optional): fallback snippet for legacy block rendering
+- `props_schema` (optional): custom props metadata
+
+### Normalization rules
+
+- If `owner` is missing, owner defaults to module/plugin slug.
+- If `key` has no namespace, key is prefixed as `{owner}:{key}`.
+- If `html_template` is missing, a default section template is generated.
+
+### End-to-end verification checklist
+
+1. Add or update definition file in module/plugin.
+2. Ensure module/plugin is enabled.
+3. Open `GET /api/v1/{admin_prefix}/page-builder/registry` and verify `owner`, `owner_type`, `source`, and normalized `key`.
+4. Open `GET /api/v1/{admin_prefix}/page-builder/data/{projectId}` and verify `registeredComponents` payload.
+5. Open editor and confirm Components tab shows a group named by owner with registered items.

@@ -56,7 +56,7 @@ Skill này chuẩn hóa quy trình lập kế hoạch để tạo GitHub issue c
 5. Tạo issue trên GitHub
 - Bắt buộc dùng GitHub tool để tạo issue (không dùng CLI thủ công làm mặc định).
 - Tool ưu tiên:
-  - `mcp_io_github_git_issue_write` với `method: create` để tạo issue mới.
+  - `issue_create` để tạo issue mới.
   - Truyền đầy đủ `title`, `body`, `labels`, và `type` (nếu repo hỗ trợ issue type).
 - Tạo issue ngay sau khi hoàn tất bước phân tích và phân rã, không yêu cầu người dùng chốt lại trước khi tạo.
 - Sau khi tạo issue thành công, chỉ phản hồi đúng 2 thông tin:

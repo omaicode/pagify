@@ -1,4 +1,4 @@
-import { useState } from "react";
+import * as React from "react";
 import { matchSorter } from "match-sorter";
 import { computed } from "nanostores";
 import { useStore } from "@nanostores/react";
@@ -45,12 +45,31 @@ import {
 
 type Meta = {
   name: string;
+  owner: string;
   category: string;
   order: undefined | number;
   label: string;
   description: undefined | string;
   icon?: string;
   firstInstance: { component: string; tag?: string };
+};
+
+const getOwnerFromComponentName = (name: string): string => {
+  if (name.startsWith("pagify:registered:")) {
+    const match = name.match(/^pagify:registered:([^:]+)/);
+    return match?.[1] ?? "registered";
+  }
+
+  if (name.startsWith("@webstudio-is/")) {
+    return "webstudio";
+  }
+
+  const separatorIndex = name.indexOf(":");
+  if (separatorIndex > 0) {
+    return name.slice(0, separatorIndex);
+  }
+
+  return "core";
 };
 
 const $metas = computed(
@@ -63,6 +82,7 @@ const $metas = computed(
       availableComponents.add(name);
       metas.push({
         name,
+        owner: getOwnerFromComponentName(name),
         category: componentMeta.category ?? "hidden",
         order: componentMeta.order,
         label: getInstanceLabel({ component: name }),
@@ -75,6 +95,7 @@ const $metas = computed(
       availableComponents.add(name);
       metas.push({
         name,
+        owner: getOwnerFromComponentName(name),
         category: templateMeta.category ?? "hidden",
         order: templateMeta.order,
         label:
@@ -86,8 +107,8 @@ const $metas = computed(
         firstInstance: templateMeta.template.instances[0],
       });
     }
-    const metasByCategory = mapGroupBy(metas, (meta) => meta.category);
-    for (const meta of metasByCategory.values()) {
+    const metasByOwner = mapGroupBy(metas, (meta) => meta.owner);
+    for (const meta of metasByOwner.values()) {
       meta.sort((metaA, metaB) => {
         return (
           (metaA.order ?? Number.MAX_SAFE_INTEGER) -
@@ -95,22 +116,23 @@ const $metas = computed(
         );
       });
     }
-    return { metasByCategory, availableComponents };
+    return { metasByOwner, availableComponents };
   }
 );
 
 type Groups = Array<{
   category: Exclude<WsComponentMeta["category"], undefined> | "found";
+  owner?: string;
   metas: Array<Meta>;
 }>;
 
 const filterAndGroupComponents = ({
   documentType = "html",
-  metasByCategory,
+  metasByOwner,
   search,
 }: {
   documentType?: "html" | "xml";
-  metasByCategory: Map<string, Array<Meta>>;
+  metasByOwner: Map<string, Array<Meta>>;
   search: string;
 }): Groups => {
   const categories = componentCategories.filter((category) => {
@@ -137,23 +159,34 @@ const filterAndGroupComponents = ({
     return true;
   });
 
-  let groups: Groups = categories.map((category) => {
-    const metas = (metasByCategory.get(category) ?? []).filter((meta) => {
-      if (documentType === "xml" && meta.category === "data") {
-        return meta.name === collectionComponent;
-      }
-      return true;
-    });
+  let groups: Groups = [...metasByOwner.entries()]
+    .sort(([ownerA], [ownerB]) => ownerA.localeCompare(ownerB))
+    .map(([owner, ownerMetas]) => {
+      const metas = ownerMetas.filter((meta) => {
+        if (categories.includes(meta.category as (typeof categories)[number]) === false) {
+          return false;
+        }
 
-    return { category, metas };
-  });
+        if (documentType === "xml" && meta.category === "data") {
+          return meta.name === collectionComponent;
+        }
+
+        return true;
+      });
+
+      return {
+        category: "other",
+        owner,
+        metas,
+      };
+    });
 
   if (search.length > 0) {
     const metas = groups.map((group) => group.metas).flat();
     const matched = matchSorter(metas, search, {
       keys: ["label"],
     });
-    groups = [{ category: "found", metas: matched }];
+    groups = [{ category: "found", owner: "found", metas: matched }];
   }
 
   groups = groups.filter((group) => group.metas.length > 0);
@@ -185,7 +218,7 @@ export const ComponentsPanel = ({
   onClose: () => void;
 }) => {
   const selectedPage = useStore($selectedPage);
-  const [selectedComponent, setSelectedComponent] = useState<string>();
+  const [selectedComponent, setSelectedComponent] = React.useState<string>();
 
   const handleInsert = (component: string) => {
     if (component === elementComponent) {
@@ -234,7 +267,7 @@ export const ComponentsPanel = ({
     },
   });
 
-  const { metasByCategory, availableComponents } = useStore($metas);
+  const { metasByOwner, availableComponents } = useStore($metas);
 
   const { dragCard, draggableContainerRef, isDragging } = useDraggable({
     publish,
@@ -243,7 +276,7 @@ export const ComponentsPanel = ({
 
   const groups = filterAndGroupComponents({
     documentType: selectedPage?.meta.documentType,
-    metasByCategory,
+    metasByOwner,
     search: searchFieldProps.value,
   });
 
@@ -264,8 +297,8 @@ export const ComponentsPanel = ({
       <ScrollArea ref={draggableContainerRef}>
         {groups.map((group) => (
           <CollapsibleSection
-            label={group.category}
-            key={group.category}
+            label={group.owner ?? group.category}
+            key={`${group.category}:${group.owner ?? "none"}`}
             fullWidth
           >
             <List asChild>

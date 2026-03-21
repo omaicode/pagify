@@ -17,6 +17,7 @@ use Pagify\PageBuilder\Http\Controllers\Api\Concerns\InteractsWithWebstudioProje
 use Pagify\PageBuilder\Models\Page;
 use Pagify\PageBuilder\Models\PageBuilderInstance;
 use Pagify\PageBuilder\Models\PageBuilderState;
+use Pagify\PageBuilder\Services\BlockRegistryService;
 use Pagify\PageBuilder\Services\EditorAccessTokenService;
 use Pagify\PageBuilder\Services\PageFolderService;
 
@@ -37,7 +38,7 @@ class WebstudioCompatController extends ApiController
 		]);
 	}
 
-	public function data(Request $request, string $projectId, EditorAccessTokenService $editorAccessToken, SiteContext $siteContext, PageFolderService $pageFolderService): JsonResponse
+	public function data(Request $request, string $projectId, EditorAccessTokenService $editorAccessToken, SiteContext $siteContext, PageFolderService $pageFolderService, BlockRegistryService $blockRegistry): JsonResponse
 	{
 		$claims = $this->authorizeRequest($request, $editorAccessToken, $siteContext, 'page:read');
 		if ($claims instanceof JsonResponse) {
@@ -116,9 +117,39 @@ class WebstudioCompatController extends ApiController
 			// always reflect the latest server state when switching pages.
 			'pages' => $pageBundle['pages'],
 			'publisherHost' => (string) ($state['publisherHost'] ?? parse_url($request->getSchemeAndHttpHost(), PHP_URL_HOST) ?: 'localhost'),
+			'registeredComponents' => $this->mapRegisteredComponents($blockRegistry->all()),
 		];
 
 		return response()->json($response);
+	}
+
+	/**
+	 * @param array<int, array<string, mixed>> $blocks
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function mapRegisteredComponents(array $blocks): array
+	{
+		$resolved = [];
+
+		foreach ($blocks as $block) {
+			$key = trim((string) ($block['key'] ?? ''));
+			if ($key === '') {
+				continue;
+			}
+
+			$resolved[] = [
+				'key' => $key,
+				'label' => (string) ($block['label'] ?? $key),
+				'icon' => (string) ($block['icon'] ?? '🧩'),
+				'category' => (string) ($block['category'] ?? 'Registered Components'),
+				'description' => (string) ($block['description'] ?? ''),
+				'owner' => (string) ($block['owner'] ?? 'core'),
+				'owner_type' => (string) ($block['owner_type'] ?? 'module'),
+				'source' => (string) ($block['source'] ?? 'internal'),
+			];
+		}
+
+		return $resolved;
 	}
 
 	public function dataPage(Request $request, string $projectId, string $pageId, EditorAccessTokenService $editorAccessToken, SiteContext $siteContext): JsonResponse

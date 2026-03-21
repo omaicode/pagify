@@ -1,0 +1,18 @@
+{
+  "slug": "demo-webstudio-register",
+  "name": "Demo Webstudio Register",
+  "version": "0.1.0",
+  "description": "Demo plugin to register Webstudio components via PHP definition file.",
+  "providers": [],
+  "hooks": {
+    "subscribers": []
+  },
+  "permissions": [],
+  "extension_points": {
+    "field_types": [],
+    "blocks": [],
+    "dashboard_widgets": [],
+    "automation_actions": [],
+    "menu_items": []
+  }
+}

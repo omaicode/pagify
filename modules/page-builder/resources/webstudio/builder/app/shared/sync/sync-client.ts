@@ -9,7 +9,11 @@ import {
   getCachedProjectDetails,
   stopPolling,
 } from "./project-queue";
-import { loadBuilderData, loadBuilderPageData } from "~/shared/builder-data";
+import {
+  loadBuilderData,
+  loadBuilderPageData,
+  loadRegisteredComponentsFromRegistry,
+} from "~/shared/builder-data";
 import {
   $project,
   $pages,
@@ -28,6 +32,7 @@ import {
 } from "./data-stores";
 import { $selectedPage } from "~/shared/awareness";
 import { $isPageDataLoading } from "~/shared/nano-states";
+import { registerPagifyRegisteredComponents } from "~/shared/pagify-registered-components";
 
 let client: SyncClient | undefined;
 let currentProjectId: string | undefined;
@@ -244,7 +249,16 @@ export const initializeClientSync = ({
         }
 
         if (authPermit === "view" || cachedDetails !== undefined) {
-          onReady?.();
+          loadRegisteredComponentsFromRegistry({ signal })
+            .then((components) => {
+              registerPagifyRegisteredComponents(components);
+            })
+            .catch(() => {
+              // Do not block editor boot when registry endpoint is temporarily unavailable.
+            })
+            .finally(() => {
+              onReady?.();
+            });
           return;
         }
       }
@@ -268,6 +282,9 @@ export const initializeClientSync = ({
             $styleSourceSelections.set(data.styleSourceSelections);
             $styles.set(data.styles);
             $marketplaceProduct.set(data.marketplaceProduct);
+
+            // Register dynamic module/plugin templates after server payload is loaded.
+            registerPagifyRegisteredComponents(data.registeredComponents);
           }
 
           // Start project sync with build info from loaded data

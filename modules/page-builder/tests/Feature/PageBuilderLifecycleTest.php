@@ -6,6 +6,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Pagify\Core\Models\Admin;
+use Pagify\Core\Models\PluginState;
+use Pagify\Core\Services\EventBus;
 use Pagify\Media\Models\MediaAsset;
 use Pagify\Media\Models\MediaUsage;
 use Pagify\PageBuilder\Models\Page;
@@ -86,6 +88,121 @@ class PageBuilderLifecycleTest extends TestCase
 			->assertJsonStructure([
 				'success',
 				'data' => ['blocks', 'breakpoints'],
+			]);
+	}
+
+	public function test_registry_api_includes_event_bus_registered_components_with_owner_prefix(): void
+	{
+		/** @var EventBus $eventBus */
+		$eventBus = app(EventBus::class);
+		$eventBus->onHook('page-builder.webstudio.components', static fn (): array => [
+			[
+				'key' => 'hero-banner',
+				'label' => 'Hero Banner',
+				'owner' => 'marketing-plugin',
+				'owner_type' => 'plugin',
+				'category' => 'Marketing',
+			],
+		]);
+
+		$accessToken = $this->issueEditorToken(['page:read']);
+
+		$this->withEditorToken($accessToken)
+			->get('/api/v1/admin/page-builder/registry')
+			->assertOk()
+			->assertJsonFragment([
+				'key' => 'marketing-plugin:hero-banner',
+				'owner' => 'marketing-plugin',
+				'owner_type' => 'plugin',
+				'source' => 'hook',
+			]);
+	}
+
+	public function test_webstudio_data_payload_exposes_registered_components(): void
+	{
+		/** @var EventBus $eventBus */
+		$eventBus = app(EventBus::class);
+		$eventBus->onHook('page-builder.webstudio.components', static fn (): array => [
+			[
+				'key' => 'hero-banner',
+				'label' => 'Hero Banner',
+				'owner' => 'marketing-plugin',
+				'owner_type' => 'plugin',
+				'category' => 'Marketing',
+			],
+		]);
+
+		$page = Page::query()->create([
+			'title' => 'Builder Data',
+			'slug' => 'builder-data-registry',
+			'status' => 'draft',
+			'layout_json' => [],
+		]);
+
+		$accessToken = $this->issueEditorToken(['page:read'], pageId: $page->id, pageSlug: $page->slug);
+
+		$this->withEditorToken($accessToken)
+			->getJson('/api/v1/admin/page-builder/data/' . $page->id)
+			->assertOk()
+			->assertJsonFragment([
+				'key' => 'marketing-plugin:hero-banner',
+				'owner' => 'marketing-plugin',
+				'owner_type' => 'plugin',
+			]);
+	}
+
+	public function test_demo_plugin_webstudio_components_are_loaded_end_to_end(): void
+	{
+		$pluginRoot = base_path('plugins/demo-webstudio-register');
+		$this->assertFileExists($pluginRoot . '/plugin.json');
+		$this->assertFileExists($pluginRoot . '/config/webstudio-components.php');
+
+		$manifestRaw = file_get_contents($pluginRoot . '/plugin.json');
+		$this->assertIsString($manifestRaw);
+		$manifest = json_decode($manifestRaw, true);
+		$this->assertIsArray($manifest);
+
+		PluginState::query()->updateOrCreate(
+			['slug' => 'demo-webstudio-register'],
+			[
+				'name' => 'Demo Webstudio Register',
+				'version' => '0.1.0',
+				'source_type' => 'local',
+				'root_path' => $pluginRoot,
+				'enabled' => true,
+				'is_installed' => true,
+				'is_compatible' => true,
+				'manifest' => $manifest,
+			]
+		);
+
+		$page = Page::query()->create([
+			'title' => 'Plugin Registry Page',
+			'slug' => 'plugin-registry-page',
+			'status' => 'draft',
+			'layout_json' => [],
+		]);
+
+		$accessToken = $this->issueEditorToken(['page:read'], pageId: $page->id, pageSlug: $page->slug);
+
+		$this->withEditorToken($accessToken)
+			->get('/api/v1/admin/page-builder/registry')
+			->assertOk()
+			->assertJsonFragment([
+				'key' => 'demo-webstudio-register:hero-banner',
+				'label' => 'Demo Hero Banner',
+				'owner' => 'demo-webstudio-register',
+				'owner_type' => 'plugin',
+			]);
+
+		$this->withEditorToken($accessToken)
+			->getJson('/api/v1/admin/page-builder/data/' . $page->id)
+			->assertOk()
+			->assertJsonFragment([
+				'key' => 'demo-webstudio-register:cta-strip',
+				'label' => 'Demo CTA Strip',
+				'owner' => 'demo-webstudio-register',
+				'owner_type' => 'plugin',
 			]);
 	}
 

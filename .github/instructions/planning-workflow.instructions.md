@@ -20,8 +20,7 @@ Khi người dùng yêu cầu lập kế hoạch, agent bắt buộc phải tuâ
 - Bắt buộc sử dụng skill `pagify-planner` khi thực hiện tạo issue từ yêu cầu planning.
 - Issue phải có đầy đủ Todo List và Acceptance Criteria.
 - Gán labels/type phù hợp với loại công việc và phạm vi module.
-- Bắt buộc dùng GitHub tool để tạo issue, ưu tiên `mcp_io_github_git_issue_write` với `method: create`.
-- Không dùng GitHub CLI làm mặc định cho thao tác tạo issue.
+- Bắt buộc Github tool `issue_write` để tạo issue.
 - Tạo issue ngay sau khi hoàn tất bước phân tích và phân rã, không yêu cầu người dùng chốt lại trước khi tạo.
 - Sau khi tạo issue thành công, chỉ phản hồi đúng 2 thông tin: tên issue và URL issue.
 

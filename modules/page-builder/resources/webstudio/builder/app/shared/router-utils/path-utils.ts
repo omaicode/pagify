@@ -252,6 +252,9 @@ export const getCanvasUrl = () => {
 export const restResourcesLoader = () =>
   withPageBuilderApiPrefix(`/resources-loader`);
 
+export const restRegistryPath = () =>
+  withPageBuilderApiPrefix(`/registry`);
+
 export const restDataPath = (projectId: string) =>
   withPageBuilderApiPrefix(`/data/${projectId}`);
 
