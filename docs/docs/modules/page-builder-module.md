@@ -155,55 +155,70 @@ Admin editor shell provides a fullscreen toggle for easier editing.
 
 ## Register Component for Webstudio
 
-Page Builder supports component registration from both module and plugin by using PHP definition files.
+Page Builder supports component registration from both module and plugin by using class-based component definitions.
 
 ### Discovery flow
 
 1. Page Builder subscribes hook `page-builder.webstudio.components` on Event Bus.
-2. Discovery service scans enabled modules/plugins for definition files.
+2. Discovery service scans enabled modules/plugins for class references in the main config.
 3. Definitions are normalized by `BlockRegistryService` with owner metadata.
 4. Registry endpoint returns owner-aware blocks.
 5. Compatibility `GET /data/{projectId}` returns `registeredComponents` for editor bootstrap.
 6. Webstudio Components tab groups registered items by owner (module/plugin).
 
-### Module definition file
+### Module main config
 
-Create file at `modules/{module-slug}/config/webstudio-components.php`.
+Add `webstudio_components` in `modules/{module-slug}/config/module.php`:
 
 ```php
 <?php
 
+use Vendor\YourModule\Webstudio\Components\HeroBannerComponent;
+
 return [
-  [
-    'key' => 'hero-banner',
-    'label' => 'Hero Banner',
-    'description' => 'Starter hero section for landing pages.',
-    'icon' => '🧩',
-    'category' => 'Marketing',
-    // Optional: override owner if needed
-    // 'owner' => 'page-builder',
-    // Optional: module|plugin
-    // 'owner_type' => 'module',
+  // ...existing module config
+  'webstudio_components' => [
+    HeroBannerComponent::class,
+  ],
+];
+```
+### Plugin main config
+
+Create `plugins/{plugin-slug}/config/plugin.php` and declare `webstudio_components`:
+
+```php
+<?php
+
+use Plugins\DemoWebstudioRegister\Webstudio\Components\CtaStripComponent;
+
+return [
+  'webstudio_components' => [
+    CtaStripComponent::class,
   ],
 ];
 ```
 
-### Plugin definition file
+Each component class must implement `Pagify\PageBuilder\Contracts\WebstudioCustomComponent` and return a definition array.
+Dynamic fallback via arbitrary `definition()` objects is not supported.
 
-Create file at `plugins/{plugin-slug}/config/webstudio-components.php`.
+To reduce verbosity and avoid missing fields, you can use `Pagify\PageBuilder\Support\WebstudioComponentDefinitionBuilder`:
 
 ```php
 <?php
 
-return [
-  [
-    'key' => 'cta-strip',
-    'label' => 'CTA Strip',
-    'description' => 'Call-to-action strip with headline and button.',
-    'icon' => '📣',
-    'category' => 'Marketing',
-  ],
-];
+use Pagify\PageBuilder\Support\WebstudioComponentDefinitionBuilder;
+
+return WebstudioComponentDefinitionBuilder::make('hero-banner', 'Hero Banner')
+  ->description('Starter hero block')
+  ->element('section')
+  ->classes(['hero', 'hero--primary'])
+  ->styles([
+    'padding' => '24px',
+    'border-radius' => '12px',
+  ])
+  ->attribute('data-variant', 'hero')
+  ->text('Hero Banner')
+  ->toArray();
 ```
 
 ### Supported fields
@@ -216,18 +231,62 @@ return [
 - `owner` (optional): module/plugin slug for grouping
 - `owner_type` (optional): `module` or `plugin`
 - `html_template` (optional): fallback snippet for legacy block rendering
+- `element` or `tag` (optional): HTML element name used when `html_template` is omitted
+- `class` (optional): string or array of css classes
+- `style` (optional): inline style string or key/value array
+- `attributes` (optional): HTML attributes map (`data-*`, `role`, etc.)
+- `text` or `inner_html` (optional): inner content for generated template
+- `children` (optional): nested child nodes/components for template composition
 - `props_schema` (optional): custom props metadata
+
+`children` supports:
+
+- string: references another registered component key (for example `hero-banner` or `demo-webstudio-register:hero-banner`)
+- object node: supports `key`/`component` reference, or inline `element/tag` + `class` + `style` + `attributes` + `text` + `inner_html` + recursive `children`
+
+Example:
+
+```php
+return WebstudioComponentDefinitionBuilder::make('cta-strip', 'CTA Strip')
+  ->tag('div')
+  ->classes('cta-strip')
+  ->children([
+    'hero-banner',
+    [
+      'element' => 'p',
+      'text' => 'Nested note',
+    ],
+  ])
+  ->toArray();
+```
 
 ### Normalization rules
 
 - If `owner` is missing, owner defaults to module/plugin slug.
 - If `key` has no namespace, key is prefixed as `{owner}:{key}`.
-- If `html_template` is missing, a default section template is generated.
+- If `html_template` is missing and `element/tag` is provided, template is generated from element + class/style/attributes.
+- If neither `html_template` nor `element/tag` is provided, a default section template is generated.
+- Invalid component definitions (missing/invalid `key`) are skipped before registry/data payload.
+- Missing optional fields are auto-normalized (`label`, `icon`, `category`, `owner_type`, `attributes`, `props_schema`).
 
 ### End-to-end verification checklist
 
-1. Add or update definition file in module/plugin.
+1. Add or update component class and register it in module/plugin main config.
 2. Ensure module/plugin is enabled.
 3. Open `GET /api/v1/{admin_prefix}/page-builder/registry` and verify `owner`, `owner_type`, `source`, and normalized `key`.
 4. Open `GET /api/v1/{admin_prefix}/page-builder/data/{projectId}` and verify `registeredComponents` payload.
 5. Open editor and confirm Components tab shows a group named by owner with registered items.
+
+### CI validation command
+
+Run command below in CI to fail early when `webstudio_components` has invalid classes or invalid definitions:
+
+```bash
+php artisan cms:page-builder:validate-webstudio-components
+```
+
+Optional machine-readable output:
+
+```bash
+php artisan cms:page-builder:validate-webstudio-components --json
+```

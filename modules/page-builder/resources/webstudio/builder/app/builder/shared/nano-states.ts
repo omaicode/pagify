@@ -138,6 +138,11 @@ export const $activeSidebarPanel = computed(
  */
 export const setActiveSidebarPanel = (nextPanel: "auto" | SidebarPanelName) => {
   const currentPanel = $activeSidebarPanel.get();
+  if (nextPanel === "auto") {
+    $activeSidebarPanel_.set(currentPanel);
+    return;
+  }
+
   // - When navigator is open, user is trying to close the navigator.
   // - Navigator is closed, user is trying to close some other panel, and if navigator is undocked, it needs to be opened.
   if (nextPanel === "none") {
@@ -150,7 +155,7 @@ export const setActiveSidebarPanel = (nextPanel: "auto" | SidebarPanelName) => {
       return;
     }
   }
-  $activeSidebarPanel_.set(nextPanel === "auto" ? undefined : nextPanel);
+  $activeSidebarPanel_.set(nextPanel);
 };
 
 export const toggleActiveSidebarPanel = (panel: SidebarPanelName) => {

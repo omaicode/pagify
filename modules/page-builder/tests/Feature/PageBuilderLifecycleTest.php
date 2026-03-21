@@ -102,6 +102,11 @@ class PageBuilderLifecycleTest extends TestCase
 				'owner' => 'marketing-plugin',
 				'owner_type' => 'plugin',
 				'category' => 'Marketing',
+				'element' => 'section',
+				'class' => ['hero', 'hero--marketing'],
+				'style' => ['padding' => '32px'],
+				'attributes' => ['data-segment' => 'b2b'],
+				'text' => 'Hero Banner',
 			],
 		]);
 
@@ -129,6 +134,12 @@ class PageBuilderLifecycleTest extends TestCase
 				'owner' => 'marketing-plugin',
 				'owner_type' => 'plugin',
 				'category' => 'Marketing',
+				'element' => 'section',
+				'class' => ['hero', 'hero--marketing'],
+				'style' => ['padding' => '32px'],
+				'attributes' => [
+					'data-segment' => 'b2b',
+				],
 			],
 		]);
 
@@ -148,6 +159,12 @@ class PageBuilderLifecycleTest extends TestCase
 				'key' => 'marketing-plugin:hero-banner',
 				'owner' => 'marketing-plugin',
 				'owner_type' => 'plugin',
+				'element' => 'section',
+				'class' => 'hero hero--marketing',
+				'style' => 'padding: 32px',
+				'attributes' => [
+					'data-segment' => 'b2b',
+				],
 			]);
 	}
 
@@ -155,7 +172,7 @@ class PageBuilderLifecycleTest extends TestCase
 	{
 		$pluginRoot = base_path('plugins/demo-webstudio-register');
 		$this->assertFileExists($pluginRoot . '/plugin.json');
-		$this->assertFileExists($pluginRoot . '/config/webstudio-components.php');
+		$this->assertFileExists($pluginRoot . '/config/plugin.php');
 
 		$manifestRaw = file_get_contents($pluginRoot . '/plugin.json');
 		$this->assertIsString($manifestRaw);
@@ -195,15 +212,44 @@ class PageBuilderLifecycleTest extends TestCase
 				'owner_type' => 'plugin',
 			]);
 
-		$this->withEditorToken($accessToken)
+		$registry = $this->withEditorToken($accessToken)
+			->get('/api/v1/admin/page-builder/registry')
+			->assertOk();
+
+		$blocks = data_get($registry->json(), 'data.blocks', []);
+		$this->assertIsArray($blocks);
+		$hero = collect($blocks)->first(static fn (mixed $item): bool => is_array($item) && ($item['key'] ?? null) === 'demo-webstudio-register:hero-banner');
+		$this->assertIsArray($hero);
+		$this->assertStringContainsString('<section', (string) ($hero['html_template'] ?? ''));
+		$this->assertStringContainsString('class="demo-hero demo-hero--primary"', (string) ($hero['html_template'] ?? ''));
+		$this->assertStringContainsString('data-variant="hero"', (string) ($hero['html_template'] ?? ''));
+
+		$dataResponse = $this->withEditorToken($accessToken)
 			->getJson('/api/v1/admin/page-builder/data/' . $page->id)
-			->assertOk()
+			->assertOk();
+
+		$dataResponse
 			->assertJsonFragment([
 				'key' => 'demo-webstudio-register:cta-strip',
 				'label' => 'Demo CTA Strip',
 				'owner' => 'demo-webstudio-register',
 				'owner_type' => 'plugin',
 			]);
+
+		$registeredComponents = data_get($dataResponse->json(), 'registeredComponents', []);
+		$this->assertIsArray($registeredComponents);
+
+		$cta = collect($registeredComponents)->first(static fn (mixed $item): bool => is_array($item) && ($item['key'] ?? null) === 'demo-webstudio-register:cta-strip');
+		$this->assertIsArray($cta);
+		$this->assertSame('div', (string) ($cta['tag'] ?? ''));
+		$this->assertSame('demo-cta-strip', (string) ($cta['class'] ?? ''));
+		$this->assertStringContainsString('display:flex', (string) ($cta['style'] ?? ''));
+		$this->assertSame('region', (string) (($cta['attributes']['role'] ?? '')));
+		$this->assertIsArray($cta['children'] ?? null);
+		$this->assertSame('hero-banner', (string) (($cta['children'][0] ?? null)));
+		$this->assertSame('p', (string) (($cta['children'][1]['element'] ?? '')));
+		$this->assertSame('Simple CTA strip', (string) (($cta['children'][1]['text'] ?? '')));
+		$this->assertStringContainsString('<div', (string) ($cta['html_template'] ?? ''));
 	}
 
 	public function test_create_and_publish_page_with_webstudio_layout_payload(): void

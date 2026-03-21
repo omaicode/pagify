@@ -29,6 +29,7 @@ import type { BaseOption } from "../shared/types";
 import {
   shouldFilterCategory,
   getComponentScore,
+  shouldHideComponentInUi,
 } from "../shared/component-utils";
 
 export type ComponentOption = BaseOption & {
@@ -94,6 +95,10 @@ export const $componentOptions = computed(
     };
 
     for (const [name, meta] of metas) {
+      if (shouldHideComponentInUi(name)) {
+        continue;
+      }
+
       if (shouldFilterCategory(meta.category)) {
         continue;
       }
@@ -111,6 +116,10 @@ export const $componentOptions = computed(
     }
 
     for (const [name, meta] of templates) {
+      if (shouldHideComponentInUi(name)) {
+        continue;
+      }
+
       if (shouldFilterCategory(meta.category)) {
         continue;
       }

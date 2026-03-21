@@ -124,7 +124,20 @@ type RegistryResponse = {
       label?: string;
       description?: string;
       icon?: string;
+      category?: string;
       owner?: string;
+      owner_type?: string;
+      source?: string;
+      html_template?: string;
+      props_schema?: Record<string, unknown>;
+      element?: string;
+      tag?: string;
+      class?: string;
+      style?: string;
+      attributes?: Record<string, string>;
+      text?: string;
+      inner_html?: string;
+      children?: Array<string | Record<string, unknown>>;
     }>;
   };
 };
@@ -333,7 +346,29 @@ export const loadRegisteredComponentsFromRegistry = async ({
       description:
         typeof item.description === "string" ? item.description : undefined,
       icon: typeof item.icon === "string" ? item.icon : undefined,
+      category: typeof item.category === "string" ? item.category : undefined,
       owner: typeof item.owner === "string" ? item.owner : undefined,
+      owner_type:
+        typeof item.owner_type === "string" ? item.owner_type : undefined,
+      source: typeof item.source === "string" ? item.source : undefined,
+      html_template:
+        typeof item.html_template === "string" ? item.html_template : undefined,
+      props_schema:
+        item.props_schema && typeof item.props_schema === "object"
+          ? item.props_schema
+          : undefined,
+      element: typeof item.element === "string" ? item.element : undefined,
+      tag: typeof item.tag === "string" ? item.tag : undefined,
+      class: typeof item.class === "string" ? item.class : undefined,
+      style: typeof item.style === "string" ? item.style : undefined,
+      attributes:
+        item.attributes && typeof item.attributes === "object"
+          ? item.attributes
+          : undefined,
+      text: typeof item.text === "string" ? item.text : undefined,
+      inner_html:
+        typeof item.inner_html === "string" ? item.inner_html : undefined,
+      children: Array.isArray(item.children) ? item.children : undefined,
     }))
     .filter((item) => item.key !== "");
 };

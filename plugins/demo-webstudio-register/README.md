@@ -1,18 +1,21 @@
 # Demo Webstudio Register Plugin
 
-This plugin demonstrates Register Component integration for Webstudio using a PHP definition file.
+This plugin demonstrates Register Component integration for Webstudio using class-based component definitions.
 
 ## Files
 
 - plugin.json
-- config/webstudio-components.php
+- config/plugin.php
+- src/Webstudio/Components/HeroBannerComponent.php
+- src/Webstudio/Components/CtaStripComponent.php
 
 ## How It Works
 
-When plugin state is enabled, page-builder discovers component definitions from:
+When plugin state is enabled, page-builder discovers component class references from:
 
-- config/webstudio-components.php
+- config/plugin.php (`webstudio_components`)
 
+Each class returns a component definition array (key, label, element/tag, class/style/attributes, ...).
 Definitions are normalized into page-builder registry output and exposed in /data/{projectId} as registeredComponents.
 
 ## Enable Plugin (API)

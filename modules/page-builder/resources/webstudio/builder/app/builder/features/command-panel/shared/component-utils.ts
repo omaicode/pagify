@@ -1,5 +1,7 @@
 import { componentCategories } from "@webstudio-is/sdk";
 
+const hiddenComponentNames = new Set(["Slot", "HeadSlot"]);
+
 /**
  * Normalizes a component's category, defaulting undefined to "hidden"
  */
@@ -15,6 +17,13 @@ export const normalizeCategory = (
 export const shouldFilterCategory = (category: string | undefined): boolean => {
   const normalized = normalizeCategory(category);
   return normalized === "hidden" || normalized === "internal";
+};
+
+/**
+ * Checks if a component should be hidden from user-facing insertion lists.
+ */
+export const shouldHideComponentInUi = (name: string): boolean => {
+  return hiddenComponentNames.has(name);
 };
 
 type ComponentMetaLike = {

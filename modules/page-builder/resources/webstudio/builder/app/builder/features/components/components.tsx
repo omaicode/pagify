@@ -42,6 +42,7 @@ import {
   getInstanceLabel,
   InstanceIcon,
 } from "~/builder/shared/instance-label";
+import { shouldHideComponentInUi } from "~/builder/features/command-panel/shared/component-utils";
 
 type Meta = {
   name: string;
@@ -78,6 +79,10 @@ const $metas = computed(
     const availableComponents = new Set<string>();
     const metas: Meta[] = [];
     for (const [name, componentMeta] of componentMetas) {
+      if (shouldHideComponentInUi(name)) {
+        continue;
+      }
+
       // only set available components from component meta
       availableComponents.add(name);
       metas.push({
@@ -91,6 +96,10 @@ const $metas = computed(
       });
     }
     for (const [name, templateMeta] of templates) {
+      if (shouldHideComponentInUi(name)) {
+        continue;
+      }
+
       const componentMeta = componentMetas.get(name);
       availableComponents.add(name);
       metas.push({
