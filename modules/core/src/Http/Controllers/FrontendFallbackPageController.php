@@ -8,6 +8,7 @@ use Illuminate\Routing\Controller;
 use Pagify\Core\Services\FrontendThemeManagerService;
 use Pagify\Core\Services\FrontendThemeTwigEngine;
 use Pagify\Core\Services\ModuleRegistry;
+use Pagify\Core\Wsre\WsreEngine;
 use Pagify\PageBuilder\Models\Page;
 
 class FrontendFallbackPageController extends Controller
@@ -16,6 +17,7 @@ class FrontendFallbackPageController extends Controller
         Request $request,
         FrontendThemeManagerService $themes,
         FrontendThemeTwigEngine $twigEngine,
+        WsreEngine $wsreEngine,
         ModuleRegistry $modules,
     ): HttpResponse {
         $path = trim($request->path(), '/');
@@ -25,6 +27,16 @@ class FrontendFallbackPageController extends Controller
         }
 
         $viewPaths = $themes->viewPathsForCurrentSite();
+        $wsreRendered = $wsreEngine->render($viewPaths, $path, [
+            'locale' => app()->getLocale(),
+            'request_path' => $path,
+            'admin_prefix' => trim((string) config('app.admin_url_prefix', 'admin'), '/'),
+        ]);
+
+        if (is_string($wsreRendered) && $wsreRendered !== '') {
+            return response($wsreRendered, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
+        }
+
         $template = $this->resolveTemplate($path, $viewPaths);
 
         if ($template !== null) {

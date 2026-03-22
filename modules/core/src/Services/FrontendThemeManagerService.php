@@ -364,18 +364,28 @@ class FrontendThemeManagerService
 
         $manifest = $parsed['manifest'];
 
-        if (! is_array($manifest) || (string) (($manifest['render']['engine'] ?? '')) !== 'twig') {
+        if (! is_array($manifest)) {
             return false;
         }
 
-        if (! $this->files->exists($themePath.'/layouts/app.twig')) {
-            return false;
+        $engine = strtolower(trim((string) ($manifest['render']['engine'] ?? '')));
+
+        if ($engine === 'twig') {
+            if (! $this->files->exists($themePath.'/layouts/app.twig')) {
+                return false;
+            }
+
+            if (! $this->files->exists($themePath.'/pages/home.twig')) {
+                return false;
+            }
+
+            return true;
         }
 
-        if (! $this->files->exists($themePath.'/pages/home.twig')) {
-            return false;
+        if ($engine === 'wsre') {
+            return $this->files->exists($themePath.'/pages/home.json');
         }
 
-        return true;
+        return false;
     }
 }
