@@ -2,17 +2,17 @@
 
 namespace Plugins\DemoWebstudioRegister\Webstudio\Components;
 
-use Pagify\PageBuilder\Contracts\WebstudioCustomComponent;
-use Pagify\PageBuilder\Support\WebstudioComponentDefinitionBuilder;
+use Pagify\PageBuilder\Webstudio\Contracts\CustomComponent;
+use Pagify\PageBuilder\Webstudio\Support\ComponentDefinitionBuilder;
 
-class CtaStripComponent implements WebstudioCustomComponent
+class CtaStripComponent implements CustomComponent
 {
 	/**
 	 * @return array<string, mixed>
 	 */
 	public function definition(): array
 	{
-		return WebstudioComponentDefinitionBuilder::make('cta-strip', 'Demo CTA Strip')
+		return ComponentDefinitionBuilder::make('cta-strip', 'Demo CTA Strip')
 			->description('Simple CTA strip registered by plugin class.')
 			->icon('📣')
 			->category('Demo Components')

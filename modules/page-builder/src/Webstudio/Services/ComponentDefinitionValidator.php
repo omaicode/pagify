@@ -1,12 +1,18 @@
 <?php
 
-namespace Pagify\PageBuilder\Services;
+namespace Pagify\PageBuilder\Webstudio\Services;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Pagify\PageBuilder\Webstudio\Helpers\ComponentDynamicContextHelper;
 
-class WebstudioComponentDefinitionValidator
+class ComponentDefinitionValidator
 {
+	public function __construct(
+		private readonly ComponentDynamicContextHelper $contextHelper,
+	) {
+	}
+
 	/**
 	 * @param array<string, mixed> $definition
 	 * @return array<string, mixed>|null
@@ -41,6 +47,7 @@ class WebstudioComponentDefinitionValidator
 			? (array) $definition['props_schema']
 			: [];
 		$normalized['children'] = $this->normalizeChildren($definition['children'] ?? []);
+		$normalized['dynamic_data'] = $this->normalizeDynamicData($definition['dynamic_data'] ?? []);
 
 		$normalized['attributes'] = $this->normalizeAttributes($definition['attributes'] ?? []);
 
@@ -50,6 +57,17 @@ class WebstudioComponentDefinitionValidator
 
 		if (isset($definition['style'])) {
 			$normalized['style'] = $this->normalizeStyleValue($definition['style']);
+		}
+
+		$placeholderErrors = $this->contextHelper->validateDefinitionPlaceholders($normalized);
+		if ($placeholderErrors !== []) {
+			Log::warning('Webstudio custom component has invalid placeholders and has been skipped.', [
+				'context' => $context,
+				'errors' => $placeholderErrors,
+				'supported_roots' => $this->contextHelper->supportedPlaceholderRoots(),
+			]);
+
+			return null;
 		}
 
 		return $normalized;
@@ -263,5 +281,48 @@ class WebstudioComponentDefinitionValidator
 		}
 
 		return $resolved !== [] ? $resolved : null;
+	}
+
+	/**
+	 * @param mixed $value
+	 * @return array<string, mixed>
+	 */
+	private function normalizeDynamicData(mixed $value): array
+	{
+		if (! is_array($value)) {
+			return [];
+		}
+
+		$resolved = [];
+		foreach ($value as $key => $item) {
+			if (! is_string($key) || trim($key) === '') {
+				continue;
+			}
+
+			$resolved[$key] = $this->normalizeDynamicNode($item);
+		}
+
+		return $resolved;
+	}
+
+	/**
+	 * @return mixed
+	 */
+	private function normalizeDynamicNode(mixed $value): mixed
+	{
+		if (is_scalar($value) || $value === null) {
+			return $value;
+		}
+
+		if (! is_array($value)) {
+			return null;
+		}
+
+		$resolved = [];
+		foreach ($value as $key => $item) {
+			$resolved[$key] = $this->normalizeDynamicNode($item);
+		}
+
+		return $resolved;
 	}
 }

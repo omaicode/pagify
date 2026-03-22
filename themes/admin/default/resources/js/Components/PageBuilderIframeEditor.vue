@@ -15,10 +15,6 @@ const props = defineProps({
         type: Array,
         default: () => ['desktop', 'tablet', 'mobile'],
     },
-    blocks: {
-        type: Array,
-        default: () => [],
-    },
     activeTheme: {
         type: String,
         default: '',

@@ -1,16 +1,19 @@
 <?php
 
-namespace Pagify\PageBuilder\Services;
+namespace Pagify\PageBuilder\Webstudio\Services;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Pagify\Core\Support\SiteContext;
-use Pagify\PageBuilder\Http\Controllers\Api\Concerns\InteractsWithWebstudioProjectState;
+use Pagify\PageBuilder\Services\EditorAccessTokenService;
+use Pagify\PageBuilder\Services\PageService;
+use Pagify\PageBuilder\Services\TrpcEnvelope;
+use Pagify\PageBuilder\Webstudio\Http\Controllers\Api\Concerns\InteractsWithProjectState;
 
-class WebstudioTrpcService
+class TrpcService
 {
-	use InteractsWithWebstudioProjectState;
+	use InteractsWithProjectState;
 
 	public function __construct(
 		private readonly PageService $pageService,

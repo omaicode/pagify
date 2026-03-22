@@ -42,10 +42,7 @@ All admin APIs are prefixed by:
 
 Primary page builder APIs:
 
-- `/page-builder/registry`
 - `/page-builder/editor/access-token`
-- `/page-builder/editor/verify-token`
-- `/page-builder/editor/contract`
 - `/page-builder/pages`
 - `/page-builder/pages/{page}`
 - `/page-builder/pages/{page}/publish`

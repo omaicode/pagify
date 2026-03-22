@@ -18,7 +18,6 @@ use Pagify\Core\Services\ThemeHelpers\AssetThemeHelper;
 use Pagify\PageBuilder\Http\Requests\Admin\StorePageRequest;
 use Pagify\PageBuilder\Http\Requests\Admin\UpdatePageRequest;
 use Pagify\PageBuilder\Models\Page;
-use Pagify\PageBuilder\Services\BlockRegistryService;
 use Pagify\PageBuilder\Services\EditorAccessTokenService;
 use Pagify\PageBuilder\Services\PageService;
 
@@ -30,7 +29,6 @@ class PageController extends Controller
 
 	public function __construct(
 		private readonly PageService $pageService,
-		private readonly BlockRegistryService $blockRegistry,
 		private readonly AuditLogger $auditLogger,
 		private readonly SiteContext $siteContext,
 		private readonly FrontendThemeManagerService $themes,
@@ -97,15 +95,7 @@ class PageController extends Controller
 	 */
 	private function editorPayload(Request $request, ?Page $page = null): array
 	{
-		$allBlocks = $this->blockRegistry->all();
 		$editorConfig = (array) config('page-builder.editor', []);
-		$simplifiedMode = (bool) ($editorConfig['simplified_mode'] ?? true);
-		$primaryBlockKeys = array_values(array_filter(array_map(
-			static fn (mixed $key): string => trim((string) $key),
-			(array) ($editorConfig['primary_blocks'] ?? []),
-		), static fn (string $key): bool => $key !== ''));
-
-		$blocks = $this->sortBlocksForEditor($allBlocks, $primaryBlockKeys);
 		$activeThemeSlug = $this->themes->activeThemeForCurrentSite();
 		$layouts = $this->activeThemeLayouts($activeThemeSlug);
 		$canvasStyles = [];
@@ -119,12 +109,9 @@ class PageController extends Controller
 			: null;
 
 		return [
-			'blocks' => $blocks,
 			'layouts' => $layouts,
 			'default_layout' => $layouts[0]['path'] ?? '',
 			'breakpoints' => array_values((array) config('page-builder.breakpoints', ['desktop', 'tablet', 'mobile'])),
-			'simple_mode' => $simplifiedMode,
-			'primary_block_keys' => $primaryBlockKeys,
 			'active_theme' => $activeThemeSlug,
 			'canvas_styles' => $canvasStyles,
 			'preview_url' => $previewUrl,
@@ -133,7 +120,7 @@ class PageController extends Controller
 	}
 
 	/**
-	 * @return array{enabled: bool, url: string, origin: string, access_token: string, token_expires_at: ?string, token_refresh_url: string, token_verify_url: string, contract_url: string, message_namespace: string}
+	 * @return array{enabled: bool, url: string, origin: string, access_token: string, token_expires_at: ?string, token_refresh_url: string, message_namespace: string}
 	 */
 	private function iframeEditorPayload(Request $request, string $activeThemeSlug, ?Page $page = null): array
 	{
@@ -183,8 +170,6 @@ class PageController extends Controller
 			'access_token' => $issuedToken['token'],
 			'token_expires_at' => $issuedToken['expires_at'],
 			'token_refresh_url' => route('page-builder.api.v1.admin.editor.access-token', [], false),
-			'token_verify_url' => route('page-builder.api.v1.admin.editor.verify-token', [], false),
-			'contract_url' => route('page-builder.api.v1.admin.editor.contract', [], false),
 			'message_namespace' => 'pagify:editor',
 		];
 	}
@@ -272,36 +257,6 @@ class PageController extends Controller
 		}
 
 		return ['html' => $html, 'css' => $css];
-	}
-
-	/**
-	 * @param array<int, array<string, mixed>> $blocks
-	 * @param array<int, string> $primaryBlockKeys
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function sortBlocksForEditor(array $blocks, array $primaryBlockKeys): array
-	{
-		if ($primaryBlockKeys === []) {
-			return $blocks;
-		}
-
-		$priority = array_flip($primaryBlockKeys);
-		$sorted = $blocks;
-
-		usort($sorted, static function (array $left, array $right) use ($priority): int {
-			$leftKey = (string) ($left['key'] ?? '');
-			$rightKey = (string) ($right['key'] ?? '');
-			$leftRank = array_key_exists($leftKey, $priority) ? (int) $priority[$leftKey] : PHP_INT_MAX;
-			$rightRank = array_key_exists($rightKey, $priority) ? (int) $priority[$rightKey] : PHP_INT_MAX;
-
-			if ($leftRank === $rightRank) {
-				return strcmp((string) ($left['label'] ?? $leftKey), (string) ($right['label'] ?? $rightKey));
-			}
-
-			return $leftRank <=> $rightRank;
-		});
-
-		return $sorted;
 	}
 
 	/**

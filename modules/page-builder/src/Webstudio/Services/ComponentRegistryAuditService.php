@@ -1,21 +1,21 @@
 <?php
 
-namespace Pagify\PageBuilder\Services;
+namespace Pagify\PageBuilder\Webstudio\Services;
 
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Str;
 use Pagify\Core\Services\ModuleRegistry;
 use Pagify\Core\Services\PluginManagerService;
-use Pagify\PageBuilder\Contracts\WebstudioCustomComponent;
+use Pagify\PageBuilder\Webstudio\Contracts\CustomComponent;
 use Throwable;
 
-class WebstudioComponentRegistryAuditService
+class ComponentRegistryAuditService
 {
 	public function __construct(
 		private readonly Container $app,
 		private readonly ModuleRegistry $modules,
 		private readonly PluginManagerService $plugins,
-		private readonly WebstudioComponentDefinitionValidator $validator,
+		private readonly ComponentDefinitionValidator $validator,
 	) {
 	}
 
@@ -119,12 +119,12 @@ class WebstudioComponentRegistryAuditService
 				continue;
 			}
 
-			if (! is_subclass_of($componentClass, WebstudioCustomComponent::class)) {
+			if (! is_subclass_of($componentClass, CustomComponent::class)) {
 				$issues[] = [
 					'owner' => $owner,
 					'owner_type' => $ownerType,
 					'class' => $componentClass,
-					'error' => sprintf('Class must implement %s.', WebstudioCustomComponent::class),
+					'error' => sprintf('Class must implement %s.', CustomComponent::class),
 				];
 
 				continue;

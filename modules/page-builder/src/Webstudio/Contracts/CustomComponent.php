@@ -1,8 +1,8 @@
 <?php
 
-namespace Pagify\PageBuilder\Contracts;
+namespace Pagify\PageBuilder\Webstudio\Contracts;
 
-interface WebstudioCustomComponent
+interface CustomComponent
 {
 	/**
 	 * @return array<string, mixed>

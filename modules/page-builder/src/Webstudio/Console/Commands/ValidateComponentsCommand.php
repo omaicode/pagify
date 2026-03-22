@@ -1,17 +1,17 @@
 <?php
 
-namespace Pagify\PageBuilder\Console\Commands;
+namespace Pagify\PageBuilder\Webstudio\Console\Commands;
 
 use Illuminate\Console\Command;
-use Pagify\PageBuilder\Services\WebstudioComponentRegistryAuditService;
+use Pagify\PageBuilder\Webstudio\Services\ComponentRegistryAuditService;
 
-class ValidateWebstudioComponentsCommand extends Command
+class ValidateComponentsCommand extends Command
 {
 	protected $signature = 'cms:page-builder:validate-webstudio-components {--json : Output machine-readable JSON report}';
 
 	protected $description = 'Validate webstudio_components registrations across all modules and plugins.';
 
-	public function handle(WebstudioComponentRegistryAuditService $audit): int
+	public function handle(ComponentRegistryAuditService $audit): int
 	{
 		$report = $audit->auditAll();
 

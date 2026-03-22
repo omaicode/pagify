@@ -76,52 +76,6 @@ class PageBuilderLifecycleTest extends TestCase
 		$this->assertNotNull($page->published_at);
 	}
 
-	public function test_registry_api_returns_blocks_and_breakpoints(): void
-	{
-		$accessToken = $this->issueEditorToken(['page:read']);
-
-		$response = $this->withEditorToken($accessToken)->get('/api/v1/admin/page-builder/registry');
-
-		$response
-			->assertOk()
-			->assertJsonPath('success', true)
-			->assertJsonStructure([
-				'success',
-				'data' => ['blocks', 'breakpoints'],
-			]);
-	}
-
-	public function test_registry_api_includes_event_bus_registered_components_with_owner_prefix(): void
-	{
-		/** @var EventBus $eventBus */
-		$eventBus = app(EventBus::class);
-		$eventBus->onHook('page-builder.webstudio.components', static fn (): array => [
-			[
-				'key' => 'hero-banner',
-				'label' => 'Hero Banner',
-				'owner' => 'marketing-plugin',
-				'owner_type' => 'plugin',
-				'category' => 'Marketing',
-				'element' => 'section',
-				'class' => ['hero', 'hero--marketing'],
-				'style' => ['padding' => '32px'],
-				'attributes' => ['data-segment' => 'b2b'],
-				'text' => 'Hero Banner',
-			],
-		]);
-
-		$accessToken = $this->issueEditorToken(['page:read']);
-
-		$this->withEditorToken($accessToken)
-			->get('/api/v1/admin/page-builder/registry')
-			->assertOk()
-			->assertJsonFragment([
-				'key' => 'marketing-plugin:hero-banner',
-				'owner' => 'marketing-plugin',
-				'owner_type' => 'plugin',
-				'source' => 'hook',
-			]);
-	}
 
 	public function test_webstudio_data_payload_exposes_registered_components(): void
 	{
@@ -202,28 +156,6 @@ class PageBuilderLifecycleTest extends TestCase
 
 		$accessToken = $this->issueEditorToken(['page:read'], pageId: $page->id, pageSlug: $page->slug);
 
-		$this->withEditorToken($accessToken)
-			->get('/api/v1/admin/page-builder/registry')
-			->assertOk()
-			->assertJsonFragment([
-				'key' => 'demo-webstudio-register:hero-banner',
-				'label' => 'Demo Hero Banner',
-				'owner' => 'demo-webstudio-register',
-				'owner_type' => 'plugin',
-			]);
-
-		$registry = $this->withEditorToken($accessToken)
-			->get('/api/v1/admin/page-builder/registry')
-			->assertOk();
-
-		$blocks = data_get($registry->json(), 'data.blocks', []);
-		$this->assertIsArray($blocks);
-		$hero = collect($blocks)->first(static fn (mixed $item): bool => is_array($item) && ($item['key'] ?? null) === 'demo-webstudio-register:hero-banner');
-		$this->assertIsArray($hero);
-		$this->assertStringContainsString('<section', (string) ($hero['html_template'] ?? ''));
-		$this->assertStringContainsString('class="demo-hero demo-hero--primary"', (string) ($hero['html_template'] ?? ''));
-		$this->assertStringContainsString('data-variant="hero"', (string) ($hero['html_template'] ?? ''));
-
 		$dataResponse = $this->withEditorToken($accessToken)
 			->getJson('/api/v1/admin/page-builder/data/' . $page->id)
 			->assertOk();
@@ -241,6 +173,12 @@ class PageBuilderLifecycleTest extends TestCase
 
 		$cta = collect($registeredComponents)->first(static fn (mixed $item): bool => is_array($item) && ($item['key'] ?? null) === 'demo-webstudio-register:cta-strip');
 		$this->assertIsArray($cta);
+		$heroRegistered = collect($registeredComponents)->first(static fn (mixed $item): bool => is_array($item) && ($item['key'] ?? null) === 'demo-webstudio-register:hero-banner');
+		$this->assertIsArray($heroRegistered);
+		$this->assertStringContainsString('<section', (string) ($heroRegistered['html_template'] ?? ''));
+		$this->assertStringContainsString('class="demo-hero demo-hero--primary"', (string) ($heroRegistered['html_template'] ?? ''));
+		$this->assertStringContainsString('data-variant="plugin-registry-page"', (string) ($heroRegistered['html_template'] ?? ''));
+		$this->assertStringContainsString('Demo Hero Banner for Plugin Registry Page', (string) ($heroRegistered['html_template'] ?? ''));
 		$this->assertSame('div', (string) ($cta['tag'] ?? ''));
 		$this->assertSame('demo-cta-strip', (string) ($cta['class'] ?? ''));
 		$this->assertStringContainsString('display:flex', (string) ($cta['style'] ?? ''));
@@ -250,6 +188,9 @@ class PageBuilderLifecycleTest extends TestCase
 		$this->assertSame('p', (string) (($cta['children'][1]['element'] ?? '')));
 		$this->assertSame('Simple CTA strip', (string) (($cta['children'][1]['text'] ?? '')));
 		$this->assertStringContainsString('<div', (string) ($cta['html_template'] ?? ''));
+		$this->assertSame('Page: Plugin Registry Page', (string) (($heroRegistered['dynamic_data']['summary'] ?? '')));
+		$this->assertStringContainsString('Page: Plugin Registry Page', (string) ($heroRegistered['description'] ?? ''));
+		$this->assertStringContainsString('Demo Hero Banner for Plugin Registry Page', (string) ($heroRegistered['text'] ?? ''));
 	}
 
 	public function test_create_and_publish_page_with_webstudio_layout_payload(): void
@@ -328,46 +269,6 @@ class PageBuilderLifecycleTest extends TestCase
 			->assertJsonPath('success', true);
 	}
 
-	public function test_editor_verify_token_endpoint_accepts_valid_token(): void
-	{
-		$accessToken = $this->issueEditorToken(['page:read']);
-
-		$this->postJson('/api/v1/admin/page-builder/editor/verify-token', [
-			'token' => $accessToken,
-		])
-			->assertOk()
-			->assertJsonPath('success', true)
-			->assertJsonPath('data.valid', true);
-	}
-
-	public function test_editor_verify_token_endpoint_rejects_invalid_token(): void
-	{
-		$this->postJson('/api/v1/admin/page-builder/editor/verify-token', [
-			'token' => 'invalid-token',
-		])
-			->assertStatus(401)
-			->assertJsonPath('success', false)
-			->assertJsonPath('code', 'UNAUTHORIZED');
-	}
-
-	public function test_editor_verify_token_endpoint_rejects_replay_when_consume_enabled(): void
-	{
-		$accessToken = $this->issueEditorToken(['page:read']);
-
-		$this->postJson('/api/v1/admin/page-builder/editor/verify-token', [
-			'token' => $accessToken,
-			'consume' => true,
-		])
-			->assertOk()
-			->assertJsonPath('success', true);
-
-		$this->postJson('/api/v1/admin/page-builder/editor/verify-token', [
-			'token' => $accessToken,
-			'consume' => true,
-		])
-			->assertStatus(401)
-			->assertJsonPath('code', 'UNAUTHORIZED');
-	}
 
 	public function test_webstudio_cgi_image_route_redirects_same_origin_absolute_asset_url(): void
 	{
@@ -383,89 +284,6 @@ class PageBuilderLifecycleTest extends TestCase
 
 		$response
 			->assertRedirect('/storage/media/2026/03/demo.png');
-	}
-
-	public function test_editor_contract_endpoint_returns_runtime_contract_and_endpoints(): void
-	{
-		$response = $this->getJson('/api/v1/admin/page-builder/editor/contract');
-
-		$response
-			->assertOk()
-			->assertJsonPath('success', true)
-			->assertJsonPath('data.contract.namespace', 'pagify:editor')
-			->assertJsonPath('data.contract.protocol_version', 1)
-			->assertJsonPath('data.contract.messages.parent_to_child.init', 'pagify:editor:init')
-			->assertJsonPath('data.endpoints.token_access', route('page-builder.api.v1.admin.editor.access-token'))
-			->assertJsonPath('data.endpoints.token_verify', route('page-builder.api.v1.admin.editor.verify-token'))
-			->assertJsonPath('data.endpoints.builder_data', route('page-builder.api.v1.admin.editor.builder-data'))
-			->assertJsonPath('data.endpoints.media_assets', route('page-builder.api.v1.admin.editor.media.assets'))
-			->assertJsonPath('data.endpoints.media_assets_upload', route('page-builder.api.v1.admin.editor.media.assets.upload'));
-	}
-
-	public function test_editor_builder_data_endpoint_returns_layout_context_for_valid_token(): void
-	{
-		$page = Page::query()->create([
-			'title' => 'Builder Data',
-			'slug' => 'builder-data',
-			'status' => 'draft',
-			'layout_json' => [
-				'type' => 'webstudio',
-				'webstudio' => [
-					'html' => '<main data-pbx-content-slot="true"><section>Builder data</section></main>',
-				],
-			],
-			'seo_meta_json' => [
-				'title' => 'Builder Data SEO',
-			],
-		]);
-
-		$accessToken = $this->issueEditorToken(['page:read'], pageId: $page->id, pageSlug: $page->slug);
-
-		$this->postJson('/api/v1/admin/page-builder/editor/builder-data', [
-			'token' => $accessToken,
-		])
-			->assertOk()
-			->assertJsonPath('success', true)
-			->assertJsonPath('data.page.id', $page->id)
-			->assertJsonPath('data.layout.type', 'webstudio')
-			->assertJsonStructure([
-				'success',
-				'data' => [
-					'context' => ['active_theme', 'breakpoints', 'blocks', 'canvas_styles'],
-				],
-			])
-			->assertJsonPath('data.context.breakpoints.0', 'desktop');
-	}
-
-	public function test_editor_builder_data_endpoint_rejects_invalid_token(): void
-	{
-		$this->postJson('/api/v1/admin/page-builder/editor/builder-data', [
-			'token' => 'invalid-token',
-		])
-			->assertStatus(401)
-			->assertJsonPath('success', false)
-			->assertJsonPath('code', 'UNAUTHORIZED');
-	}
-
-	public function test_editor_builder_data_endpoint_returns_forbidden_when_site_scope_mismatches(): void
-	{
-		/** @var EditorAccessTokenService $tokenService */
-		$tokenService = app(EditorAccessTokenService::class);
-
-		$issued = $tokenService->issue([
-			'admin_id' => null,
-			'site_id' => 999999,
-			'theme' => 'default',
-			'scopes' => ['page:read'],
-		]);
-
-		$token = (string) ($issued['token'] ?? '');
-
-		$this->postJson('/api/v1/admin/page-builder/editor/builder-data', [
-			'token' => $token,
-		])
-			->assertStatus(403)
-			->assertJsonPath('code', 'FORBIDDEN');
 	}
 
 	public function test_editor_media_assets_endpoint_returns_media_for_valid_token(): void

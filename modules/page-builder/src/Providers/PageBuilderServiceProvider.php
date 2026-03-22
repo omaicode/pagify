@@ -5,10 +5,10 @@ namespace Pagify\PageBuilder\Providers;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Pagify\Core\Services\EventBus;
-use Pagify\PageBuilder\Console\Commands\ValidateWebstudioComponentsCommand;
+use Pagify\PageBuilder\Webstudio\Console\Commands\ValidateComponentsCommand;
 use Pagify\PageBuilder\Models\Page;
 use Pagify\PageBuilder\Policies\PagePolicy;
-use Pagify\PageBuilder\Services\WebstudioComponentDefinitionDiscoveryService;
+use Pagify\PageBuilder\Webstudio\Services\ComponentDefinitionDiscoveryService;
 
 class PageBuilderServiceProvider extends ServiceProvider
 {
@@ -35,7 +35,7 @@ class PageBuilderServiceProvider extends ServiceProvider
 		Gate::policy(Page::class, PagePolicy::class);
 
 		$eventBus = $this->app->make(EventBus::class);
-		$discovery = $this->app->make(WebstudioComponentDefinitionDiscoveryService::class);
+		$discovery = $this->app->make(ComponentDefinitionDiscoveryService::class);
 
 		$eventBus->onHook('page-builder.webstudio.components', static function () use ($discovery): array {
 			return $discovery->discover();
@@ -43,7 +43,7 @@ class PageBuilderServiceProvider extends ServiceProvider
 
 		if ($this->app->runningInConsole()) {
 			$this->commands([
-				ValidateWebstudioComponentsCommand::class,
+				ValidateComponentsCommand::class,
 			]);
 		}
 	}

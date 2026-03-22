@@ -37,10 +37,7 @@ The current integration no longer uses an external iframe host as the primary ed
 
 Primary admin APIs:
 
-- `api/v1/{admin_prefix}/page-builder/registry`
 - `api/v1/{admin_prefix}/page-builder/editor/access-token`
-- `api/v1/{admin_prefix}/page-builder/editor/verify-token`
-- `api/v1/{admin_prefix}/page-builder/editor/contract`
 - `api/v1/{admin_prefix}/page-builder/pages`
 - `api/v1/{admin_prefix}/page-builder/pages/{page}`
 - `api/v1/{admin_prefix}/page-builder/pages/{page}/publish`
@@ -161,7 +158,7 @@ Page Builder supports component registration from both module and plugin by usin
 
 1. Page Builder subscribes hook `page-builder.webstudio.components` on Event Bus.
 2. Discovery service scans enabled modules/plugins for class references in the main config.
-3. Definitions are normalized by `BlockRegistryService` with owner metadata.
+3. Definitions are normalized and validated by `ComponentDefinitionDiscoveryService` + `ComponentDefinitionValidator` with owner metadata.
 4. Registry endpoint returns owner-aware blocks.
 5. Compatibility `GET /data/{projectId}` returns `registeredComponents` for editor bootstrap.
 6. Webstudio Components tab groups registered items by owner (module/plugin).
@@ -198,17 +195,17 @@ return [
 ];
 ```
 
-Each component class must implement `Pagify\PageBuilder\Contracts\WebstudioCustomComponent` and return a definition array.
+Each component class must implement `Pagify\PageBuilder\Webstudio\Contracts\CustomComponent` and return a definition array.
 Dynamic fallback via arbitrary `definition()` objects is not supported.
 
-To reduce verbosity and avoid missing fields, you can use `Pagify\PageBuilder\Support\WebstudioComponentDefinitionBuilder`:
+To reduce verbosity and avoid missing fields, you can use `Pagify\PageBuilder\Webstudio\Support\ComponentDefinitionBuilder`:
 
 ```php
 <?php
 
-use Pagify\PageBuilder\Support\WebstudioComponentDefinitionBuilder;
+use Pagify\PageBuilder\Webstudio\Support\ComponentDefinitionBuilder;
 
-return WebstudioComponentDefinitionBuilder::make('hero-banner', 'Hero Banner')
+return ComponentDefinitionBuilder::make('hero-banner', 'Hero Banner')
   ->description('Starter hero block')
   ->element('section')
   ->classes(['hero', 'hero--primary'])
@@ -237,6 +234,7 @@ return WebstudioComponentDefinitionBuilder::make('hero-banner', 'Hero Banner')
 - `attributes` (optional): HTML attributes map (`data-*`, `role`, etc.)
 - `text` or `inner_html` (optional): inner content for generated template
 - `children` (optional): nested child nodes/components for template composition
+- `dynamic_data` (optional): dynamic context payload for server-side pre-render in editor APIs
 - `props_schema` (optional): custom props metadata
 
 `children` supports:
@@ -247,7 +245,7 @@ return WebstudioComponentDefinitionBuilder::make('hero-banner', 'Hero Banner')
 Example:
 
 ```php
-return WebstudioComponentDefinitionBuilder::make('cta-strip', 'CTA Strip')
+return ComponentDefinitionBuilder::make('cta-strip', 'CTA Strip')
   ->tag('div')
   ->classes('cta-strip')
   ->children([
@@ -257,6 +255,42 @@ return WebstudioComponentDefinitionBuilder::make('cta-strip', 'CTA Strip')
       'text' => 'Nested note',
     ],
   ])
+  ->toArray();
+```
+
+### Dynamic data pre-render before editor
+
+Custom component definitions support server-side placeholder rendering before payload is sent to Webstudio editor.
+
+- Placeholder format: `{{ page.title }}`, `{{ page.slug }}`, `{{ dynamic.summary }}`, `{{ now }}`
+- Rendering is applied in both:
+  - `GET /api/v1/{admin_prefix}/page-builder/data/{projectId}`
+- Target fields are rendered before editor bootstrap: `label`, `description`, `html_template`, `text`, `inner_html`, `class`, `style`, attribute values, nested `children`, and `dynamic_data`.
+
+Supported placeholder namespaces (via context helper):
+
+- `page.*`
+- `project.*`
+- `runtime.*`
+- `dynamic.*`
+- `now`
+
+Fail-fast validation:
+
+- Invalid placeholder root (for example `{{ foo.bar }}`) makes the component definition invalid and it will be skipped.
+- Invalid/malformed placeholder syntax (for example missing `}}`) makes the component definition invalid and it will be skipped.
+- `dynamic.*` must reference an existing key in `dynamic_data`; unknown paths are rejected.
+
+Example:
+
+```php
+return ComponentDefinitionBuilder::make('hero-banner', 'Hero Banner')
+  ->dynamicData([
+    'summary' => 'Page: {{ page.title }}',
+  ])
+  ->description('Dynamic summary: {{ dynamic.summary }}')
+  ->attribute('data-page', '{{ page.slug }}')
+  ->text('Welcome to {{ page.title }}')
   ->toArray();
 ```
 
@@ -273,7 +307,7 @@ return WebstudioComponentDefinitionBuilder::make('cta-strip', 'CTA Strip')
 
 1. Add or update component class and register it in module/plugin main config.
 2. Ensure module/plugin is enabled.
-3. Open `GET /api/v1/{admin_prefix}/page-builder/registry` and verify `owner`, `owner_type`, `source`, and normalized `key`.
+3. Open `GET /api/v1/{admin_prefix}/page-builder/data/{projectId}` and verify `registeredComponents` include `owner`, `owner_type`, `source`, and normalized `key`.
 4. Open `GET /api/v1/{admin_prefix}/page-builder/data/{projectId}` and verify `registeredComponents` payload.
 5. Open editor and confirm Components tab shows a group named by owner with registered items.
 

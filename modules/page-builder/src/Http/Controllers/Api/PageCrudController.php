@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Pagify\Core\Http\Controllers\Api\ApiController;
 use Pagify\Core\Services\AuditLogger;
 use Pagify\Core\Support\SiteContext;
-use Pagify\PageBuilder\Http\Controllers\Api\Concerns\InteractsWithWebstudioProjectState;
+use Pagify\PageBuilder\Webstudio\Http\Controllers\Api\Concerns\InteractsWithProjectState;
 use Pagify\PageBuilder\Http\Requests\Admin\StorePageRequest;
 use Pagify\PageBuilder\Http\Requests\Admin\UpdatePageRequest;
 use Pagify\PageBuilder\Models\Page;
@@ -16,7 +16,7 @@ use Pagify\PageBuilder\Services\PageService;
 
 class PageCrudController extends ApiController
 {
-	use InteractsWithWebstudioProjectState;
+	use InteractsWithProjectState;
 
 	public function __construct(
 		private readonly PageService $pageService,

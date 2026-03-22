@@ -1,6 +1,6 @@
 <?php
 
-namespace Pagify\PageBuilder\Http\Controllers\Api\Concerns;
+namespace Pagify\PageBuilder\Webstudio\Http\Controllers\Api\Concerns;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -10,7 +10,7 @@ use Pagify\PageBuilder\Models\Page;
 use Pagify\PageBuilder\Models\PageBuilderState;
 use Pagify\PageBuilder\Services\EditorAccessTokenService;
 
-trait InteractsWithWebstudioProjectState
+trait InteractsWithProjectState
 {
 	/**
 	 * @return array<string, mixed>|JsonResponse

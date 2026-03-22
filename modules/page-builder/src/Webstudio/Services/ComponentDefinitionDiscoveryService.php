@@ -1,22 +1,22 @@
 <?php
 
-namespace Pagify\PageBuilder\Services;
+namespace Pagify\PageBuilder\Webstudio\Services;
 
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Pagify\Core\Services\ModuleRegistry;
 use Pagify\Core\Services\PluginManagerService;
-use Pagify\PageBuilder\Contracts\WebstudioCustomComponent;
+use Pagify\PageBuilder\Webstudio\Contracts\CustomComponent;
 use Throwable;
 
-class WebstudioComponentDefinitionDiscoveryService
+class ComponentDefinitionDiscoveryService
 {
 	public function __construct(
 		private readonly Container $app,
 		private readonly ModuleRegistry $modules,
 		private readonly PluginManagerService $plugins,
-		private readonly WebstudioComponentDefinitionValidator $validator,
+		private readonly ComponentDefinitionValidator $validator,
 	) {
 	}
 
@@ -150,12 +150,12 @@ class WebstudioComponentDefinitionDiscoveryService
 				continue;
 			}
 
-			if (! is_subclass_of($componentClass, WebstudioCustomComponent::class)) {
+			if (! is_subclass_of($componentClass, CustomComponent::class)) {
 				Log::warning('Webstudio custom component class must implement interface and has been skipped.', [
 					'class' => $componentClass,
 					'owner' => $owner,
 					'owner_type' => $ownerType,
-					'interface' => WebstudioCustomComponent::class,
+					'interface' => CustomComponent::class,
 				]);
 
 				continue;
@@ -201,10 +201,10 @@ class WebstudioComponentDefinitionDiscoveryService
 	 */
 	private function resolveComponentDefinition(mixed $component, string $componentClass): ?array
 	{
-		if (! $component instanceof WebstudioCustomComponent) {
+		if (! $component instanceof CustomComponent) {
 			Log::warning('Webstudio custom component class must implement interface and has been skipped.', [
 				'class' => $componentClass,
-				'interface' => WebstudioCustomComponent::class,
+				'interface' => CustomComponent::class,
 			]);
 
 			return null;

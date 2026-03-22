@@ -2,14 +2,14 @@
 
 namespace Pagify\PageBuilder\Tests\Unit;
 
-use Pagify\PageBuilder\Services\WebstudioComponentDefinitionValidator;
+use Pagify\PageBuilder\Webstudio\Services\ComponentDefinitionValidator;
 use Tests\TestCase;
 
 class WebstudioComponentDefinitionValidatorTest extends TestCase
 {
 	public function test_validator_fills_defaults_and_normalizes_values(): void
 	{
-		$validator = new WebstudioComponentDefinitionValidator();
+		$validator = app(ComponentDefinitionValidator::class);
 
 		$normalized = $validator->validateAndNormalize([
 			'key' => 'demo:cta_strip',
@@ -40,7 +40,7 @@ class WebstudioComponentDefinitionValidatorTest extends TestCase
 
 	public function test_validator_rejects_missing_or_invalid_key(): void
 	{
-		$validator = new WebstudioComponentDefinitionValidator();
+		$validator = app(ComponentDefinitionValidator::class);
 
 		$this->assertNull($validator->validateAndNormalize([], 'unit-test-missing-key'));
 		$this->assertNull($validator->validateAndNormalize(['key' => 'invalid key'], 'unit-test-invalid-key'));
@@ -48,7 +48,7 @@ class WebstudioComponentDefinitionValidatorTest extends TestCase
 
 	public function test_validator_normalizes_children_nodes(): void
 	{
-		$validator = new WebstudioComponentDefinitionValidator();
+		$validator = app(ComponentDefinitionValidator::class);
 
 		$normalized = $validator->validateAndNormalize([
 			'key' => 'demo:composite',
@@ -76,5 +76,52 @@ class WebstudioComponentDefinitionValidatorTest extends TestCase
 		$this->assertSame('child child--inline', $normalized['children'][1]['class']);
 		$this->assertSame('data-active', $normalized['children'][1]['attributes']['data-active']);
 		$this->assertSame('demo:cta', $normalized['children'][1]['children'][0]['key']);
+	}
+
+	public function test_validator_normalizes_dynamic_data_payload(): void
+	{
+		$validator = app(ComponentDefinitionValidator::class);
+
+		$normalized = $validator->validateAndNormalize([
+			'key' => 'demo:dynamic',
+			'dynamic_data' => [
+				'title' => '{{ page.title }}',
+				'nested' => [
+					'path' => '{{ page.slug }}',
+				],
+			],
+		], 'unit-test-dynamic-data');
+
+		$this->assertIsArray($normalized);
+		$this->assertIsArray($normalized['dynamic_data']);
+		$this->assertSame('{{ page.title }}', $normalized['dynamic_data']['title']);
+		$this->assertSame('{{ page.slug }}', $normalized['dynamic_data']['nested']['path']);
+	}
+
+	public function test_validator_rejects_invalid_placeholder_roots(): void
+	{
+		$validator = app(ComponentDefinitionValidator::class);
+
+		$normalized = $validator->validateAndNormalize([
+			'key' => 'demo:invalid-placeholder',
+			'text' => 'Hello {{ foo.bar }}',
+		], 'unit-test-invalid-placeholder');
+
+		$this->assertNull($normalized);
+	}
+
+	public function test_validator_rejects_unknown_dynamic_placeholder_path(): void
+	{
+		$validator = app(ComponentDefinitionValidator::class);
+
+		$normalized = $validator->validateAndNormalize([
+			'key' => 'demo:invalid-dynamic-placeholder',
+			'dynamic_data' => [
+				'title' => 'Demo',
+			],
+			'text' => 'Hello {{ dynamic.subtitle }}',
+		], 'unit-test-invalid-dynamic-placeholder');
+
+		$this->assertNull($normalized);
 	}
 }

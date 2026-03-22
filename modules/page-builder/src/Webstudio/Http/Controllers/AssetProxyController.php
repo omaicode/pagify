@@ -1,12 +1,12 @@
 <?php
 
-namespace Pagify\PageBuilder\Http\Controllers;
+namespace Pagify\PageBuilder\Webstudio\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
-class WebstudioAssetProxyController extends Controller
+class AssetProxyController extends Controller
 {
 	public function image(Request $request, string $path = ''): RedirectResponse
 	{

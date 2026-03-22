@@ -6,7 +6,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Pagify\Core\Http\Controllers\Api\ApiController;
 use Pagify\Core\Support\SiteContext;
-use Pagify\PageBuilder\Http\Controllers\Api\Concerns\InteractsWithWebstudioProjectState;
+use Pagify\PageBuilder\Webstudio\Http\Controllers\Api\Concerns\InteractsWithProjectState;
 use Pagify\PageBuilder\Http\Requests\Admin\MovePageFolderItemRequest;
 use Pagify\PageBuilder\Http\Requests\Admin\StorePageFolderRequest;
 use Pagify\PageBuilder\Http\Requests\Admin\UpdatePageFolderRequest;
@@ -15,7 +15,7 @@ use Pagify\PageBuilder\Services\PageFolderService;
 
 class PageFolderController extends ApiController
 {
-	use InteractsWithWebstudioProjectState;
+	use InteractsWithProjectState;
 
 	public function __construct(
 		private readonly PageFolderService $pageFolderService,

@@ -1,8 +1,8 @@
 <?php
 
-namespace Pagify\PageBuilder\Support;
+namespace Pagify\PageBuilder\Webstudio\Support;
 
-class WebstudioComponentDefinitionBuilder
+class ComponentDefinitionBuilder
 {
 	/**
 	 * @param array<string, mixed> $definition
@@ -152,6 +152,16 @@ class WebstudioComponentDefinitionBuilder
 	public function children(array $children): self
 	{
 		$this->definition['children'] = $children;
+
+		return $this;
+	}
+
+	/**
+	 * @param array<string, mixed> $dynamicData
+	 */
+	public function dynamicData(array $dynamicData): self
+	{
+		$this->definition['dynamic_data'] = $dynamicData;
 
 		return $this;
 	}

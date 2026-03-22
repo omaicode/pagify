@@ -33,7 +33,6 @@ const layout = ref({
             <PageBuilderIframeEditor
                 v-model="layout"
                 :iframe="editor.iframe ?? {}"
-                :blocks="editor.blocks ?? []"
                 :breakpoints="editor.breakpoints ?? []"
                 :canvas-styles="editor.canvas_styles ?? []"
                 :active-theme="editor.active_theme ?? ''"
