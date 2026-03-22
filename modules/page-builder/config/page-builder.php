@@ -11,7 +11,7 @@ return [
 		'origin' => (string) env('PAGE_BUILDER_IFRAME_EDITOR_ORIGIN', ''),
 		'runtime_mode' => (string) env('PAGE_BUILDER_IFRAME_EDITOR_RUNTIME_MODE', 'upstream-embedded'),
 		'upstream_url' => (string) env('PAGE_BUILDER_IFRAME_EDITOR_UPSTREAM_URL', ''),
-		'token_ttl_seconds' => (int) env('PAGE_BUILDER_IFRAME_EDITOR_TOKEN_TTL', 300),
+		'token_ttl_seconds' => (int) env('PAGE_BUILDER_IFRAME_EDITOR_TOKEN_TTL', 3600),
 		'token_issuer' => (string) env('PAGE_BUILDER_IFRAME_EDITOR_TOKEN_ISSUER', (string) env('APP_URL', 'pagify')),
 		'token_audience' => (string) env('PAGE_BUILDER_IFRAME_EDITOR_TOKEN_AUDIENCE', 'webstudio-editor'),
 		'token_secret' => (string) env('PAGE_BUILDER_IFRAME_EDITOR_TOKEN_SECRET', ''),

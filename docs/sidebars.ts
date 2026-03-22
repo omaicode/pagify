@@ -47,6 +47,7 @@ const sidebars: SidebarsConfig = {
       label: 'User Guides',
       items: [
         'guides/admin-operations-guide',
+        'guides/custom-component-quickstart',
       ],
     },
     {

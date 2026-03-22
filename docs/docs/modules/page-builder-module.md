@@ -154,6 +154,10 @@ Admin editor shell provides a fullscreen toggle for easier editing.
 
 Page Builder supports component registration from both module and plugin by using class-based component definitions.
 
+Direct quickstart guide:
+
+- [CustomComponent Quickstart](../guides/custom-component-quickstart)
+
 ### Discovery flow
 
 1. Page Builder subscribes hook `page-builder.webstudio.components` on Event Bus.

@@ -15,7 +15,7 @@ class EditorAccessTokenService
 	 */
 	public function issue(array $claims): array
 	{
-		$ttlSeconds = max(60, (int) config('page-builder.webstudio_iframe.token_ttl_seconds', 300));
+		$ttlSeconds = max(60, (int) config('page-builder.webstudio_iframe.token_ttl_seconds', 3600));
 		$now = Carbon::now();
 		$expiresAt = $now->copy()->addSeconds($ttlSeconds);
 
