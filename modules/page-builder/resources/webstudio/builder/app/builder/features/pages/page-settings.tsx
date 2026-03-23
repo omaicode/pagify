@@ -1,4 +1,3 @@
-import { nanoid } from "nanoid";
 import { z } from "zod";
 import {
   type FocusEventHandler,
@@ -27,7 +26,6 @@ import {
   findParentFolderByChildId,
   ProjectNewRedirectPath,
   isLiteralExpression,
-  documentTypes,
   isRootFolder,
   elementComponent,
 } from "@webstudio-is/sdk";
@@ -47,7 +45,6 @@ import {
   ScrollArea,
   rawTheme,
   Flex,
-  Select,
   Link,
   buttonStyle,
   PanelBanner,
@@ -72,7 +69,6 @@ import {
   $instances,
   $pages,
   $publishedOrigin,
-  $project,
   $userPlanFeatures,
   $isDesignMode,
 } from "~/shared/nano-states";
@@ -129,9 +125,7 @@ const fieldDefaultValues = {
   language: `""`,
   socialImageUrl: `""`,
   socialImageAssetId: "",
-  status: undefined as string | undefined,
   redirect: `""`,
-  documentType: "html" as (typeof documentTypes)[number],
   customMetas: [{ property: "", content: `""` }],
   marketplaceInclude: false,
   marketplaceCategory: "",
@@ -159,15 +153,6 @@ type Errors = Partial<Record<keyof Values, string[]>>;
 
 const EmptyString = z.string().refine((string) => string === "");
 
-// 2xx, 3xx, 4xx, 5xx
-const statusRegex = /^[2345]\d\d$/;
-const Status = z
-  .number()
-  .refine(
-    (value) => statusRegex.test(String(value)),
-    "Status code expects 2xx, 3xx, 4xx or 5xx"
-  );
-
 const Language = z
   .string()
   .refine(
@@ -182,9 +167,7 @@ const SharedPageValues = z.object({
   excludePageFromSearch: z.boolean().optional(),
   language: Language.or(EmptyString),
   socialImageUrl: z.string().optional(),
-  status: Status.optional(),
   redirect: z.optional(ProjectNewRedirectPath.or(EmptyString)),
-  documentType: z.optional(z.enum(documentTypes)),
   customMetas: z
     .array(
       z.object({
@@ -227,7 +210,6 @@ const validateValues = (
     ),
     language: computeExpression(values.language, variableValues),
     socialImageUrl: computeExpression(values.socialImageUrl, variableValues),
-    status: computeExpression(values.status ?? `undefined`, variableValues),
     redirect: computeExpression(values.redirect, variableValues),
     customMetas: values.customMetas.map((item) => ({
       property: item.property,
@@ -300,9 +282,7 @@ const toFormValues = (
       page.meta.excludePageFromSearch ??
       fieldDefaultValues.excludePageFromSearch,
     language: page.meta.language ?? fieldDefaultValues.language,
-    status: page.meta.status ?? fieldDefaultValues.status,
     redirect: page.meta.redirect ?? fieldDefaultValues.redirect,
-    documentType: page.meta.documentType ?? fieldDefaultValues.documentType,
     isHomePage,
     customMetas: page.meta.custom ?? fieldDefaultValues.customMetas,
     marketplaceInclude: page.marketplace?.include ?? false,
@@ -377,82 +357,6 @@ const PathField = ({
           onChange={(event) => onChange(event.target.value)}
         />
       </InputErrorsTooltip>
-    </Grid>
-  );
-};
-
-const StatusField = ({
-  errors,
-  value = `undefined`,
-  onChange,
-}: {
-  errors?: string[];
-  value: undefined | string;
-  onChange: (value: undefined | string) => void;
-}) => {
-  const id = useId();
-  const { variableValues, scope, aliases } = useStore($pageRootScope);
-  return (
-    <Grid gap={1}>
-      <Flex align="center" gap={1}>
-        <Label htmlFor={id}>Status code </Label>
-        <Tooltip
-          content={
-            <Text>
-              Status code value can be a{" "}
-              <Link
-                color="inherit"
-                target="_blank"
-                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Status"
-              >
-                HTTP Status
-              </Link>{" "}
-              number or an expression that returns the status code dynamic
-              response handling.
-            </Text>
-          }
-          variant="wrapped"
-        >
-          <InfoCircleIcon
-            color={rawTheme.colors.foregroundSubtle}
-            tabIndex={-1}
-          />
-        </Tooltip>
-      </Flex>
-      <BindingControl>
-        <BindingPopover
-          scope={scope}
-          aliases={aliases}
-          variant={isLiteralExpression(value) ? "default" : "bound"}
-          value={value}
-          onChange={onChange}
-          onRemove={(evaluatedValue) =>
-            onChange(JSON.stringify(evaluatedValue ?? ""))
-          }
-        />
-        <InputErrorsTooltip errors={errors}>
-          <InputField
-            inputMode="numeric"
-            color={errors && "error"}
-            id={id}
-            placeholder="200"
-            disabled={isLiteralExpression(value) === false}
-            value={String(computeExpression(value, variableValues) ?? "")}
-            onChange={(event) => {
-              if (event.target.value === "") {
-                onChange(undefined);
-              } else {
-                const number = Number(event.target.value);
-                const status =
-                  Number.isNaN(number) || String(number) !== event.target.value
-                    ? event.target.value
-                    : number;
-                onChange(JSON.stringify(status));
-              }
-            }}
-          />
-        </InputErrorsTooltip>
-      </BindingControl>
     </Grid>
   );
 };
@@ -596,7 +500,6 @@ const FormFields = ({
   values: Values;
   onChange: OnChange;
 }) => {
-  const project = useStore($project);
   const fieldIds = useIds(fieldNames);
   const assets = useStore($assets);
   const pages = useStore($pages);
@@ -702,20 +605,6 @@ const FormFields = ({
                     page
                   </Text>
                 </>
-              ) : values.documentType === "xml" ? (
-                <>
-                  <HomeIcon color={rawTheme.colors.foregroundSubtle} />
-                  <Text
-                    css={{
-                      overflowWrap: "anywhere",
-                      wordBreak: "break-all",
-                      my: 2,
-                    }}
-                    color="subtle"
-                  >
-                    XML pages cannot be set as the home page
-                  </Text>
-                </>
               ) : (
                 <>
                   <Checkbox
@@ -750,11 +639,6 @@ const FormFields = ({
             />
           )}
 
-          <StatusField
-            errors={errors.status}
-            value={values.status}
-            onChange={(value) => onChange({ field: "status", value })}
-          />
           <RedirectField
             errors={errors.redirect}
             value={values.redirect}
@@ -779,24 +663,6 @@ const FormFields = ({
             </PanelBanner>
           )}
 
-          <Grid gap={1}>
-            <Label htmlFor={fieldIds.documentType}>Document type</Label>
-            <Select
-              options={documentTypes}
-              getValue={(docType: (typeof documentTypes)[number]) => docType}
-              getLabel={(docType: (typeof documentTypes)[number]) =>
-                docType.toLocaleUpperCase()
-              }
-              value={values.documentType}
-              disabled={values.isHomePage}
-              onChange={(value) => {
-                onChange({
-                  field: "documentType",
-                  value,
-                });
-              }}
-            />
-          </Grid>
         </Grid>
 
         <Separator />
@@ -804,10 +670,7 @@ const FormFields = ({
         {/**
          * ----------------------========<<<Search Results>>>>========----------------------
          */}
-        <fieldset
-          disabled={values.documentType === "xml"}
-          className={fieldsetStyle()}
-        >
+        <fieldset className={fieldsetStyle()}>
           <Grid gap={2} css={{ my: theme.spacing[5], mx: theme.spacing[8] }}>
             <Grid gap={2}>
               <Label text="title">Search</Label>
@@ -1336,10 +1199,6 @@ const updatePageLocal = (pageId: Page["id"], values: Partial<Values>) => {
         values.language.length > 0 ? values.language : undefined;
     }
 
-    if ("status" in values) {
-      page.meta.status = values.status;
-    }
-
     if (values.redirect !== undefined) {
       page.meta.redirect =
         values.redirect.length > 0 ? values.redirect : undefined;
@@ -1358,10 +1217,6 @@ const updatePageLocal = (pageId: Page["id"], values: Partial<Values>) => {
 
     if (values.customMetas !== undefined) {
       page.meta.custom = values.customMetas;
-    }
-
-    if (values.documentType !== undefined) {
-      page.meta.documentType = values.documentType;
     }
 
     if (values.parentFolderId !== undefined) {
@@ -1489,6 +1344,7 @@ export const PageSettings = ({
       path: values.path,
       title: values.title,
       description: values.description,
+      isHomePage: values.isHomePage,
     }).catch((error) => {
       const message =
         error instanceof Error ? error.message : "Unable to save page";
@@ -1548,6 +1404,7 @@ export const PageSettings = ({
       path: values.path,
       title: values.title,
       description: values.description,
+      isHomePage: values.isHomePage,
     }).catch((error) => {
       const message =
         error instanceof Error ? error.message : "Unable to save page";

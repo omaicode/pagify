@@ -1,42 +1,52 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useStore } from "@nanostores/react";
-import { Text, Tooltip, Switch, toast } from "@webstudio-is/design-system";
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Flex,
+  Text,
+  Tooltip,
+  toast,
+} from "@webstudio-is/design-system";
 import { findPageByIdOrPath } from "@webstudio-is/sdk";
 import { $selectedPage } from "~/shared/awareness";
 import { $authTokenPermissions, $pages } from "~/shared/nano-states";
 import { updateWebstudioData } from "~/shared/instance-utils";
+import { serializeBuilderDataForPatch } from "~/shared/builder-data";
 import {
   isPersistedPageId,
-  updatePageStatusOnServer,
+  publishPageOnServer,
 } from "~/builder/features/pages/page-crud-api";
-
-const normalizeStatus = (status: string | undefined) => {
-  const normalized = String(status ?? "").trim().toLowerCase();
-  return normalized === "published" ? "published" : "draft";
-};
+import { $pageRootScope } from "~/builder/features/pages/page-utils";
+import React from "react";
 
 export const PublishSwitch = () => {
   const selectedPage = useStore($selectedPage);
   const pages = useStore($pages);
   const authTokenPermissions = useStore($authTokenPermissions);
+  const pageRootScope = useStore($pageRootScope);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const canPublish = authTokenPermissions.canPublish;
   const pageId = selectedPage?.id;
-  const currentStatus = normalizeStatus(selectedPage?.meta.status);
-  const isPublished = currentStatus === "published";
   const isPersisted = pageId !== undefined && isPersistedPageId(pageId);
-  const [checked, setChecked] = useState(isPublished);
+  const pageName = useMemo(() => {
+    const name = String(selectedPage?.name ?? "").trim();
+    if (name !== "") {
+      return name;
+    }
+    const path = String(selectedPage?.path ?? "").trim();
+    return path !== "" ? path : "this page";
+  }, [selectedPage?.name, selectedPage?.path]);
 
   useEffect(() => {
     setIsSubmitting(false);
-  }, [pageId, currentStatus]);
+  }, [pageId]);
 
-  useEffect(() => {
-    setChecked(isPublished);
-  }, [isPublished, pageId]);
-
-  const onToggle = async (checked: boolean) => {
+  const onConfirmPublish = async () => {
     if (selectedPage === undefined || pages === undefined || isSubmitting) {
       return;
     }
@@ -46,37 +56,32 @@ export const PublishSwitch = () => {
       return;
     }
 
-    const nextStatus = checked ? "published" : "draft";
-    if (nextStatus === currentStatus) {
-      return;
-    }
-
     setIsSubmitting(true);
-    setChecked(checked);
 
     try {
-      const persistedPage = await updatePageStatusOnServer(selectedPage, nextStatus);
-      const persistedStatus = normalizeStatus(persistedPage?.status ?? nextStatus);
+      await publishPageOnServer({
+        page: selectedPage,
+        interface: {
+          ...serializeBuilderDataForPatch(),
+          variableValues: Object.fromEntries(pageRootScope.variableValues),
+        },
+      });
 
       updateWebstudioData((data) => {
         const page = findPageByIdOrPath(selectedPage.id, data.pages);
         if (page === undefined) {
           return;
         }
-        page.meta.status = persistedStatus;
+        page.meta = page.meta ?? {};
       });
 
-      setChecked(persistedStatus === "published");
-
-      toast.success(
-        persistedStatus === "published" ? "Page published" : "Page set to draft"
-      );
+      toast.success("Page published");
+      setIsConfirmOpen(false);
     } catch (error) {
-      setChecked(isPublished);
       const message =
         error instanceof Error
           ? error.message
-          : "Unable to update page publish status";
+          : "Unable to publish page";
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -88,25 +93,60 @@ export const PublishSwitch = () => {
       ? "Only owner/admin or editors with publish permission can update publish status"
       : isPersisted === false
         ? "Create a page before publishing"
-        : "Toggle publish status for current page";
+        : "Publish current page";
 
   return (
-    <Tooltip content={tooltip}>
-      <label
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 8,
-          opacity: canPublish ? 1 : 0.6,
+    <>
+      <Tooltip content={tooltip}>
+        <Button
+          color="positive"
+          disabled={canPublish === false || isSubmitting || isPersisted === false}
+          state={isSubmitting ? "pending" : undefined}
+          onClick={() => {
+            if (canPublish === false || isPersisted === false || isSubmitting) {
+              return;
+            }
+            setIsConfirmOpen(true);
+          }}
+        >
+          Publish
+        </Button>
+      </Tooltip>
+
+      <Dialog
+        open={isConfirmOpen}
+        onOpenChange={(open) => {
+          if (isSubmitting) {
+            return;
+          }
+          setIsConfirmOpen(open);
         }}
       >
-        <Text variant="labels">Publish</Text>
-        <Switch
-          checked={checked}
-          disabled={canPublish === false || isSubmitting}
-          onCheckedChange={onToggle}
-        />
-      </label>
-    </Tooltip>
+        <DialogContent css={{ width: 460 }}>
+          <DialogTitle>Confirm publish</DialogTitle>
+          <Text css={{padding: 16}}>
+            You are publishing page <strong>{pageName}</strong>. Continue?
+          </Text>
+          <Flex justify="end" gap={2} css={{ padding: 16 }}>
+            <Button
+              color="neutral"
+              onClick={() => {
+                setIsConfirmOpen(false);
+              }}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="positive"
+              state={isSubmitting ? "pending" : undefined}
+              onClick={onConfirmPublish}
+            >
+              Confirm publish
+            </Button>
+          </Flex>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };

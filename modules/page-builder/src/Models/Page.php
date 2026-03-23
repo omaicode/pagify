@@ -21,21 +21,20 @@ class Page extends Model
 		'site_id',
 		'title',
 		'slug',
+		'is_home',
 		'folder_id',
 		'folder_order',
-		'status',
 		'layout_json',
 		'seo_meta_json',
-		'published_at',
 		'created_by_admin_id',
 		'updated_by_admin_id',
 	];
 
 	protected $casts = [
+		'is_home' => 'boolean',
 		'layout_json' => 'array',
 		'seo_meta_json' => 'array',
 		'folder_order' => 'integer',
-		'published_at' => 'datetime',
 	];
 
 	public function creator(): BelongsTo

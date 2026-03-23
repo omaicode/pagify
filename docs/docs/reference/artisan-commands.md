@@ -11,7 +11,6 @@ This page lists the most relevant Pagify-specific commands for daily operations.
 
 - `cms:make-plugin`
 - `cms:make-theme`
-- `cms:theme:clear-cache`
 
 ## Core operations
 

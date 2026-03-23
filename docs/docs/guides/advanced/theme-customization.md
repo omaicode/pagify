@@ -14,15 +14,14 @@ Read the [Theme Development Contract](../../reference/theme-development-contract
 A valid theme must include:
 
 - `theme.json`
-- `layouts/app.twig`
-- `pages/home.twig`
+- `pages/home.json`
 - static assets in `assets/js`, `assets/css`, `assets/img`
 
 ## Safe customization workflow
 
 1. Create a feature branch.
 2. Validate `theme.json` structure and slug.
-3. Apply Twig/layout updates in small commits.
+3. Apply WSRE document updates in small commits.
 4. Verify fallback behavior with invalid/missing files.
 5. Run cache clear and re-test rendering.
 
@@ -32,8 +31,11 @@ A valid theme must include:
 
 Edit:
 
-- `themes/main/{THEME_NAME}/pages/home.twig`
-- `themes/main/{THEME_NAME}/layouts/app.twig`
+- `themes/main/{THEME_NAME}/pages/home.json`
+
+Optional shell control:
+
+- `layout_html` field inside WSRE page document
 
 ### 2. Add new styles and scripts
 
@@ -42,11 +44,11 @@ Place files in:
 - `themes/main/{THEME_NAME}/assets/css`
 - `themes/main/{THEME_NAME}/assets/js`
 
-Use Twig helper:
+Use theme asset endpoint:
 
-```twig
-<link rel="stylesheet" href="{{ asset_url('css/app.css') }}">
-<script defer src="{{ asset_url('js/app.js') }}"></script>
+```text
+/theme-assets/{THEME_NAME}/css/app.css
+/theme-assets/{THEME_NAME}/js/app.js
 ```
 
 ### 3. Add localized theme text
@@ -56,11 +58,7 @@ Add translation entries:
 - `themes/main/{THEME_NAME}/lang/en/theme.php`
 - `themes/main/{THEME_NAME}/lang/vi/theme.php`
 
-Use helper:
-
-```twig
-{{ t('theme.hero_title') }}
-```
+You can map localized values from backend/domain data into WSRE output when needed.
 
 ## Validation checklist before merge
 
@@ -79,13 +77,12 @@ Theme not listed in manager:
 
 Theme selected but not rendered:
 
-- verify `pages/home.twig` exists
+- verify `pages/home.json` exists
 - verify fallback theme and default theme are valid
 - clear cache:
 
 ```bash
 php artisan optimize:clear
-php artisan cms:theme:clear-cache
 ```
 
 ## Operational recommendation

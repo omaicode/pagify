@@ -6,6 +6,7 @@ use Illuminate\Contracts\Container\Container;
 use Pagify\Core\Services\EventBus;
 use Pagify\Core\Wsre\Contracts\WsreResolver;
 use Pagify\Core\Wsre\Resolvers\CoreUsersListResolver;
+use Pagify\Core\Wsre\Resolvers\PageBuilderInterfaceResolver;
 
 class WsreResolverRegistry
 {
@@ -67,6 +68,7 @@ class WsreResolverRegistry
 	{
 		return [
 			$this->container->make(CoreUsersListResolver::class),
+			$this->container->make(PageBuilderInterfaceResolver::class),
 		];
 	}
 

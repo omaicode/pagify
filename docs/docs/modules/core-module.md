@@ -45,7 +45,6 @@ The Core module provides platform-level capabilities shared by all other modules
 - `core:audit:cleanup`
 - `cms:make-plugin`
 - `cms:make-theme`
-- `cms:theme:clear-cache`
 
 ## Testing coverage highlights
 
@@ -54,4 +53,4 @@ The Core module provides platform-level capabilities shared by all other modules
 - plugin manager behavior
 - theme management behavior
 - profile flow
-- frontend fallback and theme sandbox hardening
+- frontend fallback and theme asset hardening

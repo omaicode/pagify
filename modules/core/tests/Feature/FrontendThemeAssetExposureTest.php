@@ -24,7 +24,6 @@ class FrontendThemeAssetExposureTest extends TestCase
 
         File::deleteDirectory(base_path('storage/testing/themes/main'));
         File::ensureDirectoryExists($this->themeRoot.'/assets/css');
-        File::ensureDirectoryExists($this->themeRoot.'/layouts');
         File::ensureDirectoryExists($this->themeRoot.'/pages');
 
         File::put($this->themeRoot.'/theme.json', json_encode([
@@ -32,15 +31,18 @@ class FrontendThemeAssetExposureTest extends TestCase
             'name' => 'Unified Assets',
             'version' => '1.0.0',
             'render' => [
-                'engine' => 'twig',
+                'engine' => 'wsre',
             ],
-            'layouts' => [
-                ['file' => 'layouts/app.twig', 'label' => 'Main layout'],
-            ],
+            'layouts' => [],
         ], JSON_PRETTY_PRINT));
 
-        File::put($this->themeRoot.'/layouts/app.twig', '<!doctype html><html><body>{{ content|raw }}</body></html>');
-        File::put($this->themeRoot.'/pages/home.twig', '{% extends "layouts/app.twig" %}');
+        File::put($this->themeRoot.'/pages/home.json', json_encode([
+            'body' => [[
+                'tag' => 'main',
+                'attrs' => ['data-source' => 'wsre-home'],
+                'text' => 'Home from wsre',
+            ]],
+        ], JSON_PRETTY_PRINT));
         File::put($this->themeRoot.'/assets/css/site.css', 'body{color:#111;}');
     }
 
@@ -60,6 +62,7 @@ class FrontendThemeAssetExposureTest extends TestCase
 
         $baseResponse = $response->baseResponse;
         $this->assertInstanceOf(BinaryFileResponse::class, $baseResponse);
+        /** @var BinaryFileResponse $baseResponse */
         $cacheControl = strtolower((string) $baseResponse->headers->get('cache-control', ''));
         $this->assertStringContainsString('max-age=3600', $cacheControl);
         $this->assertStringContainsString('public', $cacheControl);

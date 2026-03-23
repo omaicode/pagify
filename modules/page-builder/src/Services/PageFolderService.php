@@ -148,7 +148,9 @@ class PageFolderService
 	 */
 	public function buildPagesBundle(string $projectId, ?Page $selectedPage, Collection $allPages, ?int $siteId): array
 	{
-		$homePage = $selectedPage ?? $allPages->first();
+		$homePage = $allPages->first(static fn (mixed $item): bool => $item instanceof Page && (bool) $item->is_home)
+			?? $selectedPage
+			?? $allPages->first();
 
 		if (! $homePage instanceof Page) {
 			$homePageId = 'home-' . $projectId;
@@ -208,10 +210,7 @@ class PageFolderService
 				'name' => (string) $page->title,
 				'path' => $path,
 				'title' => $quotedTitle,
-				'meta' => [
-					'status' => (string) $page->status,
-					'published_at' => $page->published_at?->toIso8601String(),
-				],
+				'meta' => [],
 				'rootInstanceId' => $rootInstanceId,
 			];
 
@@ -245,46 +244,65 @@ class PageFolderService
 			];
 		}
 
-		$rootChildren = [];
+		$rootFolders = [];
 		foreach ($folders as $folder) {
 			$parentId = $folder->parent_folder_id;
+			$folderId = (string) $folder->folder_id;
+			$folderEntry = [
+				'id' => $folderId,
+				'order' => (int) $folder->sort_order,
+				'label' => (string) $folder->name,
+				'type' => 'folder',
+				'is_home' => false,
+			];
+
 			if ($parentId === null || $parentId === '') {
-				$rootChildren[] = (string) $folder->folder_id;
+				$rootFolders[] = $folderEntry;
 				continue;
 			}
 
 			if (! array_key_exists($parentId, $folderChildren)) {
-				$rootChildren[] = (string) $folder->folder_id;
+				$rootFolders[] = $folderEntry;
 				continue;
 			}
 
-			$folderChildren[$parentId][] = (string) $folder->folder_id;
+			$folderChildren[$parentId][] = $folderEntry;
 		}
 
+		$rootPages = [];
 		$pagesByFolder = [];
 		foreach ($allPages->sortBy('folder_order')->values() as $page) {
 			if (! $page instanceof Page) {
 				continue;
 			}
 
+			$pageId = (string) $page->id;
+			$pageEntry = [
+				'id' => $pageId,
+				'order' => (int) $page->folder_order,
+				'label' => (string) $page->title,
+				'type' => 'page',
+				'is_home' => (bool) $page->is_home || $pageId === (string) $homePage->id,
+			];
+
 			$folderId = trim((string) ($page->folder_id ?? ''));
 			if ($folderId === '' || ! array_key_exists($folderId, $folderChildren)) {
-				$rootChildren[] = (string) $page->id;
+				$rootPages[] = $pageEntry;
 				continue;
 			}
 
 			$pagesByFolder[$folderId] ??= [];
-			$pagesByFolder[$folderId][] = (string) $page->id;
+			$pagesByFolder[$folderId][] = $pageEntry;
 		}
 
 		$normalizedFolderNodes = [];
 		foreach ($folderNodes as $folderNode) {
 			$folderId = (string) $folderNode['id'];
 			if ($folderId === self::ROOT_FOLDER_ID) {
-				$folderNode['children'] = array_values(array_unique($rootChildren));
+				$folderNode['children'] = $this->normalizeOrderedChildren(array_merge($rootFolders, $rootPages));
 			} else {
 				$children = array_merge($folderChildren[$folderId] ?? [], $pagesByFolder[$folderId] ?? []);
-				$folderNode['children'] = array_values(array_unique($children));
+				$folderNode['children'] = $this->normalizeOrderedChildren($children);
 			}
 
 			$normalizedFolderNodes[] = $folderNode;
@@ -304,10 +322,7 @@ class PageFolderService
 					'name' => (string) $homePage->title,
 					'path' => '',
 					'title' => $quotedHomeTitle,
-					'meta' => [
-						'status' => (string) $homePage->status,
-						'published_at' => $homePage->published_at?->toIso8601String(),
-					],
+					'meta' => [],
 					'rootInstanceId' => 'root-' . (string) $homePage->id,
 				],
 				'pages' => array_values(array_filter($pageItems, static fn (array $item): bool => $item['id'] !== (string) $homePage->id)),
@@ -315,6 +330,46 @@ class PageFolderService
 			],
 			'instances' => $instances,
 		];
+	}
+
+	/**
+	 * @param array<int, array{id: string, order: int, label: string, type: string, is_home: bool}> $children
+	 * @return array<int, string>
+	 */
+	private function normalizeOrderedChildren(array $children): array
+	{
+		usort($children, static function (array $left, array $right): int {
+			$orderCompare = ((int) $left['order']) <=> ((int) $right['order']);
+			if ($orderCompare !== 0) {
+				return $orderCompare;
+			}
+
+			if (($left['is_home'] ?? false) !== ($right['is_home'] ?? false)) {
+				return ($left['is_home'] ?? false) ? -1 : 1;
+			}
+
+			$labelCompare = strnatcasecmp((string) ($left['label'] ?? ''), (string) ($right['label'] ?? ''));
+			if ($labelCompare !== 0) {
+				return $labelCompare;
+			}
+
+			if (($left['type'] ?? '') !== ($right['type'] ?? '')) {
+				return ($left['type'] ?? '') <=> ($right['type'] ?? '');
+			}
+
+			return strcmp((string) ($left['id'] ?? ''), (string) ($right['id'] ?? ''));
+		});
+
+		$orderedIds = [];
+		foreach ($children as $child) {
+			$childId = (string) ($child['id'] ?? '');
+			if ($childId === '' || in_array($childId, $orderedIds, true)) {
+				continue;
+			}
+			$orderedIds[] = $childId;
+		}
+
+		return $orderedIds;
 	}
 
 	private function moveFolder(string $folderId, ?string $parentFolderId, ?int $indexWithinChildren, ?int $siteId): void

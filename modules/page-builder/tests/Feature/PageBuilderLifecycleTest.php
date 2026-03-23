@@ -4,6 +4,7 @@ namespace Pagify\PageBuilder\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Pagify\Core\Models\Admin;
 use Pagify\Core\Models\PluginState;
@@ -23,6 +24,28 @@ class PageBuilderLifecycleTest extends TestCase
 
 	public function test_create_update_publish_page_lifecycle(): void
 	{
+		config()->set('core.frontend_ui.themes_base_path', 'storage/testing/themes/main');
+		config()->set('core.frontend_ui.theme', 'unified');
+		config()->set('core.frontend_ui.fallback_theme', 'unified');
+
+		File::ensureDirectoryExists(base_path('storage/testing/themes/main/unified/pages'));
+		File::put(base_path('storage/testing/themes/main/unified/theme.json'), json_encode([
+			'slug' => 'unified',
+			'name' => 'Unified',
+			'version' => '1.0.0',
+			'render' => [
+				'engine' => 'wsre',
+			],
+			'layouts' => [],
+		], JSON_PRETTY_PRINT));
+
+		Page::query()->create([
+			'title' => 'Home',
+			'slug' => '/',
+			'is_home' => true,
+			'layout_json' => [],
+		]);
+
 		$accessToken = $this->issueEditorToken([
 			'page:read',
 			'page:write',
@@ -32,7 +55,7 @@ class PageBuilderLifecycleTest extends TestCase
 		$this->withEditorToken($accessToken)->postJson('/api/v1/admin/page-builder/pages', [
 			'title' => 'Landing Page',
 			'slug' => 'landing-page',
-			'status' => 'draft',
+			'is_home' => false,
 			'layout' => [
 				'type' => 'webstudio',
 				'webstudio' => [
@@ -47,12 +70,11 @@ class PageBuilderLifecycleTest extends TestCase
 		])->assertStatus(201);
 
 		$page = Page::query()->where('slug', 'landing-page')->firstOrFail();
-		$this->assertSame('draft', $page->status);
+		$this->assertSame('landing-page', $page->slug);
 
 		$this->withEditorToken($accessToken)->putJson('/api/v1/admin/page-builder/pages/' . $page->id, [
 			'title' => 'Landing Page Updated',
 			'slug' => 'landing-page',
-			'status' => 'draft',
 			'layout' => [
 				'type' => 'webstudio',
 				'webstudio' => [
@@ -68,12 +90,63 @@ class PageBuilderLifecycleTest extends TestCase
 		])->assertOk();
 
 		$this->withEditorToken($accessToken)
-			->postJson('/api/v1/admin/page-builder/pages/' . $page->id . '/publish')
+			->postJson('/api/v1/admin/page-builder/pages/' . $page->id . '/publish', [
+				'page' => [
+					'id' => (string) $page->id,
+					'name' => 'Landing Page Updated',
+					'path' => '/landing-page',
+					'title' => 'Landing SEO',
+					'meta' => [
+					],
+				],
+				'interface' => [
+					'instances' => [],
+					'props' => [],
+				],
+			])
 			->assertOk();
 
 		$page->refresh();
-		$this->assertSame('published', $page->status);
-		$this->assertNotNull($page->published_at);
+		$this->assertSame('landing-page', $page->slug);
+
+		$publishedFile = base_path('storage/testing/themes/main/unified/pages/landing-page.json');
+		$this->assertFileExists($publishedFile);
+
+		$publishedJson = json_decode((string) file_get_contents($publishedFile), true);
+		$this->assertIsArray($publishedJson);
+		$this->assertSame('wsre', $publishedJson['engine'] ?? null);
+		$this->assertSame('landing-page', data_get($publishedJson, 'page.slug'));
+		$this->assertSame('page-builder.render.interface', data_get($publishedJson, 'body.0.dynamic.resolver'));
+		$this->assertSame((int) $page->id, (int) data_get($publishedJson, 'body.0.dynamic.params.page_id'));
+		$this->assertIsArray(data_get($publishedJson, 'body.0.dynamic.params.interface'));
+
+		$this->withEditorToken($accessToken)->putJson('/api/v1/admin/page-builder/pages/' . $page->id, [
+			'title' => 'Landing Page Renamed',
+			'slug' => 'landing-page-v2',
+		])->assertOk();
+
+		$page->refresh();
+		$this->assertSame('landing-page-v2', $page->slug);
+
+		$this->withEditorToken($accessToken)
+			->postJson('/api/v1/admin/page-builder/pages/' . $page->id . '/publish', [
+				'page' => [
+					'id' => (string) $page->id,
+					'name' => 'Landing Page Renamed',
+					'path' => '/landing-page-v2',
+					'title' => 'Landing SEO V2',
+					'meta' => [],
+				],
+				'interface' => [
+					'instances' => [],
+					'props' => [],
+				],
+			])
+			->assertOk();
+
+		$newPublishedFile = base_path('storage/testing/themes/main/unified/pages/landing-page-v2.json');
+		$this->assertFileExists($newPublishedFile);
+		$this->assertFileDoesNotExist($publishedFile);
 	}
 
 
@@ -100,7 +173,6 @@ class PageBuilderLifecycleTest extends TestCase
 		$page = Page::query()->create([
 			'title' => 'Builder Data',
 			'slug' => 'builder-data-registry',
-			'status' => 'draft',
 			'layout_json' => [],
 		]);
 
@@ -150,7 +222,6 @@ class PageBuilderLifecycleTest extends TestCase
 		$page = Page::query()->create([
 			'title' => 'Plugin Registry Page',
 			'slug' => 'plugin-registry-page',
-			'status' => 'draft',
 			'layout_json' => [],
 		]);
 
@@ -204,7 +275,7 @@ class PageBuilderLifecycleTest extends TestCase
 		$this->withEditorToken($accessToken)->postJson('/api/v1/admin/page-builder/pages', [
 			'title' => 'Webstudio Landing',
 			'slug' => 'webstudio-landing',
-			'status' => 'published',
+			'is_home' => false,
 			'layout' => [
 				'type' => 'webstudio',
 				'webstudio' => [
@@ -216,8 +287,6 @@ class PageBuilderLifecycleTest extends TestCase
 		])->assertStatus(201);
 
 		$page = Page::query()->where('slug', 'webstudio-landing')->firstOrFail();
-		$this->assertSame('published', $page->status);
-		$this->assertNotNull($page->published_at);
 		$this->assertStringContainsString('Webstudio content', (string) data_get($page->layout_json, 'webstudio.html', ''));
 	}
 
@@ -242,13 +311,11 @@ class PageBuilderLifecycleTest extends TestCase
 		$pageA = Page::query()->create([
 			'title' => 'Page A',
 			'slug' => 'page-a',
-			'status' => 'draft',
 			'layout_json' => [],
 		]);
 		$pageB = Page::query()->create([
 			'title' => 'Page B',
 			'slug' => 'page-b',
-			'status' => 'draft',
 			'layout_json' => [],
 		]);
 
@@ -410,7 +477,6 @@ class PageBuilderLifecycleTest extends TestCase
 		$page = Page::query()->create([
 			'title' => 'Compat Data',
 			'slug' => 'compat-data',
-			'status' => 'draft',
 			'layout_json' => [
 				'type' => 'webstudio',
 				'webstudio' => [
@@ -462,14 +528,12 @@ class PageBuilderLifecycleTest extends TestCase
 		$rootPage = Page::query()->create([
 			'title' => 'Root Page',
 			'slug' => 'root-page',
-			'status' => 'draft',
 			'layout_json' => [],
 		]);
 
 		$secondPage = Page::query()->create([
 			'title' => 'Second Page',
 			'slug' => 'second-page',
-			'status' => 'draft',
 			'layout_json' => [],
 		]);
 
@@ -566,14 +630,12 @@ class PageBuilderLifecycleTest extends TestCase
 		$rootPage = Page::query()->create([
 			'title' => 'Root Page',
 			'slug' => 'root-page',
-			'status' => 'draft',
 			'layout_json' => [],
 		]);
 
 		$secondPage = Page::query()->create([
 			'title' => 'Second Page',
 			'slug' => 'second-page',
-			'status' => 'draft',
 			'layout_json' => [],
 		]);
 
@@ -656,7 +718,6 @@ class PageBuilderLifecycleTest extends TestCase
 		$page = Page::query()->create([
 			'title' => 'Custom Root Page',
 			'slug' => 'custom-root-page',
-			'status' => 'draft',
 			'layout_json' => [],
 		]);
 
@@ -719,14 +780,12 @@ class PageBuilderLifecycleTest extends TestCase
 		$rootPage = Page::query()->create([
 			'title' => 'Root Page',
 			'slug' => 'root-page',
-			'status' => 'draft',
 			'layout_json' => [],
 		]);
 
 		$secondPage = Page::query()->create([
 			'title' => 'Second Page',
 			'slug' => 'second-page',
-			'status' => 'draft',
 			'layout_json' => [],
 		]);
 
@@ -769,14 +828,13 @@ class PageBuilderLifecycleTest extends TestCase
 		$homePage = Page::query()->create([
 			'title' => 'Home',
 			'slug' => 'home',
-			'status' => 'draft',
+			'is_home' => true,
 			'layout_json' => [],
 		]);
 
 		$childPage = Page::query()->create([
 			'title' => 'Child',
 			'slug' => 'child',
-			'status' => 'draft',
 			'layout_json' => [],
 		]);
 
@@ -859,7 +917,95 @@ class PageBuilderLifecycleTest extends TestCase
 			'x-auth-token' => $accessToken,
 		])->getJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/data/unified')
 			->assertOk()
-			->assertJsonPath('pages.homePage.meta.status', 'draft');
+			->assertJsonMissingPath('pages.homePage.meta.status');
+	}
+
+	public function test_webstudio_data_root_children_are_sorted_with_home_first(): void
+	{
+		$homePage = Page::query()->create([
+			'title' => 'Home',
+			'slug' => 'home',
+			'layout_json' => [],
+		]);
+
+		$childPage = Page::query()->create([
+			'title' => 'Alpha Page',
+			'slug' => 'alpha-page',
+			'layout_json' => [],
+		]);
+
+		$accessToken = $this->issueEditorToken(['page:read', 'page:write']);
+
+		$this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->postJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/folders', [
+			'folder_id' => 'marketing',
+			'name' => 'Marketing',
+			'slug' => 'marketing',
+			'parent_folder_id' => 'root',
+		])->assertStatus(201);
+
+		Page::query()->whereKey($homePage->id)->update(['folder_order' => 0]);
+		Page::query()->whereKey($childPage->id)->update(['folder_order' => 1]);
+
+		$response = $this->withHeaders([
+			'x-auth-token' => $accessToken,
+		])->getJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/data/unified');
+
+		$response->assertOk();
+
+		$rootChildren = data_get($response->json(), 'pages.folders.0.children');
+		$this->assertIsArray($rootChildren);
+		$this->assertSame((string) $homePage->id, $rootChildren[0] ?? null);
+		$this->assertSame((string) $childPage->id, $rootChildren[1] ?? null);
+		$this->assertSame('marketing', $rootChildren[2] ?? null);
+	}
+
+	public function test_update_is_home_forces_slug_to_root_and_keeps_it_locked(): void
+	{
+		$homePage = Page::query()->create([
+			'title' => 'Home',
+			'slug' => '/',
+			'is_home' => true,
+			'layout_json' => [],
+		]);
+
+		$targetPage = Page::query()->create([
+			'title' => 'Landing',
+			'slug' => 'landing',
+			'is_home' => false,
+			'layout_json' => [],
+		]);
+
+		$accessToken = $this->issueEditorToken(['page:write', 'page:read']);
+
+		$this->withEditorToken($accessToken)
+			->putJson('/api/v1/admin/page-builder/pages/' . $targetPage->id, [
+				'title' => 'Landing Updated',
+				'slug' => 'custom-home-slug',
+				'is_home' => true,
+			])
+			->assertOk()
+			->assertJsonPath('data.slug', '/');
+
+		$targetPage->refresh();
+		$homePage->refresh();
+
+		$this->assertTrue((bool) $targetPage->is_home);
+		$this->assertSame('/', $targetPage->slug);
+		$this->assertFalse((bool) $homePage->is_home);
+		$this->assertNotSame('/', $homePage->slug);
+
+		$this->withEditorToken($accessToken)
+			->putJson('/api/v1/admin/page-builder/pages/' . $targetPage->id, [
+				'title' => 'Landing Updated Again',
+				'slug' => 'cannot-change-home-slug',
+			])
+			->assertOk()
+			->assertJsonPath('data.slug', '/');
+
+		$targetPage->refresh();
+		$this->assertSame('/', $targetPage->slug);
 	}
 
 	public function test_webstudio_rest_data_uses_live_page_status_from_database_not_persisted_pages_snapshot(): void
@@ -867,7 +1013,6 @@ class PageBuilderLifecycleTest extends TestCase
 		$page = Page::query()->create([
 			'title' => 'Live Status Page',
 			'slug' => 'live-status-page',
-			'status' => 'draft',
 			'layout_json' => [],
 		]);
 
@@ -884,7 +1029,6 @@ class PageBuilderLifecycleTest extends TestCase
 						'path' => '',
 						'title' => '"Stale Published"',
 						'meta' => [
-							'status' => 'published',
 						],
 						'rootInstanceId' => 'root-' . (string) $page->id,
 					],
@@ -906,7 +1050,7 @@ class PageBuilderLifecycleTest extends TestCase
 		])->getJson('/api/v1/' . config('app.admin_url_prefix') . '/page-builder/data/' . $page->id)
 			->assertOk()
 			->assertJsonPath('pages.homePage.name', 'Live Status Page')
-			->assertJsonPath('pages.homePage.meta.status', 'draft');
+			->assertJsonMissingPath('pages.homePage.meta.status');
 	}
 
 	public function test_webstudio_rest_data_endpoint_works_without_persisted_pages_when_database_is_empty(): void
@@ -923,9 +1067,14 @@ class PageBuilderLifecycleTest extends TestCase
 			->assertOk()
 			->assertJsonPath('projectId', 'pagify-local')
 			->assertJsonPath('pages.homePage.path', '')
-			->assertJsonPath('pages.homePage.id', 'home-pagify-local');
+			->assertJsonPath('pages.homePage.name', 'Home')
+			->assertJsonPath('pages.homePage.path', '');
 
-		$this->assertNull(Page::query()->first());
+		$homePage = Page::query()->first();
+		$this->assertInstanceOf(Page::class, $homePage);
+		$this->assertSame('Home', $homePage->title);
+		$this->assertSame('/', $homePage->slug);
+		$this->assertTrue((bool) $homePage->is_home);
 	}
 
 	public function test_webstudio_dashboard_logout_endpoint_returns_redirect_payload(): void
@@ -1003,7 +1152,6 @@ class PageBuilderLifecycleTest extends TestCase
 		$page = Page::query()->create([
 			'title' => 'Initial Page',
 			'slug' => 'initial-page',
-			'status' => 'draft',
 			'layout_json' => [],
 		]);
 
@@ -1116,7 +1264,7 @@ class PageBuilderLifecycleTest extends TestCase
 		$this->withEditorToken($accessToken)->postJson('/api/v1/admin/page-builder/pages', [
 			'title' => 'Media Sync',
 			'slug' => 'media-sync',
-			'status' => 'draft',
+			'is_home' => false,
 			'layout' => [
 				'type' => 'webstudio',
 				'webstudio' => [
@@ -1137,7 +1285,6 @@ class PageBuilderLifecycleTest extends TestCase
 		$this->withEditorToken($accessToken)->putJson('/api/v1/admin/page-builder/pages/' . $page->id, [
 			'title' => 'Media Sync Updated',
 			'slug' => 'media-sync',
-			'status' => 'draft',
 			'layout' => [
 				'type' => 'webstudio',
 				'webstudio' => [

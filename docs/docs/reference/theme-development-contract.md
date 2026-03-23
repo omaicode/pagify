@@ -5,7 +5,7 @@ title: Theme Development Contract
 
 # Development Contract
 
-Last updated: 2026-03-12
+Last updated: 2026-03-23
 
 This document defines the official contract for community frontend themes in Pagify.
 
@@ -33,10 +33,8 @@ themes/main/{slug}/
     js/
     css/
     img/
-  layouts/
-    app.twig
   pages/
-    home.twig
+    home.json
   lang/
     en/
       theme.php
@@ -60,7 +58,7 @@ themes/main/{slug}/
 - `author` string, max 255
 - `requires` object
 - `supports` object
-- `render` object with `engine` set to `twig`
+- `render` object with `engine` set to `wsre`
 
 ### Example
 
@@ -72,7 +70,7 @@ themes/main/{slug}/
   "description": "Default frontend theme for Pagify public pages.",
   "author": "Pagify",
   "render": {
-    "engine": "twig"
+    "engine": "wsre"
   },
   "requires": {
     "php": ">=8.2",
@@ -104,8 +102,10 @@ A theme is considered runtime-usable only when:
 - Theme directory exists
 - `theme.json` exists and passes validation
 - `theme.json.slug` matches directory name
+- `render.engine` is `wsre`
+- `pages/home.json` exists
 
-If no usable `pages/home.twig` is found after fallback chain, Pagify returns the raw page snapshot HTML.
+If no usable page document is found after fallback chain, Pagify continues to fallback runtime sources (including page-builder published output).
 
 ## Business Rules
 
@@ -127,7 +127,7 @@ Theme Manager should clearly show:
 Theme authors should:
 
 - Keep `theme.json.version` semantic and updated
-- Avoid removing `pages/home.twig`
+- Avoid removing `pages/home.json`
 - Test fallback behavior after changes
 - Document breaking changes in `README.md`
 
@@ -142,30 +142,9 @@ Theme authors should:
 - Verify target site exists and active
 
 3. Theme selected but not rendered:
-- Confirm `pages/home.twig` exists
+- Confirm `pages/home.json` exists
 - Verify fallback theme/default theme manifests are valid
 - Clear cache: `php artisan optimize:clear`
-
-## Twig Helper API
-
-Themes can use both global helpers and namespace helpers:
-
-- Global functions:
-  - `asset_url(path)`
-  - `page_url(slug)`
-  - `site_url(path)`
-  - `t(key, replacements = {})`
-  - `format_date(value, format = 'Y-m-d H:i')`
-  - `setting(key, default = null)`
-- Namespace helpers:
-  - `helpers.asset.url(path)`
-  - `helpers.url.page(slug)`
-  - `helpers.url.site(path)`
-  - `helpers.i18n.t(key, replacements = {})`
-  - `helpers.format.date(value, format)`
-  - `helpers.settings.get(key, default)`
-
-Twig sandbox is enabled by default for community-safety and only allows a strict helper whitelist.
 
 ## Theme Asset Exposure
 
@@ -180,19 +159,21 @@ Security rules:
 - Path traversal (`..`) is blocked.
 - Theme manifest must be valid and slug must match directory.
 
-Use in Twig:
+Use in WSRE document nodes via plain URLs:
 
-```twig
-<link rel="stylesheet" href="{{ asset_url('css/app.css') }}">
-<script defer src="{{ asset_url('js/app.js') }}"></script>
-<img src="{{ asset_url('img/logo.png') }}" alt="logo">
+```json
+{
+  "tag": "link",
+  "attrs": {
+    "rel": "stylesheet",
+    "href": "/theme-assets/default/css/app.css"
+  }
+}
 ```
-
-`asset_url(path)` resolves to the active theme for the current site by default.
 
 Cache busting:
 
-- `asset_url(path)` supports configurable strategies via `core.frontend_ui.assets.cache_busting.strategy`.
+- Theme asset URLs support configurable strategies via `core.frontend_ui.assets.cache_busting.strategy`.
 - Supported values:
   - `mtime` (default): `?v={filemtime}`
   - `hash`: `?v={sha1_file}` (truncated by `hash_length`)
@@ -201,75 +182,6 @@ Cache busting:
   - `FRONTEND_THEME_ASSET_CACHE_BUSTING` (`mtime|hash|off`)
   - `FRONTEND_THEME_ASSET_HASH_LENGTH` (default `12`)
 
-## Extension Hook Spec: `theme.render.helpers`
+## WSRE Dynamic Extensions
 
-Pagify exposes a hook for plugins/modules to inject extra Twig helper functions:
-
-- Hook name: `theme.render.helpers`
-- Dispatch timing: each render call before template evaluation
-- Dispatcher: `Pagify\\Core\\Services\\EventBus::emitHook()`
-- Consumer: `Pagify\\Core\\Services\\ThemeHelperRegistry`
-
-### Return contract per hook listener
-
-Each listener should return an array with this structure:
-
-```php
-[
-  'global' => [
-    'helper_name' => callable,
-  ],
-]
-```
-
-Rules:
-
-- `global` is optional; when present it must be an associative array.
-- Key must be non-empty string (Twig function name).
-- Value must be callable.
-- Invalid entries are ignored silently.
-- Name collision strategy: last registered listener wins and overrides previous helper name.
-
-### Example plugin subscriber
-
-```php
-<?php
-
-namespace Plugins\\Acme\\Hooks;
-
-use Pagify\\Core\\Contracts\\CoreHookSubscriber;
-use Pagify\\Core\\Services\\EventBus;
-
-class ThemeHelperSubscriber implements CoreHookSubscriber
-{
-  public function register(EventBus $eventBus): void
-  {
-    $eventBus->onHook('theme.render.helpers', function (): array {
-      return [
-        'global' => [
-          'excerpt' => static function (?string $text, int $limit = 120): string {
-            $text = trim((string) $text);
-
-            return mb_strlen($text) <= $limit
-              ? $text
-              : rtrim(mb_substr($text, 0, $limit)).'...';
-          },
-        ],
-      ];
-    });
-  }
-}
-```
-
-Then use in Twig:
-
-```twig
-<p>{{ excerpt(page.title, 40) }}</p>
-```
-
-### Security notes
-
-- Hook-injected helpers are still subject to Twig sandbox policy.
-- Only helpers that become part of the engine allowlist are callable in templates.
-- Avoid exposing file-system, process, or raw shell/network operations via helpers.
-- Keep helpers pure and deterministic when possible for safer caching and debugging.
+For runtime dynamic rendering, use WSRE resolver nodes and register resolvers via core WSRE resolver registry/hooks.

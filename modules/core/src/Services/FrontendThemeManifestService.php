@@ -45,21 +45,12 @@ class FrontendThemeManifestService
             'requires' => ['nullable', 'array'],
             'supports' => ['nullable', 'array'],
             'render' => ['required', 'array'],
-            'render.engine' => ['required', 'string', 'in:twig,wsre'],
+            'render.engine' => ['required', 'string', 'in:wsre'],
             'layouts' => ['nullable', 'array'],
-            'layouts.*.file' => ['required_with:layouts', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9]+(?:-[a-z0-9]+)*\.(twig|json)$/'],
+            'layouts.*.file' => ['required_with:layouts', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9]+(?:-[a-z0-9]+)*\.json$/'],
             'layouts.*.label' => ['required_with:layouts', 'string', 'max:255'],
         ], [
         ]);
-
-            $validator->after(function ($validator) use ($decoded): void {
-                $engine = strtolower(trim((string) ($decoded['render']['engine'] ?? '')));
-                $layouts = $decoded['layouts'] ?? null;
-
-                if ($engine === 'twig' && (! is_array($layouts) || $layouts === [])) {
-                    $validator->errors()->add('layouts', 'Layouts are required when render.engine is twig.');
-                }
-            });
 
         if ($validator->fails()) {
             return [

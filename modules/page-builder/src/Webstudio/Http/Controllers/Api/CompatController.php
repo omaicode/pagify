@@ -17,6 +17,7 @@ use Pagify\PageBuilder\Models\Page;
 use Pagify\PageBuilder\Models\PageBuilderState;
 use Pagify\PageBuilder\Services\EditorAccessTokenService;
 use Pagify\PageBuilder\Services\PageFolderService;
+use Pagify\PageBuilder\Services\PageService;
 use Pagify\PageBuilder\Webstudio\Services\BuildStatePayloadService;
 use Pagify\PageBuilder\Webstudio\Services\ComponentDefinitionDiscoveryService;
 use Pagify\PageBuilder\Webstudio\Services\ComponentDynamicRendererService;
@@ -43,7 +44,7 @@ class CompatController extends ApiController
 		]);
 	}
 
-	public function data(Request $request, string $projectId, EditorAccessTokenService $editorAccessToken, SiteContext $siteContext, PageFolderService $pageFolderService, ComponentDefinitionDiscoveryService $componentDiscovery, ComponentDynamicRendererService $dynamicRenderer, RegisteredComponentResolverService $componentResolver, RegisteredComponentPayloadMapperService $componentPayloadMapper, PageInstanceGraphService $instanceGraph, ProjectAssetPayloadService $assetPayload, BuildStatePayloadService $buildStatePayload): JsonResponse
+	public function data(Request $request, string $projectId, EditorAccessTokenService $editorAccessToken, SiteContext $siteContext, PageFolderService $pageFolderService, PageService $pageService, ComponentDefinitionDiscoveryService $componentDiscovery, ComponentDynamicRendererService $dynamicRenderer, RegisteredComponentResolverService $componentResolver, RegisteredComponentPayloadMapperService $componentPayloadMapper, PageInstanceGraphService $instanceGraph, ProjectAssetPayloadService $assetPayload, BuildStatePayloadService $buildStatePayload): JsonResponse
 	{
 		$claims = $this->authorizeRequest($request, $editorAccessToken, $siteContext, 'page:read');
 		if ($claims instanceof JsonResponse) {
@@ -51,6 +52,8 @@ class CompatController extends ApiController
 		}
 
 		$siteId = isset($claims['site_id']) ? (int) $claims['site_id'] : null;
+		$pageService->ensureHomePageExists(isset($claims['admin_id']) ? (int) $claims['admin_id'] : null);
+
 		$allPages = Page::query()->orderBy('folder_order')->orderBy('id')->get();
 		$rootPage = $allPages->first();
 		$page = $rootPage instanceof Page ? $rootPage : $this->resolvePage($claims, $projectId);
@@ -320,6 +323,14 @@ class CompatController extends ApiController
 			$name,
 			$detectedMime,
 		);
+
+		$asset = $assetManager->upload(
+			file: $uploadedFile,
+			siteId: isset($claims['site_id']) ? (int) $claims['site_id'] : null,
+			uploadedByAdminId: isset($claims['admin_id']) ? (int) $claims['admin_id'] : null,
+		);
+
+		@unlink($tmpPath);
 
 		return response()->json([
 			'uploadedAssets' => [$assetPayload->mapOne($asset, (string) ($claims['page_id'] ?? ''))],

@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Routing\Controller;
 use Pagify\Core\Services\FrontendThemeManagerService;
-use Pagify\Core\Services\FrontendThemeTwigEngine;
 use Pagify\Core\Services\ModuleRegistry;
 use Pagify\Core\Wsre\WsreEngine;
 use Pagify\PageBuilder\Models\Page;
@@ -16,7 +15,6 @@ class FrontendFallbackPageController extends Controller
     public function __invoke(
         Request $request,
         FrontendThemeManagerService $themes,
-        FrontendThemeTwigEngine $twigEngine,
         WsreEngine $wsreEngine,
         ModuleRegistry $modules,
     ): HttpResponse {
@@ -37,32 +35,20 @@ class FrontendFallbackPageController extends Controller
             return response($wsreRendered, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
         }
 
-        $template = $this->resolveTemplate($path, $viewPaths);
-
-        if ($template !== null) {
-            $rendered = $twigEngine->render($viewPaths, $template, [
-                'head' => '',
-                'content' => '',
-                'locale' => app()->getLocale(),
-                'request_path' => $path,
-                'admin_prefix' => trim((string) config('app.admin_url_prefix', 'admin'), '/'),
-            ]);
-
-            if (is_string($rendered) && $rendered !== '') {
-                return response($rendered, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
-            }
-        }
-
         if (! $modules->enabled('page-builder')) {
             abort(404);
         }
 
         $slug = $path === '' ? 'home' : $path;
 
-        $page = Page::query()
-            ->where('slug', $slug)
-            ->where('status', 'published')
-            ->first();
+        $page = $path === ''
+            ? Page::query()
+                ->where('is_home', true)
+                ->orWhereIn('slug', ['/', 'home'])
+                ->orderByRaw("CASE WHEN is_home = 1 THEN 0 ELSE 1 END")
+                ->orderByDesc('id')
+                ->first()
+            : Page::query()->where('slug', $slug)->first();
 
         if ($page === null) {
             abort(404);
@@ -99,50 +85,10 @@ class FrontendFallbackPageController extends Controller
 
         $head = implode("\n", array_filter($headParts));
 
-        $rendered = $twigEngine->render($viewPaths, 'pages/home.twig', [
-            'page' => $page,
-            'head' => $head,
-            'content' => $content,
-            'locale' => app()->getLocale(),
-            'request_path' => $slug,
-            'admin_prefix' => trim((string) config('app.admin_url_prefix', 'admin'), '/'),
-        ]);
 
-        if (is_string($rendered) && $rendered !== '') {
-            return response($rendered, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
-        }
+		$document = '<!doctype html><html><head>' . $head . '</head><body>' . $content . '</body></html>';
 
-		return response($content, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
-    }
-
-    /**
-     * @param array<int, string> $viewPaths
-     */
-    private function resolveTemplate(string $path, array $viewPaths): ?string
-    {
-        $normalized = trim($path, '/');
-        $candidates = [];
-
-        if ($normalized === '') {
-            $candidates = ['pages/home.twig', 'pages/index.twig'];
-        } else {
-            $candidates = [
-                'pages/' . $normalized . '.twig',
-                'pages/' . $normalized . '/index.twig',
-            ];
-        }
-
-        foreach ($candidates as $candidate) {
-            foreach ($viewPaths as $viewPath) {
-                $absolute = rtrim($viewPath, '/\\') . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $candidate);
-
-                if (is_file($absolute)) {
-                    return $candidate;
-                }
-            }
-        }
-
-        return null;
+		return response($document, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
     }
 
     private function isReservedPath(string $path): bool

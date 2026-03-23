@@ -102,8 +102,23 @@ class PageCrudController extends ApiController
 			return $scopeError;
 		}
 
+		$validated = $request->validate([
+			'page' => ['nullable', 'array'],
+			'interface' => ['nullable', 'array'],
+			'layout' => ['nullable', 'array'],
+		]);
+
+		if (is_array($validated['layout'] ?? null)) {
+			$page = $this->pageService->update($page, [
+				'layout' => $validated['layout'],
+			], isset($claims['admin_id']) ? (int) $claims['admin_id'] : null);
+		}
+
 		$adminId = isset($claims['admin_id']) ? (int) $claims['admin_id'] : null;
-		$published = $this->pageService->publish($page, $adminId);
+		$published = $this->pageService->publish($page, $adminId, [
+			'page' => is_array($validated['page'] ?? null) ? $validated['page'] : [],
+			'interface' => is_array($validated['interface'] ?? null) ? $validated['interface'] : [],
+		]);
 
 		$this->auditLogger->log(
 			action: 'page_builder.page.published',
@@ -170,10 +185,9 @@ class PageCrudController extends ApiController
 			'id' => $page->id,
 			'title' => $page->title,
 			'slug' => $page->slug,
-			'status' => $page->status,
+			'is_home' => (bool) $page->is_home,
 			'layout' => (array) ($page->layout_json ?? []),
 			'seo_meta' => (array) ($page->seo_meta_json ?? []),
-			'published_at' => $page->published_at?->toIso8601String(),
 			'updated_at' => $page->updated_at?->toIso8601String(),
 			'created_at' => $page->created_at?->toIso8601String(),
 			'routes' => [

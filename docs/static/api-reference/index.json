@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-03-17T05:54:26.917Z",
-  "totalClasses": 77,
+  "generatedAt": "2026-03-22T21:43:18.371Z",
+  "totalClasses": 98,
   "entries": [
     {
       "module": "core",
@@ -8,19 +8,6 @@
       "className": "CleanupAuditLogsCommand",
       "description": "CLI command entry point for CleanupAuditLogs.",
       "file": "modules/core/src/Console/Commands/CleanupAuditLogsCommand.php",
-      "methods": [
-        {
-          "name": "handle",
-          "description": "Executes the main command/job logic."
-        }
-      ]
-    },
-    {
-      "module": "core",
-      "layer": "Console/Commands",
-      "className": "ClearThemeTwigCacheCommand",
-      "description": "CLI command entry point for ClearThemeTwigCache.",
-      "file": "modules/core/src/Console/Commands/ClearThemeTwigCacheCommand.php",
       "methods": [
         {
           "name": "handle",
@@ -461,23 +448,6 @@
     {
       "module": "core",
       "layer": "Services",
-      "className": "FrontendThemeTwigEngine",
-      "description": "Implements FrontendThemeTwigEngine behavior in Services.",
-      "file": "modules/core/src/Services/FrontendThemeTwigEngine.php",
-      "methods": [
-        {
-          "name": "__construct",
-          "description": "Initializes class dependencies and runtime state."
-        },
-        {
-          "name": "render",
-          "description": "Performs render."
-        }
-      ]
-    },
-    {
-      "module": "core",
-      "layer": "Services",
       "className": "HookRegistry",
       "description": "Implements HookRegistry behavior in Services.",
       "file": "modules/core/src/Services/HookRegistry.php",
@@ -812,6 +782,94 @@
       ]
     },
     {
+      "module": "core",
+      "layer": "Wsre",
+      "className": "WsreEngine",
+      "description": "Implements WsreEngine behavior in Wsre.",
+      "file": "modules/core/src/Wsre/WsreEngine.php",
+      "methods": [
+        {
+          "name": "__construct",
+          "description": "Initializes class dependencies and runtime state."
+        },
+        {
+          "name": "render",
+          "description": "Performs render."
+        }
+      ]
+    },
+    {
+      "module": "core",
+      "layer": "Wsre",
+      "className": "WsreHooks",
+      "description": "Implements WsreHooks behavior in Wsre.",
+      "file": "modules/core/src/Wsre/WsreHooks.php",
+      "methods": []
+    },
+    {
+      "module": "core",
+      "layer": "Wsre",
+      "className": "WsreRenderContext",
+      "description": "Implements WsreRenderContext behavior in Wsre.",
+      "file": "modules/core/src/Wsre/WsreRenderContext.php",
+      "methods": [
+        {
+          "name": "__construct",
+          "description": "Initializes class dependencies and runtime state."
+        },
+        {
+          "name": "globals",
+          "description": "Performs globals."
+        },
+        {
+          "name": "requestPath",
+          "description": "Performs request path."
+        },
+        {
+          "name": "siteId",
+          "description": "Performs site id."
+        }
+      ]
+    },
+    {
+      "module": "core",
+      "layer": "Wsre",
+      "className": "WsreResolverKeys",
+      "description": "Implements WsreResolverKeys behavior in Wsre.",
+      "file": "modules/core/src/Wsre/WsreResolverKeys.php",
+      "methods": []
+    },
+    {
+      "module": "core",
+      "layer": "Wsre",
+      "className": "WsreResolverRegistry",
+      "description": "Implements WsreResolverRegistry behavior in Wsre.",
+      "file": "modules/core/src/Wsre/WsreResolverRegistry.php",
+      "methods": [
+        {
+          "name": "resolve",
+          "description": "/ private ?array $compiledResolvers = null; public function __construct( private readonly EventBus $eventBus, private readonly Container $container, ) { } /**"
+        }
+      ]
+    },
+    {
+      "module": "core",
+      "layer": "Wsre/Resolvers",
+      "className": "CoreUsersListResolver",
+      "description": "Implements CoreUsersListResolver behavior in Wsre/Resolvers.",
+      "file": "modules/core/src/Wsre/Resolvers/CoreUsersListResolver.php",
+      "methods": [
+        {
+          "name": "key",
+          "description": "Performs key."
+        },
+        {
+          "name": "resolve",
+          "description": "Performs resolve."
+        }
+      ]
+    },
+    {
       "module": "media",
       "layer": "Jobs",
       "className": "GenerateMediaImageTransformsJob",
@@ -1066,10 +1124,6 @@
           "description": "Performs creator."
         },
         {
-          "name": "revisions",
-          "description": "Performs revisions."
-        },
-        {
           "name": "updater",
           "description": "Updates an existing resource or state."
         }
@@ -1078,14 +1132,10 @@
     {
       "module": "page-builder",
       "layer": "Models",
-      "className": "PageRevision",
-      "description": "Represents persisted domain data for PageRevision.",
-      "file": "modules/page-builder/src/Models/PageRevision.php",
+      "className": "PageBuilderInstance",
+      "description": "Represents persisted domain data for PageBuilderInstance.",
+      "file": "modules/page-builder/src/Models/PageBuilderInstance.php",
       "methods": [
-        {
-          "name": "admin",
-          "description": "Performs admin."
-        },
         {
           "name": "page",
           "description": "Performs page."
@@ -1095,57 +1145,23 @@
     {
       "module": "page-builder",
       "layer": "Models",
-      "className": "PageTemplate",
-      "description": "Represents persisted domain data for PageTemplate.",
-      "file": "modules/page-builder/src/Models/PageTemplate.php",
+      "className": "PageBuilderState",
+      "description": "Represents persisted domain data for PageBuilderState.",
+      "file": "modules/page-builder/src/Models/PageBuilderState.php",
       "methods": [
         {
-          "name": "creator",
-          "description": "Performs creator."
+          "name": "page",
+          "description": "Performs page."
         }
       ]
     },
     {
       "module": "page-builder",
       "layer": "Models",
-      "className": "SectionTemplate",
-      "description": "Represents persisted domain data for SectionTemplate.",
-      "file": "modules/page-builder/src/Models/SectionTemplate.php",
-      "methods": [
-        {
-          "name": "creator",
-          "description": "Performs creator."
-        }
-      ]
-    },
-    {
-      "module": "page-builder",
-      "layer": "Policies",
-      "className": "PageBuilderLibraryPolicy",
-      "description": "Defines authorization rules for PageBuilderLibrary.",
-      "file": "modules/page-builder/src/Policies/PageBuilderLibraryPolicy.php",
-      "methods": [
-        {
-          "name": "create",
-          "description": "Creates a new resource or record."
-        },
-        {
-          "name": "delete",
-          "description": "Deletes an existing resource or state."
-        },
-        {
-          "name": "update",
-          "description": "Updates an existing resource or state."
-        },
-        {
-          "name": "view",
-          "description": "Returns details for a single resource."
-        },
-        {
-          "name": "viewAny",
-          "description": "Returns details for a single resource."
-        }
-      ]
+      "className": "PageFolder",
+      "description": "Represents persisted domain data for PageFolder.",
+      "file": "modules/page-builder/src/Models/PageFolder.php",
+      "methods": []
     },
     {
       "module": "page-builder",
@@ -1167,10 +1183,6 @@
           "description": "Performs publish."
         },
         {
-          "name": "rollbackRevision",
-          "description": "Performs rollback revision."
-        },
-        {
           "name": "update",
           "description": "Updates an existing resource or state."
         },
@@ -1180,10 +1192,6 @@
         },
         {
           "name": "viewAny",
-          "description": "Returns details for a single resource."
-        },
-        {
-          "name": "viewRevisions",
           "description": "Returns details for a single resource."
         }
       ]
@@ -1207,18 +1215,39 @@
     },
     {
       "module": "page-builder",
-      "layer": "Services",
-      "className": "BlockRegistryService",
-      "description": "Provides business logic and orchestration for BlockRegistry.",
-      "file": "modules/page-builder/src/Services/BlockRegistryService.php",
+      "layer": "Repositories",
+      "className": "PageFolderRepository",
+      "description": "Implements PageFolderRepository behavior in Repositories.",
+      "file": "modules/page-builder/src/Repositories/PageFolderRepository.php",
       "methods": [
         {
-          "name": "__construct",
-          "description": "Initializes class dependencies and runtime state."
+          "name": "findByFolderId",
+          "description": "Performs find by folder id."
         },
         {
-          "name": "all",
-          "description": "Performs all."
+          "name": "listBySite",
+          "description": "Performs list by site."
+        },
+        {
+          "name": "nextSortOrder",
+          "description": "Performs next sort order."
+        }
+      ]
+    },
+    {
+      "module": "page-builder",
+      "layer": "Services",
+      "className": "EditorAccessTokenService",
+      "description": "Provides business logic and orchestration for EditorAccessToken.",
+      "file": "modules/page-builder/src/Services/EditorAccessTokenService.php",
+      "methods": [
+        {
+          "name": "issue",
+          "description": "Performs issue."
+        },
+        {
+          "name": "verify",
+          "description": "Performs verify."
         }
       ]
     },
@@ -1238,25 +1267,50 @@
     {
       "module": "page-builder",
       "layer": "Services",
-      "className": "PageRevisionService",
-      "description": "Provides business logic and orchestration for PageRevision.",
-      "file": "modules/page-builder/src/Services/PageRevisionService.php",
+      "className": "PageFolderService",
+      "description": "Provides business logic and orchestration for PageFolder.",
+      "file": "modules/page-builder/src/Services/PageFolderService.php",
       "methods": [
         {
           "name": "__construct",
           "description": "Initializes class dependencies and runtime state."
         },
         {
-          "name": "rollback",
-          "description": "Performs rollback."
+          "name": "buildPagesBundle",
+          "description": "Performs build pages bundle."
         },
         {
-          "name": "snapshot",
-          "description": "Performs snapshot."
+          "name": "create",
+          "description": "Creates a new resource or record."
         },
         {
-          "name": "snapshotFromPage",
-          "description": "Performs snapshot from page."
+          "name": "delete",
+          "description": "Deletes an existing resource or state."
+        },
+        {
+          "name": "moveItem",
+          "description": "Performs move item."
+        },
+        {
+          "name": "update",
+          "description": "Updates an existing resource or state."
+        }
+      ]
+    },
+    {
+      "module": "page-builder",
+      "layer": "Services",
+      "className": "PageMediaUsageSyncService",
+      "description": "Provides business logic and orchestration for PageMediaUsageSync.",
+      "file": "modules/page-builder/src/Services/PageMediaUsageSyncService.php",
+      "methods": [
+        {
+          "name": "clearForPage",
+          "description": "Performs clear for page."
+        },
+        {
+          "name": "syncForPage",
+          "description": "Performs sync for page."
         }
       ]
     },
@@ -1284,10 +1338,6 @@
           "description": "Performs publish."
         },
         {
-          "name": "resolveTemplate",
-          "description": "Performs resolve template."
-        },
-        {
           "name": "update",
           "description": "Updates an existing resource or state."
         }
@@ -1296,17 +1346,320 @@
     {
       "module": "page-builder",
       "layer": "Services",
-      "className": "PageSnapshotService",
-      "description": "Provides business logic and orchestration for PageSnapshot.",
-      "file": "modules/page-builder/src/Services/PageSnapshotService.php",
+      "className": "PageWsrePublisherService",
+      "description": "Provides business logic and orchestration for PageWsrePublisher.",
+      "file": "modules/page-builder/src/Services/PageWsrePublisherService.php",
       "methods": [
         {
-          "name": "generate",
-          "description": "Performs generate."
+          "name": "__construct",
+          "description": "Initializes class dependencies and runtime state."
         },
         {
-          "name": "refresh",
-          "description": "Performs refresh."
+          "name": "publish",
+          "description": "Performs publish."
+        }
+      ]
+    },
+    {
+      "module": "page-builder",
+      "layer": "Services",
+      "className": "TrpcEnvelope",
+      "description": "Implements TrpcEnvelope behavior in Services.",
+      "file": "modules/page-builder/src/Services/TrpcEnvelope.php",
+      "methods": []
+    },
+    {
+      "module": "page-builder",
+      "layer": "Webstudio/Console/Commands",
+      "className": "ValidateComponentsCommand",
+      "description": "CLI command entry point for ValidateComponents.",
+      "file": "modules/page-builder/src/Webstudio/Console/Commands/ValidateComponentsCommand.php",
+      "methods": [
+        {
+          "name": "handle",
+          "description": "Executes the main command/job logic."
+        }
+      ]
+    },
+    {
+      "module": "page-builder",
+      "layer": "Webstudio/Helpers",
+      "className": "ComponentDynamicContextHelper",
+      "description": "Implements ComponentDynamicContextHelper behavior in Webstudio/Helpers.",
+      "file": "modules/page-builder/src/Webstudio/Helpers/ComponentDynamicContextHelper.php",
+      "methods": [
+        {
+          "name": "buildContext",
+          "description": "Performs build context."
+        },
+        {
+          "name": "collectDynamicDataPaths",
+          "description": "Performs collect dynamic data paths."
+        },
+        {
+          "name": "supportedPlaceholderExamples",
+          "description": "Performs supported placeholder examples."
+        },
+        {
+          "name": "supportedPlaceholderRoots",
+          "description": "Performs supported placeholder roots."
+        },
+        {
+          "name": "validateDefinitionPlaceholders",
+          "description": "Performs validate definition placeholders."
+        }
+      ]
+    },
+    {
+      "module": "page-builder",
+      "layer": "Webstudio/Services",
+      "className": "BuildStatePayloadService",
+      "description": "Provides business logic and orchestration for BuildStatePayload.",
+      "file": "modules/page-builder/src/Webstudio/Services/BuildStatePayloadService.php",
+      "methods": [
+        {
+          "name": "dataFromState",
+          "description": "Performs data from state."
+        },
+        {
+          "name": "resolvePageInstances",
+          "description": "Performs resolve page instances."
+        },
+        {
+          "name": "resolveRootInstances",
+          "description": "Performs resolve root instances."
+        },
+        {
+          "name": "value",
+          "description": "Performs value."
+        }
+      ]
+    },
+    {
+      "module": "page-builder",
+      "layer": "Webstudio/Services",
+      "className": "ComponentDefinitionDiscoveryService",
+      "description": "Provides business logic and orchestration for ComponentDefinitionDiscovery.",
+      "file": "modules/page-builder/src/Webstudio/Services/ComponentDefinitionDiscoveryService.php",
+      "methods": [
+        {
+          "name": "__construct",
+          "description": "Initializes class dependencies and runtime state."
+        },
+        {
+          "name": "discover",
+          "description": "Performs discover."
+        }
+      ]
+    },
+    {
+      "module": "page-builder",
+      "layer": "Webstudio/Services",
+      "className": "ComponentDefinitionValidator",
+      "description": "Implements ComponentDefinitionValidator behavior in Webstudio/Services.",
+      "file": "modules/page-builder/src/Webstudio/Services/ComponentDefinitionValidator.php",
+      "methods": [
+        {
+          "name": "__construct",
+          "description": "Initializes class dependencies and runtime state."
+        },
+        {
+          "name": "validateAndNormalize",
+          "description": "Performs validate and normalize."
+        }
+      ]
+    },
+    {
+      "module": "page-builder",
+      "layer": "Webstudio/Services",
+      "className": "ComponentDynamicRendererService",
+      "description": "Provides business logic and orchestration for ComponentDynamicRenderer.",
+      "file": "modules/page-builder/src/Webstudio/Services/ComponentDynamicRendererService.php",
+      "methods": [
+        {
+          "name": "__construct",
+          "description": "Initializes class dependencies and runtime state."
+        },
+        {
+          "name": "render",
+          "description": "Performs render."
+        }
+      ]
+    },
+    {
+      "module": "page-builder",
+      "layer": "Webstudio/Services",
+      "className": "ComponentRegistryAuditService",
+      "description": "Provides business logic and orchestration for ComponentRegistryAudit.",
+      "file": "modules/page-builder/src/Webstudio/Services/ComponentRegistryAuditService.php",
+      "methods": [
+        {
+          "name": "__construct",
+          "description": "Initializes class dependencies and runtime state."
+        },
+        {
+          "name": "auditAll",
+          "description": "Performs audit all."
+        }
+      ]
+    },
+    {
+      "module": "page-builder",
+      "layer": "Webstudio/Services",
+      "className": "PageInstanceGraphService",
+      "description": "Provides business logic and orchestration for PageInstanceGraph.",
+      "file": "modules/page-builder/src/Webstudio/Services/PageInstanceGraphService.php",
+      "methods": [
+        {
+          "name": "ensurePageRoot",
+          "description": "Guarantee selected page always has a root instance in compatibility payload. This prevents Webstudio navigator/canvas from entering invalid state when persisted snapshots are stale or missing the current page root node."
+        },
+        {
+          "name": "extractForPage",
+          "description": "Performs extract for page."
+        }
+      ]
+    },
+    {
+      "module": "page-builder",
+      "layer": "Webstudio/Services",
+      "className": "PatchStatePersistenceService",
+      "description": "Provides business logic and orchestration for PatchStatePersistence.",
+      "file": "modules/page-builder/src/Webstudio/Services/PatchStatePersistenceService.php",
+      "methods": [
+        {
+          "name": "persist",
+          "description": "Performs persist."
+        }
+      ]
+    },
+    {
+      "module": "page-builder",
+      "layer": "Webstudio/Services",
+      "className": "ProjectAssetPayloadService",
+      "description": "Provides business logic and orchestration for ProjectAssetPayload.",
+      "file": "modules/page-builder/src/Webstudio/Services/ProjectAssetPayloadService.php",
+      "methods": [
+        {
+          "name": "listForProject",
+          "description": "Performs list for project."
+        },
+        {
+          "name": "mapOne",
+          "description": "Performs map one."
+        }
+      ]
+    },
+    {
+      "module": "page-builder",
+      "layer": "Webstudio/Services",
+      "className": "RegisteredComponentDefinitionNormalizerService",
+      "description": "Provides business logic and orchestration for RegisteredComponentDefinitionNormalizer.",
+      "file": "modules/page-builder/src/Webstudio/Services/RegisteredComponentDefinitionNormalizerService.php",
+      "methods": [
+        {
+          "name": "normalize",
+          "description": "Performs normalize."
+        }
+      ]
+    },
+    {
+      "module": "page-builder",
+      "layer": "Webstudio/Services",
+      "className": "RegisteredComponentPayloadMapperService",
+      "description": "Provides business logic and orchestration for RegisteredComponentPayloadMapper.",
+      "file": "modules/page-builder/src/Webstudio/Services/RegisteredComponentPayloadMapperService.php",
+      "methods": [
+        {
+          "name": "map",
+          "description": "Performs map."
+        }
+      ]
+    },
+    {
+      "module": "page-builder",
+      "layer": "Webstudio/Services",
+      "className": "RegisteredComponentResolverService",
+      "description": "Provides business logic and orchestration for RegisteredComponentResolver.",
+      "file": "modules/page-builder/src/Webstudio/Services/RegisteredComponentResolverService.php",
+      "methods": [
+        {
+          "name": "__construct",
+          "description": "Initializes class dependencies and runtime state."
+        },
+        {
+          "name": "resolve",
+          "description": "Performs resolve."
+        }
+      ]
+    },
+    {
+      "module": "page-builder",
+      "layer": "Webstudio/Services",
+      "className": "TrpcService",
+      "description": "Provides business logic and orchestration for Trpc.",
+      "file": "modules/page-builder/src/Webstudio/Services/TrpcService.php",
+      "methods": [
+        {
+          "name": "__construct",
+          "description": "Initializes class dependencies and runtime state."
+        },
+        {
+          "name": "handle",
+          "description": "Executes the main command/job logic."
+        }
+      ]
+    },
+    {
+      "module": "page-builder",
+      "layer": "Webstudio/Support",
+      "className": "ComponentDefinitionBuilder",
+      "description": "Implements ComponentDefinitionBuilder behavior in Webstudio/Support.",
+      "file": "modules/page-builder/src/Webstudio/Support/ComponentDefinitionBuilder.php",
+      "methods": [
+        {
+          "name": "attribute",
+          "description": "Performs attribute."
+        },
+        {
+          "name": "attributes",
+          "description": "Performs attributes."
+        },
+        {
+          "name": "children",
+          "description": "Performs children."
+        },
+        {
+          "name": "classes",
+          "description": "/ private function __construct( private array $definition, ) { } public static function make(string $key, ?string $label = null): self { $key = trim($key); $label = is_string($label) ? trim($label) : null; return new self([ 'key' => $key, 'label' => $label !== '' ? $label : $key, ]); } public function description(string $description): self { $this->definition['description'] = trim($description); return $this; } public function icon(string $icon): self { $this->definition['icon'] = trim($icon); return $this; } public function category(string $category): self { $this->definition['category'] = trim($category); return $this; } public function owner(string $owner): self { $this->definition['owner'] = trim($owner); return $this; } public function ownerType(string $ownerType): self { $this->definition['owner_type'] = trim($ownerType); return $this; } public function element(string $tag): self { $this->definition['element'] = trim($tag); return $this; } public function tag(string $tag): self { $this->definition['tag'] = trim($tag); return $this; } /**"
+        },
+        {
+          "name": "dynamicData",
+          "description": "Performs dynamic data."
+        },
+        {
+          "name": "htmlTemplate",
+          "description": "Performs html template."
+        },
+        {
+          "name": "innerHtml",
+          "description": "Performs inner html."
+        },
+        {
+          "name": "propsSchema",
+          "description": "Performs props schema."
+        },
+        {
+          "name": "styles",
+          "description": "Performs styles."
+        },
+        {
+          "name": "text",
+          "description": "Performs text."
+        },
+        {
+          "name": "toArray",
+          "description": "Transforms model data into response array format."
         }
       ]
     },

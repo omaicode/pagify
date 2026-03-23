@@ -13,7 +13,7 @@ class PageDiffService
 	{
 		$changes = [];
 
-		foreach (['title', 'slug', 'status'] as $key) {
+		foreach (['title', 'slug'] as $key) {
 			$beforeValue = $before[$key] ?? null;
 			$afterValue = $after[$key] ?? null;
 

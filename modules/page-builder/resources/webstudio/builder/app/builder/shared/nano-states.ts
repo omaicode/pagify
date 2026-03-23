@@ -124,7 +124,7 @@ export const $activeSidebarPanel = computed(
     }
 
     if (isPreviewMode) {
-      return currentPanel === "pages" ? "pages" : "none";
+      return "none";
     }
     if (currentPanel === undefined) {
       return "pages";

@@ -3,6 +3,7 @@
 namespace Pagify\PageBuilder\Services;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Pagify\PageBuilder\Models\Page;
@@ -11,6 +12,7 @@ class PageService
 {
 	public function __construct(
 		private readonly PageMediaUsageSyncService $pageMediaUsageSync,
+		private readonly PageWsrePublisherService $pageWsrePublisher,
 	) {
 	}
 
@@ -20,19 +22,29 @@ class PageService
 	public function create(array $payload, ?int $adminId = null): Page
 	{
 		return DB::transaction(function () use ($payload, $adminId): Page {
-			$slug = (string) ($payload['slug'] ?? '');
+			$requestedHome = Arr::exists($payload, 'is_home') ? (bool) $payload['is_home'] : null;
+			$shouldBeHome = $requestedHome ?? (Page::query()->exists() === false);
+			$slug = $shouldBeHome ? '/' : (string) ($payload['slug'] ?? '');
+
+			if ($shouldBeHome) {
+				$this->releaseHomeSlugForAnotherPage();
+			}
+
 			$this->ensureSlugIsUnique($slug);
 
 			$page = Page::query()->create([
 				'title' => (string) ($payload['title'] ?? ''),
 				'slug' => $slug,
-				'status' => (string) ($payload['status'] ?? 'draft'),
+				'is_home' => $shouldBeHome,
 				'layout_json' => $this->resolveLayoutPayload($payload),
 				'seo_meta_json' => (array) ($payload['seo_meta'] ?? []),
-				'published_at' => ($payload['status'] ?? 'draft') === 'published' ? now() : null,
 				'created_by_admin_id' => $adminId,
 				'updated_by_admin_id' => $adminId,
 			]);
+
+			if ($shouldBeHome) {
+				$this->setAsHomePage($page);
+			}
 
 			$this->pageMediaUsageSync->syncForPage($page);
 
@@ -46,42 +58,141 @@ class PageService
 	public function update(Page $page, array $payload, ?int $adminId = null): Page
 	{
 		return DB::transaction(function () use ($page, $payload, $adminId): Page {
-			$nextSlug = (string) ($payload['slug'] ?? $page->slug);
+			$requestedHome = Arr::exists($payload, 'is_home') ? (bool) $payload['is_home'] : null;
+			$shouldBeHome = $requestedHome === true || (bool) $page->is_home;
+			$nextSlug = $shouldBeHome ? '/' : (string) ($payload['slug'] ?? $page->slug);
+
+			if ($shouldBeHome) {
+				$this->releaseHomeSlugForAnotherPage((int) $page->id);
+			}
+
 			$this->ensureSlugIsUnique($nextSlug, $page->id);
 
 			$page->fill([
 				'title' => (string) ($payload['title'] ?? $page->title),
 				'slug' => $nextSlug,
-				'status' => (string) ($payload['status'] ?? $page->status),
+				'is_home' => $shouldBeHome,
 				'layout_json' => $this->resolveLayoutPayload($payload, (array) ($page->layout_json ?? [])),
 				'seo_meta_json' => (array) ($payload['seo_meta'] ?? $page->seo_meta_json ?? []),
 				'updated_by_admin_id' => $adminId,
 			]);
 
-			if ($page->status === 'published' && $page->published_at === null) {
-				$page->published_at = now();
-			}
-
 			$page->save();
 
+			if ($shouldBeHome) {
+				$this->setAsHomePage($page);
+			}
+
 			$updated = $page->refresh();
+
+			if (Page::query()->where('is_home', true)->doesntExist()) {
+				$updated->forceFill(['is_home' => true])->save();
+				$updated = $updated->refresh();
+			}
+
 			$this->pageMediaUsageSync->syncForPage($updated);
 
 			return $updated;
 		});
 	}
 
-	public function publish(Page $page, ?int $adminId = null): Page
+	/**
+	 * @param array<string, mixed> $publishPayload
+	 */
+	public function publish(Page $page, ?int $adminId = null, array $publishPayload = []): Page
 	{
-		return DB::transaction(function () use ($page, $adminId): Page {
+		return DB::transaction(function () use ($page, $adminId, $publishPayload): Page {
 			$page->forceFill([
-				'status' => 'published',
-				'published_at' => now(),
 				'updated_by_admin_id' => $adminId,
 			])->save();
 
-			return $page->refresh();
+			$published = $page->refresh();
+			$this->pageWsrePublisher->publish($published, $publishPayload);
+
+			return $published;
 		});
+	}
+
+	public function ensureHomePageExists(?int $adminId = null): Page
+	{
+		return DB::transaction(function () use ($adminId): Page {
+			$existingHome = Page::query()->where('is_home', true)->orderBy('id')->first();
+			if ($existingHome instanceof Page) {
+				return $existingHome;
+			}
+
+			$existing = Page::query()
+				->orderByRaw("CASE WHEN slug = '/' THEN 0 ELSE 1 END")
+				->orderBy('id')
+				->first();
+
+			if ($existing instanceof Page) {
+				$this->setAsHomePage($existing);
+
+				return $existing;
+			}
+
+			$homePage = Page::query()->create([
+				'title' => 'Home',
+				'slug' => '/',
+				'is_home' => true,
+				'layout_json' => [],
+				'seo_meta_json' => [],
+				'created_by_admin_id' => $adminId,
+				'updated_by_admin_id' => $adminId,
+			]);
+
+			$this->pageMediaUsageSync->syncForPage($homePage);
+
+			return $homePage->refresh();
+		});
+	}
+
+	private function setAsHomePage(Page $page): void
+	{
+		Page::query()->whereKeyNot($page->id)->where('is_home', true)->update(['is_home' => false]);
+		$page->forceFill(['is_home' => true])->save();
+	}
+
+	private function releaseHomeSlugForAnotherPage(?int $promotedPageId = null): void
+	{
+		$currentHomeQuery = Page::query()->where('is_home', true);
+
+		if ($promotedPageId !== null) {
+			$currentHomeQuery->whereKeyNot($promotedPageId);
+		}
+
+		$currentHome = $currentHomeQuery->orderBy('id')->first();
+		if (! $currentHome instanceof Page) {
+			return;
+		}
+
+		if ((string) $currentHome->slug !== '/') {
+			return;
+		}
+
+		$currentHome->forceFill([
+			'slug' => $this->generateAvailableSlugForDemotedHome($currentHome),
+		])->save();
+	}
+
+	private function generateAvailableSlugForDemotedHome(Page $page): string
+	{
+		$baseSlug = Str::slug((string) $page->title);
+
+		if ($baseSlug === '' || $baseSlug === 'home') {
+			$baseSlug = 'page-' . (string) $page->id;
+		}
+
+		$candidate = $baseSlug;
+		$suffix = 1;
+
+		while ($candidate === '/' || Page::query()->where('slug', $candidate)->whereKeyNot($page->id)->exists()) {
+			$candidate = $baseSlug . '-' . $suffix;
+			$suffix++;
+		}
+
+		return $candidate;
 	}
 
 	public function delete(Page $page): void

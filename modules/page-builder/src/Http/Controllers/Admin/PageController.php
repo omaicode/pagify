@@ -13,7 +13,6 @@ use Inertia\Response;
 use Pagify\Core\Support\SiteContext;
 use Pagify\Core\Services\AuditLogger;
 use Pagify\Core\Services\FrontendThemeManagerService;
-use Pagify\Core\Services\FrontendThemeTwigEngine;
 use Pagify\Core\Services\ThemeHelpers\AssetThemeHelper;
 use Pagify\PageBuilder\Http\Requests\Admin\StorePageRequest;
 use Pagify\PageBuilder\Http\Requests\Admin\UpdatePageRequest;
@@ -32,7 +31,6 @@ class PageController extends Controller
 		private readonly AuditLogger $auditLogger,
 		private readonly SiteContext $siteContext,
 		private readonly FrontendThemeManagerService $themes,
-		private readonly FrontendThemeTwigEngine $twigEngine,
 		private readonly AssetThemeHelper $assetTheme,
 		private readonly EditorAccessTokenService $editorAccessToken,
 		private readonly Filesystem $files,
@@ -97,7 +95,7 @@ class PageController extends Controller
 	{
 		$editorConfig = (array) config('page-builder.editor', []);
 		$activeThemeSlug = $this->themes->activeThemeForCurrentSite();
-		$layouts = $this->activeThemeLayouts($activeThemeSlug);
+		$layouts = []; // Removed activeThemeLayouts call
 		$canvasStyles = [];
 
 		if ((bool) ($editorConfig['load_active_theme_styles'] ?? true)) {
@@ -174,61 +172,6 @@ class PageController extends Controller
 		];
 	}
 
-	public function preview(Page $page): HttpResponse
-	{
-		$this->authorize('view', $page);
-
-		$layout = (array) ($page->layout_json ?? []);
-		$editorMarkup = $this->resolveEditorMarkupFromLayout($layout);
-		$editorHtml = $editorMarkup['html'];
-		$editorCss = $editorMarkup['css'];
-
-		$content = $this->extractContentSlotHtml($editorHtml);
-
-		if ($content === '') {
-			$content = trim($editorHtml);
-		}
-
-		if ($content === '') {
-			$content = '<section class="pbx-section"><h2 class="pbx-subheading">Preview is empty</h2><p class="pbx-text">Save content in editor, then open live preview again.</p></section>';
-		}
-
-		$seo = (array) ($page->seo_meta_json ?? []);
-		$title = e((string) ($seo['title'] ?? $page->title));
-		$description = e((string) ($seo['description'] ?? ''));
-		$canonical = e((string) ($seo['canonical_url'] ?? ''));
-		$ogImage = e((string) ($seo['og_image'] ?? ''));
-		$jsonLd = $seo['json_ld'] ?? null;
-		$jsonLdString = is_array($jsonLd) ? json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
-
-		$headParts = [
-			"<title>{$title}</title>",
-			$description !== '' ? "<meta name=\"description\" content=\"{$description}\">" : '',
-			$canonical !== '' ? "<link rel=\"canonical\" href=\"{$canonical}\">" : '',
-			$ogImage !== '' ? "<meta property=\"og:image\" content=\"{$ogImage}\">" : '',
-			is_string($jsonLdString) ? '<script type="application/ld+json">' . $jsonLdString . '</script>' : '',
-			$editorCss !== '' ? '<style>' . $editorCss . '</style>' : '',
-			'<meta name="robots" content="noindex,nofollow">',
-		];
-
-		$head = implode("\n", array_filter($headParts));
-
-		$rendered = $this->twigEngine->render($this->themes->viewPathsForCurrentSite(), 'pages/home.twig', [
-			'page' => $page,
-			'head' => $head,
-			'content' => $content,
-			'locale' => app()->getLocale(),
-			'request_path' => $page->slug,
-			'admin_prefix' => trim((string) config('app.admin_url_prefix', 'admin'), '/'),
-		]);
-
-		if (is_string($rendered) && trim($rendered) !== '') {
-			return response($rendered, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
-		}
-
-		return response($content, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
-	}
-
 	/**
 	 * @param array<string, mixed> $layout
 	 * @return array{html: string, css: string}
@@ -257,56 +200,6 @@ class PageController extends Controller
 		}
 
 		return ['html' => $html, 'css' => $css];
-	}
-
-	/**
-	 * @return array<int, array{path: string, label: string, editor_html: string, html_attributes: array<string, string>, body_attributes: array<string, string>, preview_styles: array<int, array<string, mixed>>, preview_scripts: array<int, array<string, mixed>>}>
-	 */
-	private function activeThemeLayouts(string $activeThemeSlug): array
-	{
-		$themesBasePath = trim((string) config('core.frontend_ui.themes_base_path', 'themes/main'), '/');
-		$themePath = base_path($themesBasePath . '/' . $activeThemeSlug);
-		$layoutDefinitions = $this->manifestLayoutDefinitions($themePath);
-
-		$layoutFiles = collect($layoutDefinitions)
-			->map(function (array $layoutDefinition) use ($themePath): array {
-				$template = (string) ($layoutDefinition['path'] ?? 'layouts/app.twig');
-				$label = (string) ($layoutDefinition['label'] ?? basename($template));
-				$absoluteTemplatePath = $themePath . '/' . str_replace('/', DIRECTORY_SEPARATOR, $template);
-				$raw = $this->files->exists($absoluteTemplatePath)
-					? $this->files->get($absoluteTemplatePath)
-					: '';
-				$renderedLayoutPayload = $this->renderLayoutForEditor($themePath, $template, $label);
-
-				return [
-					'path' => $template,
-					'label' => $label,
-					'editor_html' => $renderedLayoutPayload['editor_html'] ?? $this->editorLayoutHtmlFromTwig($raw, $label),
-					'html_attributes' => (array) ($renderedLayoutPayload['html_attributes'] ?? []),
-					'body_attributes' => (array) ($renderedLayoutPayload['body_attributes'] ?? []),
-					'preview_styles' => (array) ($renderedLayoutPayload['preview_styles'] ?? []),
-					'preview_scripts' => (array) ($renderedLayoutPayload['preview_scripts'] ?? []),
-				];
-			})
-			->sortBy('label')
-			->values()
-			->all();
-
-		if ($layoutFiles === []) {
-			return [
-				[
-					'path' => 'layouts/app.twig',
-					'label' => 'App layout',
-					'editor_html' => $this->defaultEditorLayoutHtml('app.twig'),
-					'html_attributes' => [],
-					'body_attributes' => [],
-					'preview_styles' => [],
-					'preview_scripts' => [],
-				],
-			];
-		}
-
-		return $layoutFiles;
 	}
 
 	/**
@@ -369,45 +262,6 @@ class PageController extends Controller
 		}
 
 		return array_values(array_unique($definitions, SORT_REGULAR));
-	}
-
-	/**
-	 * @return array{editor_html: string, html_attributes: array<string, string>, body_attributes: array<string, string>, preview_styles: array<int, array<string, mixed>>, preview_scripts: array<int, array<string, mixed>>}|null
-	 */
-	private function renderLayoutForEditor(string $themePath, string $template, string $label): ?array
-	{
-		$contentSlotHtml = '<main data-pbx-content-slot="true" class="pbx-layout-content"><section class="pbx-section"><h2 class="pbx-subheading">Editable content area</h2><p class="pbx-text">Drag, drop, add, remove, or edit blocks in this area.</p></section></main>';
-
-		$rendered = $this->twigEngine->render([$themePath], $template, [
-			'head' => '',
-			'content' => $contentSlotHtml,
-			'locale' => app()->getLocale(),
-			'request_path' => '',
-			'admin_prefix' => trim((string) config('app.admin_url_prefix', 'admin'), '/'),
-		]);
-
-		if (! is_string($rendered) || trim($rendered) === '') {
-			return null;
-		}
-
-		$body = $this->extractBodyFromHtml($rendered);
-		$markup = $body !== '' ? $body : $rendered;
-		$htmlAttributes = $this->extractTagAttributesFromHtml($rendered, 'html');
-		$bodyAttributes = $this->extractBodyAttributesFromHtml($rendered);
-		$previewStyles = $this->extractPreviewSafeStyleLinksFromHtml($rendered);
-		$previewScripts = $this->extractPreviewSafeScriptsFromHtml($rendered);
-
-		if (! str_contains($markup, 'data-pbx-content-slot="true"')) {
-			$markup .= $contentSlotHtml;
-		}
-
-		return [
-			'editor_html' => '<div data-pbx-layout="' . e($label) . '">' . trim($markup) . '</div>',
-			'html_attributes' => $htmlAttributes,
-			'body_attributes' => $bodyAttributes,
-			'preview_styles' => $previewStyles,
-			'preview_scripts' => $previewScripts,
-		];
 	}
 
 	/**

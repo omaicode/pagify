@@ -102,7 +102,6 @@ class PageBuilderThemeRenderTest extends TestCase
             'site_id' => $site->id,
             'title' => 'Landing',
             'slug' => 'landing',
-            'status' => 'published',
             'layout_json' => [
                 'type' => 'webstudio',
                 'webstudio' => [
@@ -142,7 +141,6 @@ class PageBuilderThemeRenderTest extends TestCase
             'site_id' => $site->id,
             'title' => 'Pricing',
             'slug' => 'pricing',
-            'status' => 'published',
             'layout_json' => [
                 'type' => 'webstudio',
                 'webstudio' => [
@@ -190,7 +188,6 @@ class PageBuilderThemeRenderTest extends TestCase
             'site_id' => $site->id,
             'title' => 'About',
             'slug' => 'about',
-            'status' => 'published',
             'layout_json' => [
                 'type' => 'webstudio',
                 'webstudio' => [
@@ -227,7 +224,6 @@ class PageBuilderThemeRenderTest extends TestCase
             'site_id' => $site->id,
             'title' => 'Host test',
             'slug' => 'host-test',
-            'status' => 'published',
             'layout_json' => [
                 'type' => 'webstudio',
                 'webstudio' => [
@@ -263,7 +259,6 @@ class PageBuilderThemeRenderTest extends TestCase
             'site_id' => $site->id,
             'title' => 'Host request test',
             'slug' => 'host-request-test',
-            'status' => 'published',
             'layout_json' => [
                 'type' => 'webstudio',
                 'webstudio' => [

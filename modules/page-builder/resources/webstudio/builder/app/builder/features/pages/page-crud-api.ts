@@ -11,13 +11,19 @@ type PageFormValues = {
   path: string;
   title: string;
   description?: string;
+  isHomePage?: boolean;
 };
 
 type PersistedPage = {
   id: string;
   title: string;
   slug: string;
-  status: string;
+};
+
+type PublishPayload = {
+  page: Pick<Page, "id" | "name" | "path" | "title" | "meta">;
+  interface?: Record<string, unknown>;
+  layout?: Record<string, unknown>;
 };
 
 const stripExpressionQuotes = (value: string | undefined) => {
@@ -64,7 +70,9 @@ const toPayload = (values: PageFormValues) => {
   return {
     title,
     slug,
-    status: "draft",
+    ...(values.isHomePage !== undefined
+      ? { is_home: values.isHomePage === true }
+      : {}),
     seo_meta: {
       title: stripExpressionQuotes(values.title),
       description: stripExpressionQuotes(values.description),
@@ -123,39 +131,23 @@ export const updatePageOnServer = async (
   return assertResponse(response);
 };
 
-export const updatePageStatusOnServer = async (
-  page: Pick<Page, "id" | "name" | "path" | "title" | "meta">,
-  status: "draft" | "published"
-) => {
+export const publishPageOnServer = async (payload: PublishPayload) => {
+  const page = payload.page;
+
   if (!isPersistedPageId(page.id)) {
     return null;
   }
 
-  if (status === "published") {
-    const response = await fetch(adminPagePublishPath(page.id), {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-      },
-    });
-
-    return assertResponse(response);
-  }
-
-  const response = await fetch(adminPagePath(page.id), {
-    method: "PUT",
+  const response = await fetch(adminPagePublishPath(page.id), {
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
     body: JSON.stringify({
-      ...toPayload({
-        name: page.name,
-        path: page.path,
-        title: page.title,
-        description: page.meta.description,
-      }),
-      status,
+      page,
+      interface: payload.interface,
+      layout: payload.layout,
     }),
   });
 

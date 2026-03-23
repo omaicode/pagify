@@ -1,0 +1,42 @@
+{
+    "version": 1,
+    "engine": "wsre",
+    "page": {
+        "id": 2,
+        "slug": "landing-page-v2"
+    },
+    "head": [
+        {
+            "tag": "title",
+            "text": "Landing SEO"
+        },
+        {
+            "tag": "meta",
+            "attrs": {
+                "name": "description",
+                "content": "Updated description"
+            }
+        }
+    ],
+    "body": [
+        {
+            "dynamic": {
+                "resolver": "page-builder.render.interface",
+                "params": {
+                    "page_id": 2,
+                    "root_instance_id": "root-2",
+                    "interface": {
+                        "instances": [],
+                        "props": [],
+                        "styles": [],
+                        "styleSourceSelections": [],
+                        "breakpoints": [],
+                        "dataSources": [],
+                        "resources": [],
+                        "variableValues": []
+                    }
+                }
+            }
+        }
+    ]
+}

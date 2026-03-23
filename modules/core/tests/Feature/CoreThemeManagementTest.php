@@ -31,11 +31,9 @@ class CoreThemeManagementTest extends TestCase
             'name' => 'Default Main Theme',
             'version' => '1.0.0',
             'render' => [
-                'engine' => 'twig',
+                'engine' => 'wsre',
             ],
-            'layouts' => [
-                ['file' => 'layouts/app.twig', 'label' => 'Default layout'],
-            ],
+            'layouts' => [],
         ], JSON_PRETTY_PRINT));
     }
 
@@ -48,6 +46,7 @@ class CoreThemeManagementTest extends TestCase
 
     public function test_theme_routes_are_forbidden_without_permission(): void
     {
+        /** @var Admin $admin */
         $admin = Admin::factory()->create();
 
         $this->createThemeFixture('marketing', [
@@ -139,6 +138,7 @@ class CoreThemeManagementTest extends TestCase
      */
     private function makeAdminWithPermissions(array $permissions): Admin
     {
+        /** @var Admin $admin */
         $admin = Admin::factory()->create();
 
         foreach ($permissions as $permissionName) {
@@ -166,11 +166,9 @@ class CoreThemeManagementTest extends TestCase
             'name' => ucfirst($slug),
             'version' => '1.0.0',
             'render' => [
-                'engine' => 'twig',
+                'engine' => 'wsre',
             ],
-            'layouts' => [
-                ['file' => 'layouts/app.twig', 'label' => 'Main layout'],
-            ],
+            'layouts' => [],
             'description' => '',
             'author' => '',
         ], $overrides);

@@ -230,8 +230,7 @@ export const SidebarLeft = ({ publish }: SidebarLeftProps) => {
       orientation="vertical"
     >
       {
-        // In preview mode, we don't show left sidebar, but we want to allow pages panel to be open in the preview mode.
-        // This way user can switch pages without exiting preview mode.
+        // In preview mode we hide left sidebar entirely.
       }
       {isPreviewMode === false && (
         <Flex

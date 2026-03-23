@@ -1,0 +1,9 @@
+{
+    "slug": "unified",
+    "name": "Unified",
+    "version": "1.0.0",
+    "render": {
+        "engine": "wsre"
+    },
+    "layouts": []
+}

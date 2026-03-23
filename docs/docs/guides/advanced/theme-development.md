@@ -27,10 +27,8 @@ themes/main/{slug}/
     js/
     css/
     img/
-  layouts/
-    app.twig
   pages/
-    home.twig
+    home.json
   lang/
     en/theme.php
     vi/theme.php
@@ -47,8 +45,7 @@ php artisan cms:make-theme "My Theme"
 Then review and update:
 
 1. `theme.json` metadata and version.
-2. `layouts/app.twig` layout shell.
-3. `pages/home.twig` homepage content.
+2. `pages/home.json` homepage WSRE document.
 4. Assets and localization files.
 
 ## Manifest essentials (`theme.json`)
@@ -65,24 +62,46 @@ Recommended fields:
 - `author`
 - `requires`
 - `supports`
-- `render.engine = twig`
+- `render.engine = wsre`
 
 Important rule: `theme.json.slug` must match folder name.
 
-## Template development workflow
+## WSRE document workflow
 
-### 1. Build layout shell
+### 1. Build page document
 
-Use `layouts/app.twig` for shared page structure:
+Use `pages/home.json` with WSRE nodes:
 
-- metadata
-- header/footer
-- global CSS/JS
-- blocks or includes used by pages
+- `head`: meta/title/script/link nodes
+- `body`: HTML-like nodes or dynamic resolvers
+- optional `layout_html`: shell containing `{{ head }}` and `{{ content }}` placeholders
 
-### 2. Build page templates
+Example minimal page:
 
-Start with `pages/home.twig`, then expand to additional page templates if your routing/render stack supports them.
+```json
+{
+  "version": 1,
+  "engine": "wsre",
+  "head": [
+    { "tag": "title", "text": "My Theme" }
+  ],
+  "body": [
+    {
+      "tag": "main",
+      "children": [
+        { "tag": "h1", "text": "Welcome" }
+      ]
+    }
+  ]
+}
+```
+
+### 2. Add route-based pages
+
+Start with `pages/home.json`, then add:
+
+- `pages/about.json` for `/about`
+- `pages/blog/index.json` for `/blog`
 
 ### 3. Add assets
 
@@ -92,11 +111,11 @@ Store assets in:
 - `assets/js`
 - `assets/img`
 
-Load assets with helper:
+Use asset URL pattern:
 
-```twig
-<link rel="stylesheet" href="{{ asset_url('css/app.css') }}">
-<script defer src="{{ asset_url('js/app.js') }}"></script>
+```text
+/theme-assets/{theme-slug}/css/app.css
+/theme-assets/{theme-slug}/js/app.js
 ```
 
 ### 4. Add localization
@@ -106,11 +125,7 @@ Provide translation files:
 - `lang/en/theme.php`
 - `lang/vi/theme.php`
 
-Use helper in Twig:
-
-```twig
-{{ t('theme.hero_title') }}
-```
+Localization files can still be consumed by backend/domain services when needed.
 
 ## Runtime behavior you must validate
 
@@ -120,7 +135,7 @@ Theme resolution order for frontend rendering:
 2. Fallback theme (`FRONTEND_THEME_FALLBACK`)
 3. Default theme (`FRONTEND_THEME`)
 
-If templates are missing/invalid across fallback chain, runtime may render snapshot HTML fallback.
+If no valid page document is found across fallback chain, runtime will continue with next source and may eventually fall back to page-builder published output.
 
 ## Extension points and helpers
 
@@ -141,7 +156,6 @@ For helper-hook contract and subscriber example:
 
 ```bash
 php artisan optimize:clear
-php artisan cms:theme:clear-cache
 ```
 
 6. Run smoke tests and key frontend regression cases.
@@ -155,9 +169,9 @@ Theme not listed in manager:
 
 Theme selected but not rendering:
 
-- check `pages/home.twig`
+- check `pages/home.json`
 - check fallback/default theme validity
-- clear framework/theme cache
+- clear framework cache
 
 Asset file changes not visible:
 

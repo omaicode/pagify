@@ -370,22 +370,6 @@ class FrontendThemeManagerService
 
         $engine = strtolower(trim((string) ($manifest['render']['engine'] ?? '')));
 
-        if ($engine === 'twig') {
-            if (! $this->files->exists($themePath.'/layouts/app.twig')) {
-                return false;
-            }
-
-            if (! $this->files->exists($themePath.'/pages/home.twig')) {
-                return false;
-            }
-
-            return true;
-        }
-
-        if ($engine === 'wsre') {
-            return $this->files->exists($themePath.'/pages/home.json');
-        }
-
-        return false;
+        return $engine === 'wsre' && $this->files->exists($themePath.'/pages/home.json');
     }
 }

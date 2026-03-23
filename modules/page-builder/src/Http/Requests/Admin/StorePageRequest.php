@@ -20,7 +20,7 @@ class StorePageRequest extends FormRequest
 		return [
 			'title' => ['required', 'string', 'max:160'],
 			'slug' => ['required', 'string', 'max:160', 'alpha_dash'],
-			'status' => ['nullable', 'string', 'in:draft,published'],
+			'is_home' => ['sometimes', 'boolean'],
 			'layout' => ['nullable', 'array'],
 			'layout.type' => ['required_with:layout', 'string', 'in:webstudio'],
 			'layout.webstudio' => ['nullable', 'array'],

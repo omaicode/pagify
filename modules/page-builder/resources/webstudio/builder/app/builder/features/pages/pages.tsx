@@ -20,6 +20,7 @@ import {
   ChevronRightIcon,
   FolderIcon,
   EllipsesIcon,
+  HomeIcon,
   NewFolderIcon,
   NewPageIcon,
   PageIcon,
@@ -432,7 +433,9 @@ const PagesTree = ({
                 {item.type === "page" && (
                   <TreeNodeLabel
                     prefix={
-                      isPathnamePattern(item.page.path) ? (
+                      item.id === pages.homePage.id ? (
+                        <HomeIcon />
+                      ) : isPathnamePattern(item.page.path) ? (
                         <DynamicPageIcon />
                       ) : (
                         <PageIcon />

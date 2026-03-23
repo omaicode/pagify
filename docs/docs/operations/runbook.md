@@ -121,8 +121,7 @@ composer dev
 - Active frontend theme root (runtime default): `${FRONTEND_THEMES_BASE_PATH}/${FRONTEND_THEME}`
 - Frontend fallback theme root: `${FRONTEND_THEMES_BASE_PATH}/${FRONTEND_THEME_FALLBACK}`
 - Frontend manifest: `${FRONTEND_THEMES_BASE_PATH}/{THEME_NAME}/theme.json`
-- Frontend page view entry: `${FRONTEND_THEMES_BASE_PATH}/{THEME_NAME}/pages/home.twig`
-- Frontend layout view: `${FRONTEND_THEMES_BASE_PATH}/{THEME_NAME}/layouts/app.twig`
+- Frontend page entry: `${FRONTEND_THEMES_BASE_PATH}/{THEME_NAME}/pages/home.json`
 
 ## Troubleshooting
 
@@ -139,17 +138,11 @@ php artisan db:seed --class="Pagify\\Core\\Database\\Seeders\\CoreDatabaseSeeder
 	- `CORE_ADMIN_USERNAME` (default: `admin`)
 	- `CORE_ADMIN_EMAIL` (default: `admin@localhost`)
 	- `CORE_ADMIN_PASSWORD` (default: `password`)
-- Unified default frontend pages are now delivered directly from Twig files in `themes/main/unified/pages/*.twig`.
+- Unified default frontend pages are now delivered from WSRE JSON documents in `themes/main/unified/pages/*.json`.
 - If config/view cache causes stale behavior, clear Laravel caches:
 
 ```bash
 php artisan optimize:clear
-```
-
-- For frontend Twig template cache (recommended after theme deploy):
-
-```bash
-php artisan cms:theme:clear-cache
 ```
 
 - If plugin APIs return "Plugin state storage is not initialized yet", run migrations first:
