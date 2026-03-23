@@ -37,3 +37,4 @@ modules/*/vendor
 docs/node_modules
 docs/.docusaurus
 docs/build
+.gitnexus
